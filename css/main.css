@@ -2877,7 +2877,7 @@ pre .javascript .function {
   background: #fff;
   box-shadow: initial;
   border-radius: initial;
-  opacity: 0;
+  opacity: 1;
 }
 .sidebar-inner.affix {
   position: fixed;
