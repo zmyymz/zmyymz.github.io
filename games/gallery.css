@@ -1,0 +1,57 @@
+.game-gallery .post-header { text-align: left; margin-bottom: 24px; }
+.game-gallery .gallery-eyebrow { color: #68866f; font-size: 11px; letter-spacing: 2px; margin: 0 0 12px; }
+.game-gallery .post-title { font-size: 32px; font-weight: 700; color: #283c31; text-align: left; }
+.game-gallery .gallery-intro { color: #777; margin: 0 0 36px; }
+.gallery-section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.game-gallery .gallery-section-title h2 { margin: 0; font-size: 16px; }
+.gallery-section-title > span { color: #888; font-size: 12px; }
+.game-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.game-card { border: 1px solid #e4e9e3; border-radius: 16px; overflow: hidden; background: #fff; }
+.game-card:only-child { grid-column: 1 / -1; display: grid; grid-template-columns: 45% 55%; }
+.game-gallery .game-card:only-child .game-cover { height: 100%; min-height: 300px; }
+.game-gallery a.game-cover { display: block; position: relative; height: 210px; overflow: hidden; border: 0; }
+.radish-cover { background: linear-gradient(#e0f1e6 0%, #eef6d9 72%, #e7dabd 72%); }
+.cover-badge { position: absolute; left: 16px; top: 16px; padding: 2px 10px; font-size: 11px; border-radius: 20px; background: #ffffffc9; color: #436147; }
+.radish-art { position: absolute; left: 50%; top: 50%; width: 100px; height: 130px; transform: translate(-50%, -48%) rotate(-12deg); }
+.radish-root { position: absolute; left: 22px; top: 43px; width: 58px; height: 78px; background: linear-gradient(110deg, #ffba78, #f77950); border-radius: 40% 45% 60% 60%; transform: rotate(8deg); box-shadow: inset -8px 0 #e86c4433; }
+.radish-root:after { content: ''; position: absolute; bottom: -8px; left: 24px; width: 14px; height: 20px; background: #f77950; border-radius: 0 0 90% 0; transform: rotate(20deg); }
+.radish-leaves { position: absolute; top: 0; left: 44px; width: 18px; height: 55px; border-radius: 80% 10% 20% 10%; background: #5e9952; transform: rotate(9deg); }
+.radish-leaves:before, .radish-leaves:after { content: ''; position: absolute; width: 20px; height: 42px; background: #76ad55; border-radius: 80% 10% 20% 10%; transform-origin: bottom; bottom: 0; }
+.radish-leaves:before { transform: rotate(-40deg); }
+.radish-leaves:after { transform: rotate(38deg); background: #48854b; }
+.game-card-content { padding: 20px; }
+.slot-cover { background: linear-gradient(135deg, #cee7e5, #91b9bd); }
+.slot-art { position: absolute; left: 50%; top: 57%; transform: translate(-50%, -50%) rotate(-18deg); width: 180px; height: 95px; border: 21px solid #456069; border-radius: 70px; box-sizing: border-box; box-shadow: 0 0 0 5px #faf1d6; }
+.slot-art:before { content: ''; position: absolute; inset: -12px; border: 1px dashed #fff9d5; border-radius: 70px; }
+.slot-art i { position: absolute; right: 5px; bottom: -29px; color: #f9bd58; font-size: 36px; text-shadow: 2px 3px #30444c; }
+.guardian-cover { background: linear-gradient(#e4efda 0%, #f2edcf 70%, #9bb975 70%); }
+.guardian-art { position: absolute; left: 50%; top: 54%; transform: translate(-50%, -50%) rotate(-14deg); display: grid; place-items: center; width: 120px; height: 120px; border: 2px dashed #6b975c66; border-radius: 50%; background: #fff6d37a; }
+.guardian-art i { font-size: 76px; color: #b78049; text-shadow: 3px 4px #fff9e6; }
+.laundry-cover { background: linear-gradient(135deg, #eceddf, #cfdfd9); }
+.laundry-art { position: absolute; top: 44px; left: 50%; transform: translateX(-50%) rotate(-4deg); width: 96px; height: 118px; border-radius: 10px; background: #f9faf1; border: 2px solid #a4b4a7; box-shadow: 8px 7px 0 #b3c4b7; }
+.laundry-art > span { display: block; border-bottom: 1px solid #ccd8ce; padding: 5px 10px; color: #739488; font-size: 12px; }
+.laundry-art b { display: block; margin: 10px auto; border: 6px solid #7c9e91; background: #c6e2dc; border-radius: 50%; width: 57px; height: 57px; line-height: 57px; text-align: center; font-size: 45px; font-weight: 400; color: #fff; }
+.game-gallery .game-load-note { margin: 10px 0 0; font-size: 11px; color: #888; }
+.regicide-cover { background: radial-gradient(ellipse at top, #456852, #203f32); }
+.regicide-art { position: absolute; top: 43px; left: 50%; transform: translateX(-50%) rotate(-8deg); width: 84px; height: 118px; padding: 9px; box-sizing: border-box; border-radius: 8px; background: #f8f4e6; color: #294a38; box-shadow: 10px 5px 0 #b99e65; font-family: Georgia, serif; }
+.regicide-art > span { display: block; font-size: 17px; line-height: 1; }
+.regicide-art b { display: block; font-size: 40px; text-align: center; line-height: 1.3; }
+.regicide-art small { display: block; font-size: 10px; letter-spacing: 2px; text-align: center; }
+.game-tags { display: flex; gap: 6px; font-size: 11px; color: #69806c; }
+.game-tags span { border-radius: 4px; padding: 1px 7px; background: #f0f5ed; }
+.game-gallery .game-card h2 { margin: 12px 0 10px; font-size: 22px; color: #283c31; }
+.game-card h2 small { font-size: 14px; font-weight: 400; color: #777; }
+.game-gallery .game-description { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; height: 3.8em; overflow: hidden; overflow-wrap: anywhere; font-size: 13px; line-height: 1.9; margin: 0 0 18px; text-align: left; cursor: help; }
+.game-gallery .game-controls { font-size: 12px; color: #888; margin: 0 0 18px; }
+.game-gallery a.game-play { display: flex; justify-content: space-between; align-items: center; background: #355e43; color: #fff; padding: 9px 15px; border: 0; border-radius: 7px; font-size: 14px; }
+.game-gallery a.game-play:hover { background: #244c32; }
+.game-gallery a:focus-visible { outline: 3px solid #d38b3f; outline-offset: -3px; }
+.game-gallery .gallery-note { font-size: 12px; color: #888; margin: 32px 0 0; }
+.game-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 600px) {
+  .game-grid { grid-template-columns: 1fr; }
+  .game-card:only-child { display: block; }
+  .game-gallery .game-card:only-child .game-cover { height: 210px; min-height: 0; }
+  .game-gallery .post-title { font-size: 28px; }
+  .gallery-section-title { align-items: baseline; flex-wrap: wrap; }
+}

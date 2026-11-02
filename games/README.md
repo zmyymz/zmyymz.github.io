@@ -5,14 +5,29 @@
 
 ## 添加已部署的游戏
 
-编辑 `games/index.html`，第一次添加时删除 `.games-empty` 提示块，在同一位置放入下面的卡片。以后复制卡片继续添加即可，无需 JavaScript 或构建步骤。
+《轨迹 / SLOT RUN》位于 `games/slot-run/`，复制自本地 slot-run 项目。保留 `index.html` 的 Three.js CDN 加载及内置备用版本，并随附可选的 `diagnostics.mjs`；正常游玩不启用诊断。游戏、工坊与存档逻辑未改动，迁移访问地址后不会自动带入旧地址存档。
+
+《手掌护田》位于 `games/hand-guardian/index.html`，为原单文件 Canvas/WebAudio 游戏的副本，未修改玩法。包含 6 个关卡，按住蓄力、松手张掌，横屏布局。
+
+《泡泡滚筒》位于 `games/bubble-laundry/`，是 Godot 4.7.2 单线程 Web 导出。此目录为生成产物，应从 `/Users/zhangmeiyue.zmy/Documents/workspace/games/godot-demo` 运行 `python3 tools/export_web.py --output /Users/zhangmeiyue.zmy/Documents/workspace/zmyymz.github.io/games/bubble-laundry` 更新，不要单独手改导出脚本。完整目录都需保留，首次加载包含较大的 WASM 引擎文件。导出命令只写本地文件，不会发布。
+
+已收录《弑君者 · 极简记血》（`games/regicide-lite/index.html`）：这是配合实体牌局使用的辅助工具，卡片需明确标注用途。发布副本仅将原“完整版”链接改成了返回游戏页，记血逻辑保持原样。进度按浏览器与站点保存在本地，从原文件迁移到博客地址不会自动迁移旧进度。
+
+编辑 `games/index.html`，在 `.game-grid` 内复制一整个 `.game-card`，修改封面、名称、简介、操作方式和两个游玩链接即可。最新游戏可放在最前面；桌面双列、手机单列，无需 JavaScript 或构建步骤。当前已收录《拔萝卜 · 30秒》，位于 `games/pull-radish/index.html`。
 
 ```html
-<section class="game-card" style="padding: 24px 0; border-bottom: 1px solid #eee;">
-  <h2>游戏名称</h2>
-  <p>一句话介绍玩法，以及支持手机触屏还是电脑键盘。</p>
-  <p><a class="btn" href="https://你的游戏地址/" target="_blank" rel="noopener noreferrer">开始游戏 ↗</a></p>
-</section>
+<article class="game-card">
+  <a class="game-cover" href="/games/游戏英文名/" target="_blank" rel="noopener noreferrer" aria-label="开始玩游戏名称，打开新标签页">
+    <img src="/images/games/封面.webp" alt="游戏画面" width="600" height="420" loading="lazy" style="width:100%;height:100%;object-fit:cover;border:0;padding:0;">
+  </a>
+  <div class="game-card-content">
+    <div class="game-tags"><span>类型</span><span>单人</span></div>
+    <h2>游戏名称</h2>
+    <p class="game-description" title="一句话介绍玩法。">一句话介绍玩法。</p>
+    <p class="game-controls">鼠标 / 触屏拖拽</p>
+    <a class="game-play" href="/games/游戏英文名/" target="_blank" rel="noopener noreferrer">开始游戏 ↗</a>
+  </div>
+</article>
 ```
 
 使用真实的 HTTPS 游玩地址。游戏可以部署在独立的 GitHub Pages 仓库，或其他静态站点托管平台；这里保存链接即可。添加截图时，将图片放到 `images/games/`，添加有 `alt` 描述、宽高及 `loading="lazy"` 的图片标签。

@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#204f3a">
+<title>手掌护田 · Hand Guardian</title>
+<style>
+  *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}
+  body{display:grid;place-items:center;background:#153e30;font-family:system-ui,"PingFang SC","Microsoft YaHei","Arial Unicode MS",sans-serif;overscroll-behavior:none}
+  canvas{display:block;width:min(100vw,177.777778vh);height:min(100vh,56.25vw);background:#b8e5e4;touch-action:none;cursor:none;user-select:none;-webkit-user-select:none;outline:none}
+  @supports(height:100dvh){canvas{width:min(100vw,177.777778dvh);height:min(100dvh,56.25vw)}}
+</style>
+</head>
+<body>
+<canvas id="game" width="1280" height="720" tabindex="0" aria-label="手掌护田。按住握拳蓄力，松手张掌弹开周围动物。P 或 Escape 暂停，Enter 开始。">请使用支持 Canvas 的现代浏览器。</canvas>
+<script>
+'use strict';
+// ── CONFIG：玩法、物理、场景与表现参数集中配置 ──────────────────────
+const CONFIG = {
+  width:1280,height:720,step:1/60,maxDelta:0.1,
+  farm:{maxHP:100,x:295,y:295,w:690,h:310,cropCols:6,cropRows:3,cellGap:14,eatRadius:88,damageTextInterval:0.8},
+  hand:{radius:45,chargeTime:0.85,
+    spring:160,damping:23,returnSpring:210,returnDamping:27,returnDistance:10,
+    cooldown:0.24,burstDuration:0.18,openDuration:0.12,curlSpeed:18,pressCurl:0.10,chargeEase:1.25,maxReturnTime:0.14,
+    baseDamage:1,extraDamage:2,knockback:360,extraKnockback:700,
+    lift:220,extraLift:230,artTilt:0,pinchTilt:0},
+  physics:{gravity:1200,airDrag:1.55,bounce:0.29,minBounce:80,stun:0.32,deathTime:1.5,separation:28},
+  animals:{
+    rabbit:{radius:18,speed:80,hp:1,mass:0.8,eat:8,score:100},
+    boar:{radius:28,speed:60,hp:3,mass:1.6,eat:15,score:150},
+    elephant:{radius:60,speed:35,hp:10,mass:6,eat:30,score:300}
+  },
+  growth:[
+    {base:24,full:40,limit:1},{base:36,full:70,limit:2},
+    {base:48,full:100,limit:3},{base:60,full:130,limit:4},
+    {base:72,full:160,limit:5},{base:84,full:190,limit:6}
+  ],
+  upgrades:{
+    heavy:{name:'重手掌',desc:'满蓄力伤害 +0.5',detail:'厚血动物也能拍得动',amount:0.5,max:3},
+    quick:{name:'灵巧手',desc:'蓄满时间 −0.1 秒',detail:'握拳更快，出手更轻巧',amount:0.1,max:3},
+    soil:{name:'结实田地',desc:'每关生命上限 +15',detail:'给农田多一份保护',amount:15,max:3},
+    stun:{name:'强力震荡',desc:'受击眩晕 +0.12 秒',detail:'争取时间，再拍一下',amount:0.12,max:3}
+  },
+  pickups:{radius:24,collectRadius:30,life:8,readyDelay:0.3,maxTemporary:3,
+    dropChance:0.24,pityKills:4,dropCooldown:1.4,lowHP:0.4,
+    heal:20,iceTime:4,iceSpeed:0.4,chiliTime:8,chiliDamage:1.3},
+  levels:[
+    {name:'小苗初长',hint:'靠近兔子再松手，开局一次只拍一只',maxActive:3,waves:[
+      {types:['rabbit','rabbit','rabbit'],interval:2.4},
+      {types:['rabbit','rabbit','rabbit','rabbit'],interval:2.2},
+      {types:['rabbit','rabbit','rabbit','rabbit'],interval:2.1},
+      {types:['rabbit','rabbit','rabbit','rabbit','rabbit'],interval:2}]},
+    {name:'兔群来访',hint:'成长种子扩大范围，碰到道具就能拾取',maxActive:4,waves:[
+      {types:['rabbit','rabbit','rabbit','rabbit'],interval:2},
+      {types:['rabbit','boar','rabbit','rabbit'],interval:1.9},
+      {types:['rabbit','rabbit','boar','rabbit','boar'],interval:1.9},
+      {types:['boar','rabbit','rabbit','rabbit','rabbit','rabbit'],interval:1.8}]},
+    {name:'野猪拱地',hint:'野猪更耐打，蓄满力或用辣椒强化',maxActive:4,waves:[
+      {types:['boar','rabbit','rabbit','boar'],interval:2},
+      {types:['rabbit','rabbit','boar','rabbit','boar'],interval:1.9},
+      {types:['boar','rabbit','rabbit','boar','rabbit'],interval:1.9},
+      {types:['boar','rabbit','boar','rabbit','boar','rabbit'],interval:1.8}]},
+    {name:'象脚来了',hint:'大象来了！蓄满力，多次拍击',maxActive:4,waves:[
+      {types:['rabbit','rabbit','rabbit','rabbit'],interval:2},
+      {types:['boar','rabbit','rabbit','boar'],interval:2},
+      {types:['rabbit','rabbit','boar','rabbit','rabbit'],interval:1.9},
+      {types:['elephant','rabbit','boar','rabbit','rabbit'],interval:2.3}]},
+    {name:'左右夹击',hint:'两边都有来客，冰霜果能帮你争取时间',maxActive:5,waves:[
+      {types:['boar','rabbit','rabbit','boar'],interval:1.8},
+      {types:['rabbit','rabbit','boar','rabbit','boar'],interval:1.7},
+      {types:['rabbit','elephant','rabbit','boar'],interval:2.1},
+      {types:['boar','rabbit','boar','rabbit','rabbit'],interval:1.7},
+      {types:['rabbit','boar','rabbit','boar','rabbit','rabbit'],interval:1.6}]},
+    {name:'丰收保卫战',hint:'两只大象分批登场，守住最后的丰收',maxActive:5,waves:[
+      {types:['rabbit','boar','rabbit','rabbit','boar'],interval:1.7},
+      {types:['rabbit','rabbit','boar','rabbit','boar','rabbit'],interval:1.6},
+      {types:['elephant','rabbit','boar','rabbit','rabbit'],interval:2.1},
+      {types:['rabbit','boar','rabbit','rabbit','boar','rabbit'],interval:1.6},
+      {types:['elephant','boar','rabbit','rabbit','boar','rabbit','rabbit'],interval:1.8}]}
+  ],
+  save:{key:'hand-guardian-campaign-v2',version:2},
+  waveIntro:1.5,waveClear:2.5,tutorialTime:12,comboWindow:1.2,maxMultiplier:5,
+  scoring:{hit:10,knockout:50,elephantBonus:200},
+  fx:{maxParticles:200,maxTexts:32,shakeMax:12,shakeDuration:0.23,particles:13,elephantParticles:25},
+  audio:{volume:0.16},
+  colors:{ink:'#203e37',green:'#285f44',mint:'#d7f0bd',cream:'#fffbe9',gold:'#ffcb58',coral:'#e97759'}
+};
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+canvas.style.cursor='none';
+const C=CONFIG.colors,TAU=Math.PI*2;
+// ── Utils：纯数学与基本图形，不使用外部素材 ─────────────────────────
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const rand=(a,b)=>a+Math.random()*(b-a);
+function rounded(x,y,w,h,r,fill,stroke,lw=2){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}}
+function ellipse(x,y,rx,ry,fill,stroke,lw=2){ctx.beginPath();ctx.ellipse(x,y,Math.max(.01,rx),Math.max(.01,ry),0,0,TAU);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}}
+function line(x1,y1,x2,y2,color,width=2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.stroke()}
+function label(s,x,y,size=20,color=C.ink,align='left',weight=600){ctx.font=`${Math.round(weight/100)*100} ${size}px system-ui,"PingFang SC","Microsoft YaHei","Arial Unicode MS",sans-serif`;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillStyle=color;ctx.fillText(s,x,y)}
+function star(x,y,r,color,rotation=0){ctx.beginPath();for(let i=0;i<10;i++){let a=i*Math.PI/5+rotation-Math.PI/2,rr=i%2?r*.44:r;let px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr;i?ctx.lineTo(px,py):ctx.moveTo(px,py)}ctx.closePath();ctx.fillStyle=color;ctx.fill()}
+// ── AudioManager：只在用户手势后初始化，音源播放完即断开 ────────────
+class AudioManager{
+  constructor(){this.enabled=true;this.context=null;this.master=null;this.noise=null}
+  unlock(){
+    try{if(!this.context){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;this.context=new AC();this.master=this.context.createGain();this.master.gain.value=this.enabled?CONFIG.audio.volume:0;this.master.connect(this.context.destination);this.noise=this.context.createBuffer(1,this.context.sampleRate*.3,this.context.sampleRate);const d=this.noise.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}if(this.context.state==='suspended')this.context.resume().catch(()=>{})}catch(e){this.enabled=false}
+  }
+  toggle(){this.enabled=!this.enabled;this.unlock();if(this.master)this.master.gain.setTargetAtTime(this.enabled?CONFIG.audio.volume:0,this.context.currentTime,.01)}
+  tone(from,to,duration,type='sine',volume=1,delay=0){
+    if(!this.enabled||!this.context)return;const t=this.context.currentTime+delay,o=this.context.createOscillator(),g=this.context.createGain();o.type=type;o.frequency.setValueAtTime(from,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,to),t+duration);g.gain.setValueAtTime(.001,t);g.gain.exponentialRampToValueAtTime(Math.max(.002,volume),t+.008);g.gain.exponentialRampToValueAtTime(.001,t+duration);o.connect(g);g.connect(this.master);o.start(t);o.stop(t+duration+.02);o.onended=()=>{o.disconnect();g.disconnect()}
+  }
+  whoosh(power){
+    if(!this.enabled||!this.context)return;const t=this.context.currentTime,s=this.context.createBufferSource(),f=this.context.createBiquadFilter(),g=this.context.createGain();s.buffer=this.noise;f.type='bandpass';f.frequency.setValueAtTime(700+power*1400,t);f.frequency.exponentialRampToValueAtTime(180,t+.22);g.gain.setValueAtTime(.65,t);g.gain.exponentialRampToValueAtTime(.001,t+.24);s.connect(f);f.connect(g);g.connect(this.master);s.start(t);s.stop(t+.25);s.onended=()=>{s.disconnect();f.disconnect();g.disconnect()}
+  }
+  hit(type,combo){this.tone(type==='elephant'?88:180,35,.19,'triangle',1.4);if(type==='rabbit')this.tone(850,440,.1,'sine',.35);if(combo>1)this.tone(420+Math.min(combo,10)*60,650,.12,'sine',.4)}
+  clear(){[440,554,660].forEach((n,i)=>this.tone(n,n,.22,'sine',.5,i*.09))}
+  fail(){[220,174,110].forEach((n,i)=>this.tone(n,n*.7,.35,'triangle',.7,i*.17))}
+}
+const audio=new AudioManager();
+
+// ── ParticleSystem：固定容量池；不在每帧创建粒子对象 ────────────────
+class ParticleSystem{
+  constructor(){this.pool=Array.from({length:CONFIG.fx.maxParticles},()=>({life:0}));this.texts=Array.from({length:CONFIG.fx.maxTexts},()=>({life:0}));this.cursor=0;this.textCursor=0}
+  reset(){for(const p of this.pool)p.life=0;for(const t of this.texts)t.life=0}
+  burst(x,y,n=13){for(let i=0;i<n;i++){const p=this.pool[this.cursor++%this.pool.length],a=rand(0,TAU),speed=rand(70,330);Object.assign(p,{x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-70,life:rand(.3,.65),max:.65,size:rand(3,10),angle:a,type:i%3,color:i%2?C.gold:'#fffbe9'})}const p=this.pool[this.cursor++%this.pool.length];Object.assign(p,{x,y,vx:0,vy:0,life:.3,max:.3,size:15,angle:0,type:3,color:'#fff'})}
+  dust(x,y){for(let i=0;i<5;i++){const p=this.pool[this.cursor++%this.pool.length];Object.assign(p,{x,y,vx:rand(-80,80),vy:rand(-65,-15),life:.35,max:.35,size:rand(5,11),angle:0,type:2,color:'#d3bd83'})}}
+  text(s,x,y,color=C.ink,size=24){const t=this.texts[this.textCursor++%this.texts.length];Object.assign(t,{s,x,y,color,size,life:1,max:1})}
+  update(dt){for(const p of this.pool){if(p.life<=0)continue;p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=p.type===3?0:350*dt;p.angle+=dt*5;if(p.type===3)p.size+=dt*230}for(const t of this.texts)if(t.life>0){t.life-=dt;t.y-=dt*36}}
+  draw(){ctx.save();for(const p of this.pool){if(p.life<=0)continue;ctx.globalAlpha=clamp(p.life/p.max,0,1);if(p.type===0)star(p.x,p.y,p.size,p.color,p.angle);else if(p.type===3)ellipse(p.x,p.y,p.size,p.size,null,p.color,4);else ellipse(p.x,p.y,p.size,p.size*.65,p.color)}for(const t of this.texts){if(t.life<=0)continue;ctx.globalAlpha=Math.min(1,t.life*3);label(t.s,t.x,t.y,t.size,t.color,'center',800)}ctx.restore()}
+}
+
+// ── CampaignStore：逐关快照、通关记录、未领取奖励均可恢复 ───────────
+const freshBuild=()=>({growth:0,heavy:0,quick:0,soil:0,stun:0});
+const copyBuild=b=>({growth:b.growth,heavy:b.heavy,quick:b.quick,soil:b.soil,stun:b.stun});
+const validBuild=b=>b&&Number.isInteger(b.growth)&&b.growth>=0&&b.growth<CONFIG.growth.length&&
+  Object.keys(CONFIG.upgrades).every(k=>Number.isInteger(b[k])&&b[k]>=0&&b[k]<=CONFIG.upgrades[k].max);
+class CampaignStore{
+  constructor(){this.available=true;this.data=this.load()}
+  empty(){return {version:CONFIG.save.version,checkpoints:[freshBuild()],results:Array(CONFIG.levels.length).fill(null),pending:null}}
+  load(){
+    try{
+      const raw=window.localStorage.getItem(CONFIG.save.key);if(!raw)return this.empty();
+      const d=JSON.parse(raw);
+      if(d.version!==CONFIG.save.version||!Array.isArray(d.checkpoints)||!d.checkpoints.length||d.checkpoints.length>CONFIG.levels.length||!d.checkpoints.every(validBuild)||!Array.isArray(d.results)||d.results.length!==CONFIG.levels.length)throw new Error('invalid save');
+      if(d.checkpoints.some((b,i)=>b.growth!==i)||Object.values(d.checkpoints[0]).some(v=>v!==0))throw new Error('invalid checkpoint');
+      for(let i=0;i<d.results.length;i++){
+        const r=d.results[i];if(r!==null&&(!Number.isInteger(r.stars)||r.stars<1||r.stars>3||!Number.isFinite(r.score)||r.score<0))throw new Error('invalid result');
+        if(i<d.checkpoints.length-1&&!r)throw new Error('missing result');
+      }
+      if(d.pending){const p=d.pending;
+        if(!Number.isInteger(p.level)||p.level<0||p.level>=CONFIG.levels.length-1||p.level!==d.checkpoints.length-1||!d.results[p.level]||!validBuild(p.build)||p.build.growth!==p.level+1||!Array.isArray(p.offers)||p.offers.length!==3||new Set(p.offers).size!==3||!p.offers.every(k=>CONFIG.upgrades[k]&&p.build[k]<CONFIG.upgrades[k].max))throw new Error('invalid reward');
+      }else if(d.checkpoints.length<CONFIG.levels.length&&d.results[d.checkpoints.length-1])throw new Error('missing reward');
+      return d;
+    }catch(e){this.available=false;return this.empty()}
+  }
+  save(){try{window.localStorage.setItem(CONFIG.save.key,JSON.stringify(this.data));this.available=true}catch(e){this.available=false}}
+  record(level,score,stars){const old=this.data.results[level];this.data.results[level]={score:Math.max(old?.score||0,score),stars:Math.max(old?.stars||0,stars)};return !old}
+}
+
+// ── 拾取图标：画布路径绘制，不加载图片或图标字体 ────────────────────
+function itemIcon(type,x,y,scale=1){
+  ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.lineCap='round';ctx.lineJoin='round';
+  if(type==='seed'){
+    ellipse(0,8,9,12,'#b2824f',C.ink,2);line(0,5,0,-12,C.green,3);
+    ctx.save();ctx.rotate(-.6);ellipse(-5,-12,6,11,'#85b65d',C.green,1.5);ctx.restore();
+    ctx.save();ctx.rotate(.7);ellipse(5,-13,6,11,'#c4dc80',C.green,1.5);ctx.restore();
+  }else if(type==='water'){
+    rounded(-13,-6,23,23,5,'#9ecdd4',C.ink,2);ellipse(13,-2,9,8,null,C.ink,3);
+    ctx.beginPath();ctx.moveTo(-13,0);ctx.lineTo(-25,-6);ctx.lineTo(-23,-12);ctx.lineTo(-8,-2);ctx.fillStyle='#9ecdd4';ctx.fill();ctx.strokeStyle=C.ink;ctx.lineWidth=2;ctx.stroke();
+    line(-9,-10,5,-10,C.ink,3);ellipse(-26,1,2,3,'#6faec5');ellipse(-30,7,2,3,'#6faec5');
+  }else if(type==='ice'){
+    for(let i=0;i<6;i++){ctx.save();ctx.rotate(i*TAU/6);line(0,0,0,-18,'#639aaf',3);line(0,-11,-5,-15,'#639aaf',2);line(0,-11,5,-15,'#639aaf',2);ctx.restore()}
+    ellipse(0,0,4,4,'#b7e5ed');
+  }else if(type==='chili'){
+    ctx.beginPath();ctx.moveTo(5,-13);ctx.bezierCurveTo(22,-7,12,18,-15,18);ctx.quadraticCurveTo(3,10,-3,-4);ctx.quadraticCurveTo(-6,-13,5,-13);ctx.fillStyle=C.coral;ctx.fill();ctx.strokeStyle=C.ink;ctx.lineWidth=2;ctx.stroke();line(3,-13,8,-21,C.green,3);line(5,-6,7,1,'#ffd4ad',2);
+  }
+  ctx.restore();
+}
+const itemNames={seed:'成长种子',water:'小水壶',ice:'冰霜果',chili:'辣椒'};
+class PickupSystem{
+  constructor(){this.reset()}
+  reset(){this.items=[];this.cooldown=0;this.misses=0}
+  spawn(type,x,y){
+    if(type==='seed'&&this.items.some(p=>p.type==='seed'))return;
+    if(type!=='seed'&&this.items.filter(p=>p.type!=='seed').length>=CONFIG.pickups.maxTemporary)return;
+    this.items.push({type,x:clamp(x,75,1205),y:clamp(y,320,600),age:0,life:CONFIG.pickups.life,remove:false});
+  }
+  maybeDrop(a){
+    if(this.cooldown>0)return;this.misses++;
+    const cfg=CONFIG.pickups,low=game.hp/game.maxHP<cfg.lowHP;
+    if(!low&&this.misses<cfg.pityKills&&Math.random()>cfg.dropChance)return;
+    const pool=game.levelIndex===0?['water']:game.levelIndex===1?['water','ice']:['water','ice','chili'];
+    const type=low?'water':pool[Math.floor(Math.random()*pool.length)];
+    this.spawn(type,a.x,a.y);this.cooldown=cfg.dropCooldown;this.misses=0;
+  }
+  collect(p){
+    if(p.remove)return;p.remove=true;
+    if(p.type==='seed')game.collectSeed();
+    else if(p.type==='water'){const healed=Math.min(CONFIG.pickups.heal,game.maxHP-game.hp);game.hp+=healed;game.fx.text(healed?`生命 +${Math.round(healed)}`:'田地生命已满',p.x,p.y-45,C.green,21)}
+    else if(p.type==='ice'){game.buffs.ice=CONFIG.pickups.iceTime;game.fx.text('全场减速 4 秒',p.x,p.y-45,'#407b94',21)}
+    else if(p.type==='chili'){game.buffs.chili=CONFIG.pickups.chiliTime;game.fx.text('伤害 +30% · 8 秒',p.x,p.y-45,'#ad513d',21)}
+    game.fx.burst(p.x,p.y,8);audio.tone(560,840,.14,'sine',.45);
+  }
+  update(dt){
+    this.cooldown=Math.max(0,this.cooldown-dt);
+    for(const p of this.items){p.age+=dt;if(p.type!=='seed')p.life-=dt;
+      if(p.age>=CONFIG.pickups.readyDelay&&Math.hypot(p.x-game.hand.x,p.y-game.hand.y)<=CONFIG.pickups.collectRadius)this.collect(p);
+      if(p.life<=0&&p.type!=='seed')p.remove=true;
+    }
+    for(let i=this.items.length-1;i>=0;i--)if(this.items[i].remove)this.items.splice(i,1);
+  }
+  draw(){
+    for(const p of this.items){ctx.save();const y=p.y+Math.sin(p.age*4)*3;ctx.globalAlpha=p.type==='seed'?1:Math.min(1,p.life/1.5);
+      ellipse(p.x,p.y+24,24,6,'rgba(32,62,55,.15)');ellipse(p.x,y,CONFIG.pickups.radius,CONFIG.pickups.radius,C.cream,p.type==='seed'?C.gold:'#91b29b',2.5);itemIcon(p.type,p.x,y,.85);
+      label(itemNames[p.type],p.x,y-38,16,C.ink,'center',750);
+      if(p.type!=='seed'){ctx.beginPath();ctx.arc(p.x,y,28,-Math.PI/2,-Math.PI/2+TAU*p.life/CONFIG.pickups.life);ctx.strokeStyle='#6f9989';ctx.lineWidth=2;ctx.stroke()}
+      ctx.restore();
+    }
+  }
+}
+
+// ── Animal：左右入场、进食、受击、伪 3D 高度和落地弹跳 ─────────────
+class Animal{
+  constructor(type,side,y){this.type=type;this.cfg=CONFIG.animals[type];this.radius=this.cfg.radius;this.dir=side;this.x=side===1?-this.radius-12:CONFIG.width+this.radius+12;this.y=y;this.hp=this.cfg.hp;this.vx=0;this.vy=0;this.z=0;this.vz=0;this.rotation=0;this.spin=0;this.state='WALKING';this.stun=0;this.flash=0;this.age=0;this.death=0;this.remove=false;this.scored=false;this.struck=false;this.eating=false;this.phase=rand(0,TAU)}
+  hit(dx,dy,power,damage){
+    if(this.remove||this.hp<=0)return;this.hp=Math.max(0,this.hp-damage);this.state=this.hp<=0?'DEAD':'STUNNED';this.struck=true;this.stun=game.stunDuration;this.flash=.15;
+    const force=(CONFIG.hand.knockback+power*CONFIG.hand.extraKnockback)/this.cfg.mass;
+    this.vx=dx*force;this.vy=dy*force*.6;this.vz=(CONFIG.hand.lift+power*CONFIG.hand.extraLift)/Math.sqrt(this.cfg.mass);this.z=Math.max(2,this.z);this.spin=(dx>=0?1:-1)*(this.type==='elephant'?1.5:7);game.onHit(this,power);
+  }
+  knockout(){if(this.scored)return;this.scored=true;this.remove=true;game.pickups.maybeDrop(this);const points=this.cfg.score+CONFIG.scoring.knockout+(this.type==='elephant'?CONFIG.scoring.elephantBonus:0);game.addScore(points,clamp(this.x,80,1200),clamp(this.y-this.z,150,620));if(this.type==='elephant')game.fx.text('大象退场！',clamp(this.x,150,1130),this.y-this.z-50,C.green,27)}
+  update(dt){
+    this.age+=dt;this.flash=Math.max(0,this.flash-dt);this.eating=false;
+    if(this.state==='WALKING'){
+      this.x+=this.dir*this.cfg.speed*(game.buffs.ice>0?CONFIG.pickups.iceSpeed:1)*dt;this.rotation*=Math.exp(-dt*12);
+      const f=CONFIG.farm;if(this.x>f.x&&this.x<f.x+f.w&&this.y>f.y&&this.y<f.y+f.h){this.eating=true;game.damageFarm(this.cfg.eat*dt,this.x,this.y)}
+      if((this.dir===1&&this.x>CONFIG.width+this.radius+35)||(this.dir===-1&&this.x<-this.radius-35))this.remove=true;
+    }else{
+      this.x+=this.vx*dt;this.y+=this.vy*dt;this.vx*=Math.exp(-CONFIG.physics.airDrag*dt);this.vy*=Math.exp(-CONFIG.physics.airDrag*dt);this.z+=this.vz*dt;this.vz-=CONFIG.physics.gravity*dt;this.rotation+=this.spin*dt;
+      if(this.z<=0){this.z=0;if(Math.abs(this.vz)>CONFIG.physics.minBounce){this.vz=-this.vz*CONFIG.physics.bounce;game.fx.dust(this.x,this.y)}else{this.vz=0;this.stun-=dt;this.spin*=.6;if(this.hp>0&&this.stun<=0){this.state='WALKING';this.rotation=0;this.y=clamp(this.y,310,600)}}}
+      if(this.struck&&(this.x<-this.radius-45||this.x>CONFIG.width+this.radius+45||this.y>CONFIG.height+this.radius||this.y<170-this.radius)){if(this.type==='elephant'&&this.hp>0){this.x=clamp(this.x,this.radius,CONFIG.width-this.radius);this.y=clamp(this.y,310,600);this.vx*=.1;this.vy*=.1}else this.knockout()}
+      if(this.hp<=0){this.death+=dt;if(this.death>CONFIG.physics.deathTime)this.knockout()}
+    }
+  }
+  draw(){
+    if(this.remove)return;const r=this.radius;ctx.save();const fade=this.hp<=0?clamp((CONFIG.physics.deathTime-this.death)*3,0,1):1;ctx.globalAlpha=fade*.19;ellipse(this.x,this.y+r*.65,r*1.1/(1+this.z/300),r*.28,'#274334');ctx.globalAlpha=fade;
+    ctx.translate(this.x,this.y-this.z);ctx.rotate(this.rotation);ctx.scale(this.dir,1);const walk=this.state==='WALKING'?Math.sin(this.age*11+this.phase):0;ctx.translate(0,Math.abs(walk)*-2);ctx.lineJoin='round';
+    if(this.type==='rabbit')this.drawRabbit(walk);else if(this.type==='boar')this.drawBoar(walk);else this.drawElephant(walk);
+    if(this.flash>0){ctx.globalAlpha=this.flash*3;ellipse(0,0,r*1.1,r,'#fff')}
+    ctx.restore();
+    if(this.hp>0&&this.cfg.hp>1){const w=r*1.5;rounded(this.x-w/2,this.y-this.z-r-24,w,7,4,'#426450');rounded(this.x-w/2,this.y-this.z-r-24,w*this.hp/this.cfg.hp,7,4,this.type==='elephant'?C.gold:'#c4ee8c');if(this.type==='elephant')label(`${Math.ceil(this.hp)} / ${this.cfg.hp}`,this.x,this.y-this.z-r-38,13,C.ink,'center',800)}
+    if(this.eating&&Math.sin(this.age*9)>.2){label('嚼…',this.x+this.dir*r,this.y-r-18,14,'#b05136','center')}
+  }
+  drawRabbit(w){
+    ellipse(-14,4,8,8,'#fffbe9',C.ink);ellipse(-1,2,23,17,'#fff9e5',C.ink,2.5);ellipse(-8,17+w*2,10,5,'#e9e4cc',C.ink);ellipse(13,15-w*2,9,5,'#fff9e5',C.ink);
+    ctx.save();ctx.translate(14,-14);ctx.rotate(-.13);ellipse(-6,-16,5,19,'#fff9e5',C.ink);ellipse(5,-18,5,20,'#fff9e5',C.ink);ellipse(-6,-17,2,12,'#e7b1a6');ellipse(5,-19,2,12,'#e7b1a6');ctx.restore();
+    ellipse(15,-5,14,13,'#fff9e5',C.ink,2.5);ellipse(20,-8,2.4,3.3,C.ink);ellipse(28,-2,3,2.6,'#dc8f82');ellipse(19,2,4,2,'#edb5a5');line(25,3,21,5,C.ink,1.5);
+  }
+  drawBoar(w){
+    ellipse(-24,3,8,6,'#68515b',C.ink);for(let i=0;i<4;i++){let x=-18+i*12;rounded(x,17+(i%2?w:-w)*3,9,14,4,'#5e4750',C.ink)}
+    ellipse(-3,0,35,26,'#9c7374',C.ink,2.5);ellipse(-10,-7,23,14,'#ae8783');star(-15,-25,9,'#68515b');
+    ctx.beginPath();ctx.moveTo(10,-17);ctx.lineTo(6,-34);ctx.quadraticCurveTo(26,-31,25,-15);ctx.fillStyle='#86626a';ctx.fill();ctx.strokeStyle=C.ink;ctx.stroke();
+    ellipse(24,0,21,21,'#9c7374',C.ink,2.5);ellipse(41,7,12,10,'#ca9990',C.ink);ellipse(38,7,2,3,'#64464c');ellipse(46,7,2,3,'#64464c');ellipse(28,-5,3,3.5,C.ink);line(23,-12,31,-9,C.ink,3);
+    ctx.beginPath();ctx.moveTo(29,12);ctx.quadraticCurveTo(36,25,40,13);ctx.quadraticCurveTo(34,18,34,9);ctx.fillStyle='#fff4cf';ctx.fill();ctx.strokeStyle=C.ink;ctx.lineWidth=2;ctx.stroke();
+  }
+  drawElephant(w){
+    line(-56,-5,-75,15,'#597e83',7);ellipse(-76,17,5,7,'#405e65');for(let i=0;i<4;i++)rounded(-45+i*26,28+(i%2?w:-w)*3,23,34,9,'#789a9d',C.ink,2.5);
+    ellipse(-8,0,67,47,'#91b3b1',C.ink,3);ellipse(-20,-13,43,23,'#a4c3bb');ellipse(43,-11,39,38,'#91b3b1',C.ink,3);
+    ellipse(15,-6,27,34,'#799ea2',C.ink,2.5);ellipse(12,-7,17,24,'#8cadad');
+    ctx.beginPath();ctx.moveTo(65,-8);ctx.bezierCurveTo(92,-3,77,41,99,33);ctx.bezierCurveTo(110,24,113,39,99,47);ctx.bezierCurveTo(62,61,65,17,57,12);ctx.fillStyle='#91b3b1';ctx.fill();ctx.strokeStyle=C.ink;ctx.lineWidth=3;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(56,13);ctx.quadraticCurveTo(76,34,83,17);ctx.quadraticCurveTo(70,23,64,10);ctx.fillStyle='#fff3d2';ctx.fill();ctx.strokeStyle=C.ink;ctx.lineWidth=2;ctx.stroke();
+    ellipse(56,-17,4,5,C.ink);ellipse(57,-19,1.3,1.5,'#fff');line(48,-27,60,-29,C.ink,3);for(let i=0;i<3;i++)line(72,9+i*8,79,10+i*8,'#64888c',1.5);
+    for(let i=0;i<4;i++)for(let j=0;j<2;j++)ellipse(-39+i*26+j*8,59+(i%2?w:-w)*3,4,3,'#c7d7cb');
+  }
+}
+
+// ── Hand：按时间蓄力握拳，张掌产生全向冲击，不再拖拽瞄准 ───────────
+class Hand{
+  constructor(){this.hits=new Set();this.reset()}
+  reset(){
+    Object.assign(this,{x:640,y:530,targetX:640,targetY:530,state:'IDLE',
+      power:0,chargeElapsed:0,vx:0,vy:0,cooldown:0,rotation:0,
+      radius:CONFIG.hand.radius,curl:0,burstTime:0,burstCurl:0,burstRange:0,
+      held:false,returnTime:0});
+    this.hits.clear();
+  }
+  get range(){return game.growth.base+this.power*(game.growth.full-game.growth.base)}
+  press(){
+    const allowed=game.state==='PLAYING'||(game.state==='WAVE_CLEAR'&&game.waves.index<game.level.waves.length-1);
+    if(!allowed)return false;
+    // 不丢弃出掌/冷却期间的按下：持续按住，就在可用时自动开始蓄力。
+    if(this.held)return true;
+    this.held=true;
+    if(game.state==='PLAYING'&&this.state!=='BURSTING'&&this.cooldown===0)this.beginCharge();
+    return true;
+  }
+  beginCharge(){
+    this.state='CHARGING';this.chargeElapsed=0;this.power=0;
+    this.curl=CONFIG.hand.pressCurl;this.returnTime=0;
+    this.x=this.targetX;this.y=this.targetY;this.vx=this.vy=0;
+  }
+  release(){
+    this.held=false;
+    // 等待期间已经松手就取消，不在稍后补发一次意外攻击。
+    if(this.state!=='CHARGING')return false;
+    const h=CONFIG.hand;
+    this.state='BURSTING';this.burstTime=0;this.burstCurl=this.curl;
+    this.cooldown=h.cooldown;
+    this.burstRange=this.range;this.vx=this.vy=0;this.hits.clear();
+    // 只按距离找范围内的目标；击退方向由动物相对掌心的位置自动计算。
+    // 开局只命中最近一只；成长逐步解锁多目标，每个目标各命中一次。
+    while(this.hits.size<game.growth.limit){
+      let nearest=null,best=Infinity;
+      for(const a of game.animals){
+        if(a.remove||a.hp<=0||this.hits.has(a))continue;
+        const distance=Math.hypot(a.x-this.x,a.y-a.z-this.y);
+        if(distance<=this.burstRange+a.radius&&distance<best){best=distance;nearest=a}
+      }
+      if(!nearest)break;
+      let dx=nearest.x-this.x,dy=nearest.y-nearest.z-this.y;
+      const distance=Math.hypot(dx,dy);
+      // 正好与掌心重合时自动推向最近的左右边界，避免零向量。
+      if(distance<0.001){dx=nearest.x<CONFIG.width/2?-1:1;dy=0}
+      else{dx/=distance;dy/=distance}
+      const damage=game.attackDamage(this.power);
+      this.hits.add(nearest);nearest.hit(dx,dy,this.power,damage);
+    }
+    audio.whoosh(this.power);
+    game.fx.burst(this.x,this.y,6+Math.round(this.power*8));
+    this.power=0;this.chargeElapsed=0;
+    return true;
+  }
+  cancel(){this.held=false;this.power=0;this.chargeElapsed=0;if(this.state==='CHARGING')this.beginReturn()}
+  deferCharge(){this.power=0;this.chargeElapsed=0;if(this.state==='CHARGING')this.beginReturn()}
+  beginReturn(){this.state='RETURNING';this.returnTime=0;this.vx=this.vy=0}
+  update(dt,active){
+    const h=CONFIG.hand;this.cooldown=Math.max(0,this.cooldown-dt);
+    if(this.state==='BURSTING'){
+      this.burstTime+=dt;
+      this.curl=this.burstCurl*(1-clamp(this.burstTime/h.openDuration,0,1));
+      if(this.burstTime>=h.burstDuration)this.beginReturn();
+      return;
+    }
+    if(active&&this.held&&this.cooldown===0&&this.state!=='CHARGING')this.beginCharge();
+    if(!active&&this.state==='CHARGING')this.deferCharge();
+    // 握拳时也能平移手掌；平移不增加蓄力，不产生射出方向。
+    const returning=this.state==='RETURNING';
+    const stiffness=returning?h.returnSpring:h.spring;
+    const damping=returning?h.returnDamping:h.damping;
+    this.vx+=((this.targetX-this.x)*stiffness-this.vx*damping)*dt;
+    this.vy+=((this.targetY-this.y)*stiffness-this.vy*damping)*dt;
+    this.x+=this.vx*dt;this.y+=this.vy*dt;
+    if(this.state==='CHARGING'&&active){
+      this.chargeElapsed=Math.min(game.chargeDuration,this.chargeElapsed+dt);
+      this.power=clamp(this.chargeElapsed/game.chargeDuration,0,1);
+      // 手型和力量条读取同一个进度，蓄满时才真正完全握拳。
+      this.curl=h.pressCurl+(1-h.pressCurl)*(1-Math.pow(1-this.power,h.chargeEase));
+    }else{
+      this.curl*=Math.exp(-h.curlSpeed*dt);
+    }
+    if(returning){
+      this.returnTime+=dt;
+      // 回位仅是表现，不要求鼠标停住后才允许下一次攻击。
+      if(this.returnTime>=h.maxReturnTime||Math.hypot(this.x-this.targetX,this.y-this.targetY)<h.returnDistance){
+        this.state='IDLE';this.curl=0;
+      }
+    }
+  }
+  draw(){
+    ctx.save();
+    if(this.state==='CHARGING'){
+      // 圆形范围替代方向虚线；不论从哪里拖动，攻击始终覆盖四周。
+      ctx.globalAlpha=.08;ellipse(this.x,this.y,this.range,this.range,C.gold);
+      ctx.globalAlpha=.7;ellipse(this.x,this.y,this.range,this.range,null,C.cream,2);
+      ctx.globalAlpha=1;
+      if(this.power>0){ctx.beginPath();ctx.arc(this.x,this.y,this.range,-Math.PI/2,-Math.PI/2+TAU*this.power);ctx.strokeStyle=C.gold;ctx.lineWidth=5;ctx.stroke()}
+      const bx=clamp(this.x-62,10,1146),by=clamp(this.y+59,120,CONFIG.height-88);
+      rounded(bx,by,124,12,6,'#244d3d');
+      rounded(bx+3,by+3,118*this.power,6,3,C.gold);
+      label(this.power>=1?`松手弹开 · ${game.growth.limit}目标`:`蓄力 ${Math.round(this.power*100)}% · ${game.growth.limit}目标`,bx+62,by+29,15,C.cream,'center',800);
+    }
+    if(this.state==='BURSTING'){
+      const t=clamp(this.burstTime/CONFIG.hand.burstDuration,0,1);
+      const radius=lerp(Math.min(12,this.burstRange),this.burstRange,1-(1-t)*(1-t));
+      ctx.globalAlpha=(1-t)*.8;ellipse(this.x,this.y,radius,radius,null,C.cream,7*(1-t)+1);
+      ctx.globalAlpha=(1-t)*.45;ellipse(this.x,this.y,radius*.77,radius*.77,null,C.gold,3);
+      ctx.globalAlpha=1;
+    }
+    if(this.held&&this.state!=='CHARGING'){
+      label(game.state==='WAVE_CLEAR'?'下一波自动蓄力':'准备中 · 按住即可',clamp(this.x,95,1185),clamp(this.y+82,120,CONFIG.height-60),15,C.cream,'center',700);
+    }
+    ctx.translate(this.x,this.y);
+    const pop=this.state==='BURSTING'?Math.sin(Math.PI*clamp(this.burstTime/CONFIG.hand.burstDuration,0,1))*.2:0;
+    const scale=1-this.curl*.09+pop;
+    ctx.scale(scale,scale);
+    ctx.rotate(CONFIG.hand.artTilt+CONFIG.hand.pinchTilt*this.curl);
+    ctx.save();ctx.translate(3,7);this.shape('rgba(32,62,55,.18)',null,this.curl);ctx.restore();
+    this.shape('#fffef4',C.ink,this.curl);
+    if(this.cooldown>0&&this.state!=='CHARGING'){
+      ctx.beginPath();ctx.arc(0,1,53,-Math.PI/2,-Math.PI/2+TAU*(1-this.cooldown/CONFIG.hand.cooldown));ctx.strokeStyle='#d5ded0';ctx.lineWidth=2;ctx.stroke();
+    }
+    ctx.restore();
+  }
+  shape(fill,stroke,curl=0){
+    // 张掌：中指最长，食指与无名指稍短，小指较短且向外展开。
+    // 指根用圆滑的 U 形过渡；握拳仍保持四个拳峰，拇指藏到后方。
+    const m=(open,closed)=>lerp(open,closed,curl);
+    ctx.beginPath();ctx.moveTo(-16,m(31,26));
+    ctx.quadraticCurveTo(m(-24,-25),m(28,24),m(-25,-27),m(17,12));
+    // 拇指从掌侧自然斜出，虎口与食指之间保留圆弧。
+    ctx.bezierCurveTo(m(-28,-27),m(11,8),m(-37,-27),m(1,6),m(-42,-27),m(-4,4));
+    ctx.bezierCurveTo(m(-51,-27),m(-13,-3),m(-42,-26),m(-24,-7),m(-34,-25),m(-16,-11));
+    ctx.lineTo(m(-25,-24),m(-7,-15));
+    ctx.quadraticCurveTo(m(-18,-23),m(1,-17),m(-20,-22),m(-13,-19));
+    // 食指略向左倾，指尖圆润，宽度与中指相近。
+    ctx.lineTo(m(-25,-22),m(-40,-19));
+    ctx.bezierCurveTo(m(-28,-22),m(-53,-30),m(-15,-8),m(-58,-30),m(-11,-8),m(-44,-19));
+    ctx.lineTo(-8,m(-18,-12));
+    ctx.quadraticCurveTo(m(-5,-8),m(-10,-12),m(-3,-8),m(-18,-12));
+    // 中指最长、最直。
+    ctx.lineTo(m(-3,-8),m(-52,-21));
+    ctx.bezierCurveTo(m(-3,-8),m(-67,-33),m(11,6),m(-65,-33),m(11,6),m(-52,-21));
+    ctx.lineTo(m(11,6),m(-18,-12));
+    ctx.quadraticCurveTo(m(13,6),m(-10,-12),m(16,6),m(-18,-12));
+    // 无名指轻微向外，小指更短，避免五根等长的柱状外观。
+    ctx.lineTo(m(18,6),m(-43,-20));
+    ctx.bezierCurveTo(m(20,6),m(-56,-31),m(33,20),m(-52,-29),m(30,20),m(-39,-18));
+    ctx.lineTo(m(25,20),m(-13,-10));
+    ctx.quadraticCurveTo(m(27,20),m(-5,-10),m(31,20),m(-13,-10));
+    ctx.lineTo(m(34,20),m(-27,-16));
+    ctx.bezierCurveTo(m(40,20),m(-39,-26),m(51,33),m(-31,-22),m(45,33),m(-20,-12));
+    ctx.lineTo(m(32,31),m(9,10));
+    ctx.quadraticCurveTo(m(30,29),27,m(18,16),m(31,28));
+    ctx.quadraticCurveTo(0,m(38,31),-16,m(31,26));
+    ctx.closePath();ctx.fillStyle=fill;ctx.fill();
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2.6;ctx.lineJoin='round';ctx.stroke()}
+  }
+  drawMenuPointer(){
+    ctx.save();ctx.translate(input.x,input.y);ctx.rotate(CONFIG.hand.artTilt);
+    this.shape('#fffef4',C.ink);ctx.restore();
+  }
+}
+
+
+// ── Scene：天空、山丘、篱笆、田垄均由 Canvas 路径生成 ───────────────
+class Scene{
+  constructor(){this.crops=[];const f=CONFIG.farm;for(let row=0;row<f.cropRows;row++)for(let col=0;col<f.cropCols;col++)this.crops.push({x:f.x+(col+.5)*f.w/f.cropCols,y:f.y+(row+.5)*f.h/f.cropRows+10,damage:0,phase:row*.8+col*1.7});this.back=document.createElement('canvas');this.back.width=CONFIG.width;this.back.height=CONFIG.height;this.cacheBackground()}
+  reset(){for(const c of this.crops)c.damage=0}
+  cacheBackground(){
+    const g=this.back.getContext('2d');g.fillStyle='#bde5e1';g.fillRect(0,0,1280,720);
+    const cloud=(x,y,s)=>{g.fillStyle='#f6fae9';g.beginPath();g.ellipse(x,y,58*s,17*s,0,0,TAU);g.ellipse(x-19*s,y-13*s,28*s,22*s,0,0,TAU);g.ellipse(x+12*s,y-20*s,29*s,28*s,0,0,TAU);g.fill()};cloud(157,134,1);cloud(517,105,.75);cloud(1082,149,1.2);
+    g.fillStyle='#94c7ac';g.beginPath();g.moveTo(0,232);g.bezierCurveTo(210,60,340,239,524,186);g.bezierCurveTo(702,65,857,205,1015,177);g.bezierCurveTo(1120,125,1210,179,1280,168);g.lineTo(1280,380);g.lineTo(0,380);g.fill();
+    g.fillStyle='#79ad89';g.beginPath();g.moveTo(0,270);g.bezierCurveTo(135,164,262,256,475,225);g.bezierCurveTo(769,158,870,287,1098,230);g.quadraticCurveTo(1220,209,1280,246);g.lineTo(1280,420);g.lineTo(0,420);g.fill();
+    g.fillStyle='#92ba72';g.fillRect(0,264,1280,456);g.fillStyle='#a1c681';g.beginPath();g.ellipse(640,480,650,185,0,0,TAU);g.fill();
+    // 远景小屋、风向旗。
+    g.fillStyle='#eee3b8';g.fillRect(100,205,74,64);g.fillStyle='#d97f5e';g.beginPath();g.moveTo(85,210);g.lineTo(136,165);g.lineTo(188,210);g.fill();g.fillStyle='#67856c';g.fillRect(128,232,20,37);g.fillStyle='#f8f0cf';g.fillRect(111,222,11,13);
+    g.strokeStyle='#658c64';g.lineWidth=4;g.beginPath();g.moveTo(1144,190);g.lineTo(1144,270);g.stroke();g.fillStyle='#ecb95a';g.beginPath();g.moveTo(1146,192);g.lineTo(1190,202);g.lineTo(1146,215);g.fill();
+    // 篱笆只位于背景，不阻挡左右侧入侵路线。
+    g.strokeStyle='#98774d';g.lineWidth=8;for(let y of [260,280]){g.beginPath();g.moveTo(0,y);g.lineTo(1280,y);g.stroke()}for(let x=22;x<1280;x+=59){g.fillStyle='#e6cc8d';g.strokeStyle='#977c50';g.lineWidth=2;g.beginPath();g.moveTo(x-6,295);g.lineTo(x-6,251);g.lineTo(x,243);g.lineTo(x+6,251);g.lineTo(x+6,295);g.closePath();g.fill();g.stroke()}
+    g.fillStyle='#779c58';g.beginPath();g.roundRect(239,303,802,330,85);g.fill();g.fillStyle='#c5aa72';g.beginPath();g.roundRect(262,292,756,334,68);g.fill();g.strokeStyle='#ad8b58';g.lineWidth=3;g.stroke();
+    // 更大的 6×3 田块，每格一簇苗，格间留出清楚的田埂。
+    const f=CONFIG.farm,cw=f.w/f.cropCols,ch=f.h/f.cropRows,gap=f.cellGap;
+    for(let row=0;row<f.cropRows;row++)for(let col=0;col<f.cropCols;col++){
+      const x=f.x+col*cw+gap/2,y=f.y+row*ch+gap/2,w=cw-gap,h=ch-gap;
+      g.fillStyle='#8d754b';g.beginPath();g.roundRect(x,y+4,w,h,14);g.fill();
+      g.fillStyle=(row+col)%2?'#b69a64':'#bea36e';g.beginPath();g.roundRect(x,y,w,h-4,14);g.fill();
+      g.strokeStyle='#d0b981';g.lineWidth=2;g.beginPath();g.moveTo(x+15,y+10);g.lineTo(x+w-15,y+10);g.stroke();
+      g.fillStyle='#99804f';for(let i=0;i<3;i++){g.beginPath();g.ellipse(x+22+i*27,y+h-17,2,1.5,0,0,TAU);g.fill()}
+    }
+    // 确定性的小草与石子，背景只生成一次。
+    for(let i=0;i<100;i++){const x=(i*137+41)%1280,y=307+(i*73)%360;if(x>248&&x<1030&&y<642)continue;g.strokeStyle=i%3?'#6f9f59':'#c2d291';g.lineWidth=2;g.beginPath();g.moveTo(x,y);g.lineTo(x-3,y-7);g.moveTo(x,y);g.lineTo(x+4,y-5);g.stroke()}
+    g.fillStyle='#c4c79b';for(let i=0;i<14;i++){g.beginPath();g.ellipse((i*313+67)%1280,338+(i*97)%280,5+i%4,3,0,0,TAU);g.fill()}
+    // 下沿留出视觉呼吸区。
+    g.fillStyle='#83ad66';g.beginPath();g.moveTo(0,680);g.quadraticCurveTo(380,643,640,678);g.quadraticCurveTo(980,704,1280,661);g.lineTo(1280,720);g.lineTo(0,720);g.fill();
+  }
+  draw(time){ctx.drawImage(this.back,0,0);for(const c of this.crops){const sway=Math.sin(time*2+c.phase)*.12;ctx.save();ctx.translate(c.x,c.y);ctx.rotate(sway+c.damage*.65);ctx.globalAlpha=1-c.damage*.25;const stem=c.damage>.55?'#9f914c':'#407541',leaf=c.damage>.55?'#d5bb60':'#82b957';line(0,8,0,-22,stem,3);ctx.save();ctx.rotate(-.65);ellipse(-6,-10,6,14,leaf,stem,1.5);ctx.restore();ctx.save();ctx.rotate(.7);ellipse(6,-15,6,14,leaf,stem,1.5);ctx.restore();ellipse(0,-23,4,7,c.damage>.55?'#e4cd78':'#c0d980');ctx.restore()}}
+}
+
+// ── WaveManager：每关独立波次；首波保底种子；最后一波进入结算 ───────
+class WaveManager{
+  constructor(){this.reset()}
+  reset(){this.index=0;this.spawned=0;this.timer=0;this.intro=CONFIG.waveIntro;this.clearTime=0}
+  next(){this.index++;this.spawned=0;this.timer=0;this.intro=CONFIG.waveIntro}
+  update(dt){
+    if(this.intro>0){this.intro=Math.max(0,this.intro-dt);return}
+    const stage=CONFIG.levels[game.levelIndex],wave=stage.waves[this.index];this.timer-=dt;
+    if(this.spawned<wave.types.length&&this.timer<=0&&game.animals.length<stage.maxActive){
+      let side=game.levelIndex===0&&this.index===0?1:((this.spawned+this.index)%2===0?1:-1);
+      const y=game.levelIndex===0&&this.index===0?420:rand(338,575);
+      game.animals.push(new Animal(wave.types[this.spawned],side,y));this.spawned++;this.timer=wave.interval;
+    }
+    if(this.spawned===wave.types.length&&game.animals.length===0)game.clearWave();
+  }
+}
+
+// ── Game：关卡成长与临时效果分开；失败回滚到本关入场快照 ───────────
+class Game{
+  constructor(){
+    this.store=new CampaignStore();this.build=freshBuild();this.levelIndex=0;this.state='MENU';
+    this.scene=new Scene();this.fx=new ParticleSystem();this.hand=new Hand();this.waves=new WaveManager();this.pickups=new PickupSystem();
+    this.animals=[];this.score=0;this.hp=this.maxHP;this.combo=0;this.comboTime=0;this.elapsed=0;this.visualTime=0;
+    this.shakeTime=0;this.shakeMag=0;this.damageAmount=0;this.damageClock=0;this.tutorial=0;this.buffs={ice:0,chili:0};
+    this.seedCollected=false;this.seedSpawned=false;this.result=null;this.growthNotice=0;
+  }
+  get growth(){return CONFIG.growth[this.build.growth]}
+  get maxHP(){return CONFIG.farm.maxHP+this.build.soil*CONFIG.upgrades.soil.amount}
+  get chargeDuration(){return CONFIG.hand.chargeTime-this.build.quick*CONFIG.upgrades.quick.amount}
+  get stunDuration(){return CONFIG.physics.stun+this.build.stun*CONFIG.upgrades.stun.amount}
+  get highest(){return this.store.data.checkpoints.length-1}
+  get level(){return CONFIG.levels[this.levelIndex]}
+  get remaining(){return this.level.waves[this.waves.index].types.length-this.waves.spawned+this.animals.length}
+  attackDamage(power){return (CONFIG.hand.baseDamage+power*(CONFIG.hand.extraDamage+this.build.heavy*CONFIG.upgrades.heavy.amount))*(this.buffs.chili>0?CONFIG.pickups.chiliDamage:1)}
+  openMap(){
+    input.cancel();
+    if(this.store.data.pending){this.openUpgrades();return}
+    this.state='MAP';
+  }
+  start(){this.startLevel(this.highest)}
+  startLevel(index){
+    if(this.store.data.pending){this.openUpgrades();return false}
+    if(!Number.isInteger(index)||index<0||index>this.highest)return false;
+    input.cancel();
+    this.levelIndex=index;this.build=copyBuild(this.store.data.checkpoints[index]);
+    this.animals.length=0;this.fx.reset();this.scene.reset();this.hand.reset();this.pickups.reset();this.waves.reset();
+    this.hand.targetX=input.x;this.hand.targetY=input.y;this.score=0;this.hp=this.maxHP;this.combo=0;this.comboTime=0;
+    this.elapsed=0;this.shakeTime=0;this.shakeMag=0;this.damageAmount=0;this.damageClock=0;
+    this.buffs.ice=0;this.buffs.chili=0;this.seedCollected=false;this.seedSpawned=false;this.growthNotice=0;this.result=null;
+    this.tutorial=index===0?CONFIG.tutorialTime:0;this.state='PLAYING';audio.unlock();return true;
+  }
+  pause(){
+    if(this.state==='PLAYING'||this.state==='WAVE_CLEAR'){this.resumeState=this.state;input.cancel();this.state='PAUSED'}
+    else if(this.state==='PAUSED'){this.state=this.resumeState;audio.unlock()}
+  }
+  collectSeed(){
+    if(this.seedCollected||this.levelIndex>=CONFIG.levels.length-1)return;
+    this.seedCollected=true;this.build.growth=Math.min(CONFIG.growth.length-1,this.build.growth+1);this.growthNotice=3.5;
+    for(const p of this.pickups.items)if(p.type==='seed')p.remove=true;
+    this.fx.text(`范围升级！最多 ${this.growth.limit} 个目标`,640,330,C.green,26);audio.clear();
+  }
+  clearWave(){
+    this.state='WAVE_CLEAR';this.waves.clearTime=CONFIG.waveClear;this.combo=0;this.comboTime=0;
+    if(this.waves.index<this.level.waves.length-1)this.hand.deferCharge();else input.cancel();
+    if(this.waves.index===0&&this.levelIndex<CONFIG.levels.length-1&&!this.seedSpawned){
+      this.seedSpawned=true;this.pickups.spawn('seed',640,428);
+      this.fx.text('成长种子！移过手掌即可拾取',640,370,C.green,22);
+    }
+    audio.clear();for(let i=0;i<3;i++)this.fx.burst(440+i*200,305,10);
+  }
+  finishStage(){
+    if(this.result)return;
+    // 没捡到的保底种子在结算时自动收取；临时道具不带入下一关。
+    if(this.levelIndex<CONFIG.levels.length-1)this.collectSeed();
+    const stars=this.hp/this.maxHP>=0.8?3:this.hp/this.maxHP>=0.5?2:1;
+    const first=this.store.record(this.levelIndex,this.score,stars);
+    this.result={score:this.score,stars,hp:this.hp,maxHP:this.maxHP,first,choice:null};
+    this.pickups.reset();this.buffs.ice=0;this.buffs.chili=0;input.cancel();
+    if(first&&this.levelIndex<CONFIG.levels.length-1){
+      const offers=Object.keys(CONFIG.upgrades).filter(k=>this.build[k]<CONFIG.upgrades[k].max);
+      for(let i=offers.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[offers[i],offers[j]]=[offers[j],offers[i]]}
+      this.store.data.pending={level:this.levelIndex,build:copyBuild(this.build),offers:offers.slice(0,3)};
+    }
+    this.store.save();this.state=this.levelIndex===CONFIG.levels.length-1?'WIN':'STAGE_CLEAR';
+    audio.clear();
+  }
+  openUpgrades(){
+    const pending=this.store.data.pending;if(!pending)return;
+    this.levelIndex=pending.level;this.build=copyBuild(pending.build);
+    if(!this.result){const r=this.store.data.results[pending.level];this.result={score:r.score,stars:r.stars,hp:this.maxHP,maxHP:this.maxHP,first:true,choice:null}}
+    this.score=this.result.score;this.hp=this.result.hp;this.animals.length=0;
+    this.waves.index=this.level.waves.length-1;this.waves.spawned=this.level.waves[this.waves.index].types.length;
+    input.cancel();this.state='UPGRADE';
+  }
+  chooseUpgrade(key){
+    const p=this.store.data.pending;
+    if(this.state!=='UPGRADE'||!p||!p.offers.includes(key)||p.build[key]>=CONFIG.upgrades[key].max)return false;
+    // 奖励只提交一次，下一关只接受这份已确认的入场快照。
+    const b=copyBuild(p.build);b[key]++;
+    if(this.store.data.checkpoints.length!==p.level+1)return false;
+    this.store.data.checkpoints.push(copyBuild(b));this.store.data.pending=null;this.store.save();
+    this.build=b;this.result.choice=CONFIG.upgrades[key].name;this.state='STAGE_CLEAR';audio.clear();return true;
+  }
+  nextStage(){if(this.store.data.pending)this.openUpgrades();else if(this.levelIndex<CONFIG.levels.length-1)this.startLevel(this.levelIndex+1);else this.openMap()}
+  addScore(n,x,y){this.score+=n;this.fx.text(`+${n}`,x,y-35,C.green,24)}
+  onHit(a,power){
+    this.combo=this.comboTime>0?this.combo+1:1;this.comboTime=CONFIG.comboWindow;
+    this.addScore(CONFIG.scoring.hit*Math.min(this.combo,CONFIG.maxMultiplier),a.x,a.y-a.z);
+    if(this.combo>1)this.fx.text(`连击 x${this.combo}`,a.x,a.y-a.z-72,'#b85f2e',28);
+    this.fx.burst(a.x,a.y-a.z,a.type==='elephant'?CONFIG.fx.elephantParticles:CONFIG.fx.particles);
+    this.shakeTime=CONFIG.fx.shakeDuration;this.shakeMag=Math.min(CONFIG.fx.shakeMax,3+power*5+a.cfg.mass);audio.hit(a.type,this.combo);
+  }
+  damageFarm(amount,x,y){this.hp=Math.max(0,this.hp-amount);this.damageAmount+=amount;for(const c of this.scene.crops)if(Math.hypot(c.x-x,c.y-y)<CONFIG.farm.eatRadius)c.damage=clamp(c.damage+amount*.055,0,1)}
+  update(dt){
+    if(this.state==='PAUSED')return;this.visualTime+=dt;
+    if(!['PLAYING','WAVE_CLEAR'].includes(this.state)){this.hand.update(dt,false);this.fx.update(dt);return}
+    this.shakeTime=Math.max(0,this.shakeTime-dt);this.growthNotice=Math.max(0,this.growthNotice-dt);this.fx.update(dt);
+    this.buffs.ice=Math.max(0,this.buffs.ice-dt);this.buffs.chili=Math.max(0,this.buffs.chili-dt);
+    if(this.state==='WAVE_CLEAR'){
+      this.hand.update(dt,false);this.pickups.update(dt);this.waves.clearTime-=dt;
+      if(this.waves.clearTime<=0){if(this.waves.index===this.level.waves.length-1)this.finishStage();else{this.waves.next();this.state='PLAYING'}}
+      return;
+    }
+    this.elapsed+=dt;this.tutorial=Math.max(0,this.tutorial-dt);this.comboTime=Math.max(0,this.comboTime-dt);if(!this.comboTime)this.combo=0;
+    this.hand.update(dt,true);
+    for(const a of this.animals)a.update(dt);
+    for(let i=0;i<this.animals.length;i++)for(let j=i+1;j<this.animals.length;j++){
+      const a=this.animals[i],b=this.animals[j];if(a.state!=='WALKING'||b.state!=='WALKING'||a.remove||b.remove)continue;
+      let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),min=(a.radius+b.radius)*.82;
+      if(d<min){if(d<.01){dx=0;dy=1;d=1}const push=Math.min(min-d,CONFIG.physics.separation*dt)*.5;
+        a.y=clamp(a.y-dy/d*push,310,600);b.y=clamp(b.y+dy/d*push,310,600);a.x-=dx/d*push;b.x+=dx/d*push}
+    }
+    for(let i=this.animals.length-1;i>=0;i--)if(this.animals[i].remove)this.animals.splice(i,1);
+    // 生命归零优先判负，避免同一帧拾取水壶或清波掩盖失败。
+    if(this.hp<=0){this.state='GAME_OVER';input.cancel();this.combo=0;this.comboTime=0;audio.fail();return}
+    this.pickups.update(dt);
+    this.damageClock+=dt;if(this.damageClock>=CONFIG.farm.damageTextInterval){if(this.damageAmount>0)this.fx.text(`−${this.damageAmount.toFixed(1)} 田地生命`,181,121,'#b9533c',18);this.damageAmount=0;this.damageClock=0}
+    this.waves.update(dt);
+  }
+  draw(){
+    ctx.clearRect(0,0,CONFIG.width,CONFIG.height);ctx.save();
+    if(this.shakeTime>0&&this.state!=='PAUSED'){const m=this.shakeMag*this.shakeTime/CONFIG.fx.shakeDuration;ctx.translate(rand(-m,m),rand(-m,m))}
+    this.scene.draw(this.visualTime);
+    if(!['MENU','MAP','UPGRADE'].includes(this.state)){
+      this.animals.sort((a,b)=>a.y-b.y);for(const a of this.animals)a.draw();this.pickups.draw();
+    }
+    if(['PLAYING','WAVE_CLEAR'].includes(this.state))this.hand.draw();this.fx.draw();ctx.restore();UI.draw();
+    if(!['PLAYING','WAVE_CLEAR'].includes(this.state))this.hand.drawMenuPointer();
+  }
+}
+
+// ── UI：所有按钮与画面共用坐标；关卡地图、强化选择、星级结算 ───────
+const UI={
+  buttons:[],
+  button(id,s,x,y,w,h,primary=false,disabled=false){
+    if(!disabled)this.buttons.push({id,x,y,w,h});
+    const hover=!disabled&&input.x>=x&&input.x<=x+w&&input.y>=y&&input.y<=y+h;
+    ctx.save();if(disabled)ctx.globalAlpha=.45;
+    rounded(x,y+4,w,h,15,primary?'#194634':'#c5c5a7');
+    rounded(x,y,w,h,15,primary?(hover?'#387754':C.green):(hover?'#f2eacb':C.cream),primary?C.green:'#d8d4b9',1.5);
+    label(s,x+w/2,y+h/2,19,primary?C.cream:C.green,'center',750);ctx.restore();
+  },
+  hit(x,y){
+    for(let i=this.buttons.length-1;i>=0;i--){const b=this.buttons[i];if(x<b.x||x>b.x+b.w||y<b.y||y>b.y+b.h)continue;
+      if(b.id==='sound')audio.toggle();
+      else if(b.id==='continue'){if(game.store.data.pending)game.openUpgrades();else game.start()}
+      else if(b.id==='map')game.openMap();
+      else if(b.id==='menu')game.state='MENU';
+      else if(b.id==='retry')game.startLevel(game.levelIndex);
+      else if(b.id==='pause'||b.id==='resume')game.pause();
+      else if(b.id==='next')game.nextStage();
+      else if(b.id.startsWith('level:'))game.startLevel(Number(b.id.split(':')[1]));
+      else if(b.id.startsWith('upgrade:'))game.chooseUpgrade(b.id.split(':')[1]);
+      this.buttons.length=0;return true;
+    }return false;
+  },
+  veil(){ctx.fillStyle='rgba(27,61,46,.39)';ctx.fillRect(0,0,1280,720)},
+  panel(x,y,w,h){rounded(x,y+8,w,h,28,'#244d3d');rounded(x,y,w,h,28,C.cream,C.ink,2)},
+  stars(n,x,y,size=15){for(let i=0;i<3;i++)star(x+(i-1)*size*2.6,y,size,i<n?C.gold:'#d8dfc5')},
+  saveNote(y=669){if(!game.store.available)label('本地存档暂不可用，进度仅保留在本次打开期间',640,y,15,C.cream,'center')},
+  hud(){
+    rounded(24,22,296,78,21,C.cream);label('田地生命',45,45,15,C.green);
+    label(`${Math.ceil(game.hp)} / ${game.maxHP}`,298,45,17,C.green,'right',800);
+    rounded(45,68,253,12,6,'#e4e6c8');if(game.hp>0)rounded(45,68,253*game.hp/game.maxHP,12,6,game.hp/game.maxHP>.35?'#79aa5b':C.coral);
+    rounded(333,22,226,78,21,C.cream);label(`第 ${game.levelIndex+1} 关 · ${game.level.name}`,446,46,20,C.green,'center',800);
+    label(`第 ${game.waves.index+1} / ${game.level.waves.length} 波 · 剩余 ${game.remaining} 只`,446,77,14,'#66795e','center');
+    rounded(573,22,233,78,21,C.cream);label(`范围 Lv.${game.build.growth+1} · ${game.growth.limit} 目标`,590,46,18,C.green,'left',800);
+    label(`满蓄力 ${game.growth.full}px · ${game.chargeDuration.toFixed(2)}秒`,590,77,14,'#66795e');
+    rounded(820,22,171,78,21,C.cream);label('本关得分',839,44,14,C.green);label(String(game.score).padStart(5,'0'),972,75,26,C.green,'right',850);
+    this.button('sound',audio.enabled?'音效 开':'音效 关',1005,29,117,57);this.button('pause','暂 停',1138,29,117,57);
+    if(game.combo>1){rounded(1042,113,209,40,14,C.gold);label(`连击 x${game.combo} · ${Math.min(game.combo,CONFIG.maxMultiplier)}倍得分`,1146,133,17,C.green,'center',800)}
+    let bx=37;for(const k of ['ice','chili'])if(game.buffs[k]>0){rounded(bx,112,194,44,14,C.cream);itemIcon(k,bx+25,134,.65);label(`${k==='ice'?'减速':'强化'} ${game.buffs[k].toFixed(1)}秒`,bx+54,135,17,C.green);bx+=206}
+    label('HAND GUARDIAN',30,690,14,'#345c40','left',850);label('按住握拳 · 松手张开 · 碰到道具自动拾取',640,690,15,'#345c40','center');label('P / ESC 暂停',1250,690,14,'#345c40','right');
+  },
+  menu(){
+    this.veil();this.panel(304,113,672,487);rounded(505,141,270,31,15,'#e3edce');label('HAND GUARDIAN · 关卡成长版',640,157,13,C.green,'center',850);
+    label('手掌护田',640,222,66,C.green,'center',850);label('从拍走一只兔子，到守住整片丰收。',640,285,22,'#66795e','center');
+    line(347,326,933,326,'#dedfc5');
+    const words=[['靠近','开局近身单目标'],['握拳','按住蓄力再松手'],['成长','捡道具，逐关变强']];
+    for(let i=0;i<3;i++){const x=437+i*203;label(words[i][0],x,366,24,C.green,'center',800);label(words[i][1],x,402,15,'#66795e','center')}
+    const pending=game.store.data.pending;
+    this.button('continue',pending?'领取通关强化':game.highest>0?`继续第 ${game.highest+1} 关 →`:'开始第一关 →',362,452,306,62,true);
+    this.button('map','关卡地图',691,452,226,62);
+    label('鼠标 / 触屏：按住握拳，松开张掌；无需选择方向',640,552,16,'#66795e','center');
+    this.button('sound',audio.enabled?'音效 开':'音效 关',1110,28,139,54);this.saveNote();
+  },
+  map(){
+    this.veil();this.panel(135,83,1010,554);label('沿着田埂，守到丰收',640,129,35,C.green,'center',850);
+    label('每关重新回满生命 · 失败只重试本关 · 旧关可刷星',640,173,17,'#66795e','center');
+    for(let i=0;i<CONFIG.levels.length;i++){
+      const x=169+(i%3)*320,y=207+Math.floor(i/3)*185,unlocked=i<=game.highest,result=game.store.data.results[i];
+      const hover=unlocked&&input.x>=x&&input.x<=x+300&&input.y>=y&&input.y<=y+164;
+      rounded(x,y,300,164,20,unlocked?(hover?'#e7efce':'#f1f2dc'):'#e4e5d6',unlocked?'#bdcba9':'#d5d9c8',1.5);
+      if(unlocked)this.buttons.push({id:`level:${i}`,x,y,w:300,h:164});
+      label(String(i+1).padStart(2,'0'),x+23,y+31,18,unlocked?C.green:'#89917f','left',850);
+      label(CONFIG.levels[i].name,x+23,y+67,25,unlocked?C.green:'#89917f','left',800);
+      label(`${CONFIG.levels[i].waves.length} 波 · ${i>=3?'大象登场':i>=1?'兔子与野猪':'近身拍走兔子'}`,x+23,y+101,14,'#738068');
+      if(result){this.stars(result.stars,x+67,y+137,9);label(`最佳 ${result.score}`,x+275,y+138,14,C.green,'right')}
+      else label(unlocked?'开始守护 →':`完成第 ${i} 关后解锁`,x+23,y+138,15,unlocked?C.green:'#89917f');
+      ctx.save();ctx.translate(x+255,y+54);ctx.scale(i>=3?.35:.6,i>=3?.35:.6);
+      if(!unlocked)ctx.globalAlpha=.4;
+      if(i>=3)Animal.prototype.drawElephant(0);else if(i>=1)Animal.prototype.drawBoar(0);else Animal.prototype.drawRabbit(0);ctx.restore();
+    }
+    this.button('menu','返回首页',154,656,150,42);label('首次通关保存成长与强化；重玩旧关不会重复叠加奖励',775,678,15,C.cream,'center');this.saveNote(711);
+  },
+  upgrade(){
+    this.veil();const p=game.store.data.pending;if(!p)return;
+    label(`第 ${p.level+1} 关完成`,640,133,18,C.cream,'center',700);label('选一份强化，带去下一关',640,184,38,C.cream,'center',850);
+    label('三选一 · 选择后自动保存 · 效果持续到后续关卡',640,226,17,'#e9ecd2','center');
+    for(let i=0;i<p.offers.length;i++){
+      const key=p.offers[i],u=CONFIG.upgrades[key],x=159+i*327,y=280,hover=input.x>=x&&input.x<=x+308&&input.y>=y&&input.y<=y+283;
+      rounded(x,y+7,308,283,23,'#234736');rounded(x,y,308,283,23,hover?'#f2efcf':C.cream,hover?C.gold:'#b4c5a1',hover?3:2);
+      this.buttons.push({id:`upgrade:${key}`,x,y,w:308,h:283});
+      label(`${i+1}   成长强化`,x+25,y+33,14,'#718266');
+      label(u.name,x+154,y+89,31,C.green,'center',850);label(u.desc,x+154,y+139,22,C.green,'center',750);
+      label(u.detail,x+154,y+180,16,'#718266','center');
+      rounded(x+24,y+218,260,43,13,C.green);label(`选择 · Lv.${p.build[key]} → ${p.build[key]+1}`,x+154,y+240,17,C.cream,'center',750);
+    }
+    label('点击卡片选择，或按数字键 1 / 2 / 3',640,614,17,C.cream,'center');this.saveNote(667);
+  },
+  result(){
+    const win=game.state==='WIN',r=game.result;if(!r)return;
+    this.veil();this.panel(351,128,578,491);
+    label(win?'六关全部完成':`第 ${game.levelIndex+1} 关 · ${game.level.name}`,640,166,16,C.green,'center',750);
+    label(win?'丰收守住了！':'这一关守住了！',640,220,40,C.green,'center',850);this.stars(r.stars,640,276,23);
+    label(`本关得分 ${r.score}`,640,335,30,C.green,'center',850);
+    label(`剩余生命 ${Math.ceil(r.hp)} / ${r.maxHP}`,640,377,17,'#66795e','center');
+    let note=game.store.data.pending?'成长已收好，选一份强化再出发':r.choice?`已获得「${r.choice}」，下一关已解锁`:r.first?'成长与星级已保存':'刷星记录已保存，成长奖励不重复领取';
+    if(win)note=`最佳星级合计 ${game.store.data.results.reduce((s,v)=>s+(v?.stars||0),0)} / 18 · 可以回地图继续刷星`;
+    label(note,640,425,16,C.green,'center');
+    if(win){this.button('map','回到关卡地图',449,470,382,61,true)}
+    else{this.button('next',game.store.data.pending?'选择通关强化 →':'进入下一关 →',418,471,444,59,true);if(!game.store.data.pending)this.button('map','关卡地图',533,548,214,42)}
+    this.saveNote();
+  },
+  draw(){
+    this.buttons.length=0;
+    if(game.state==='MENU'){this.menu();return}if(game.state==='MAP'){this.map();return}if(game.state==='UPGRADE'){this.upgrade();return}
+    this.hud();
+    if(game.state==='PLAYING'){
+      if(game.waves.intro>0){ctx.save();ctx.globalAlpha=Math.min(1,game.waves.intro*3);rounded(390,182,500,87,23,C.cream,C.ink,2);
+        label(`第 ${game.levelIndex+1} 关 · 第 ${game.waves.index+1} 波`,640,211,29,C.green,'center',850);label(game.level.hint,640,246,17,C.green,'center');ctx.restore()}
+      else if(game.tutorial>0&&game.waves.index===0){rounded(365,167,550,70,18,C.cream);label('把手掌靠近兔子，再按住握拳、松手弹开',640,189,18,C.green,'center',750);label('开局最多命中最近的 1 只 · 首波后有成长种子',640,216,15,'#718266','center')}
+      if(game.growthNotice>0){rounded(372,594,536,50,17,C.cream);label(`成长 Lv.${game.build.growth+1}：满蓄力 ${game.growth.full}px · 最多 ${game.growth.limit} 个目标`,640,619,19,C.green,'center',800)}
+    }else if(game.state==='WAVE_CLEAR'){
+      rounded(406,175,468,121,25,C.cream,C.ink,2);label(`第 ${game.waves.index+1} 波完成`,640,213,33,C.green,'center',850);
+      label(game.waves.index===game.level.waves.length-1?'准备结算本关…':!game.seedCollected&&game.seedSpawned?'种子在田里，移动手掌去拾取！':'稍作休息，下一波马上到来',640,261,18,C.green,'center');
+    }else if(game.state==='PAUSED'){
+      this.buttons.length=0;this.veil();this.panel(374,161,532,428);label('休息一下',640,217,43,C.green,'center',850);label('动物、道具和强化计时都已暂停',640,270,18,'#66795e','center');
+      this.button('resume','继续守护',445,316,390,60,true);this.button('retry','重试本关',445,397,184,53);this.button('map','关卡地图',651,397,184,53);
+      label('重试将恢复本关开始时的能力',640,492,16,'#66795e','center');this.button('sound',audio.enabled?'音效 开':'音效 关',567,525,146,43);
+    }else if(game.state==='GAME_OVER'){
+      this.buttons.length=0;this.veil();this.panel(359,158,562,433);label('再守一次，就差一点',640,221,37,C.green,'center',850);label(`第 ${game.levelIndex+1} 关 · 本次得分 ${game.score}`,640,283,21,C.green,'center');
+      label('此前关卡的成长已保存；本关从入场状态重试',640,344,17,'#66795e','center');
+      this.button('retry','重试本关 →',431,403,419,62,true);this.button('map','回到关卡地图',523,491,234,51);
+    }else if(game.state==='STAGE_CLEAR'||game.state==='WIN'){this.buttons.length=0;this.result()}
+  }
+};
+
+// ── Input：保留按住意图，统一清理取消/失焦/丢失捕获，避免漏按与卡住 ─
+const input={
+  x:640,y:530,pointerId:null,
+  position(e){
+    const r=canvas.getBoundingClientRect();
+    this.x=clamp((e.clientX-r.left)*CONFIG.width/r.width,0,CONFIG.width);
+    this.y=clamp((e.clientY-r.top)*CONFIG.height/r.height,0,CONFIG.height);
+    game.hand.targetX=this.x;game.hand.targetY=this.y;
+  },
+  dropCapture(){
+    const id=this.pointerId;this.pointerId=null;
+    if(id!==null){try{if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id)}catch(e){}}
+  },
+  cancel(){this.dropCapture();game.hand.cancel()},
+  init(){
+    canvas.addEventListener('pointerdown',e=>{
+      if(!e.isPrimary||(e.pointerType==='mouse'&&e.button!==0)||this.pointerId!==null)return;
+      e.preventDefault();audio.unlock();canvas.focus();this.position(e);
+      if(UI.hit(this.x,this.y))return;
+      if(game.hand.press()){
+        this.pointerId=e.pointerId;
+        try{canvas.setPointerCapture(e.pointerId)}catch(e){}
+      }
+    });
+    const move=e=>{
+      if(!e.isPrimary||(this.pointerId!==null&&this.pointerId!==e.pointerId))return;
+      this.position(e);
+      // 鼠标在画面外松开、系统未送达 pointerup 时，禁止留下幽灵蓄力。
+      if(this.pointerId===e.pointerId&&e.pointerType==='mouse'&&typeof e.buttons==='number'&&(e.buttons&1)===0)this.cancel();
+    };
+    canvas.addEventListener('pointermove',move);
+    window.addEventListener('pointermove',e=>{if(this.pointerId===e.pointerId)move(e)});
+    const release=e=>{
+      if(e.pointerId!==this.pointerId)return;
+      this.position(e);this.dropCapture();
+      if(game.state==='PLAYING')game.hand.release();else game.hand.cancel();
+    };
+    const cancel=e=>{if(e.pointerId===this.pointerId)this.cancel()};
+    canvas.addEventListener('pointerup',release);window.addEventListener('pointerup',release);
+    canvas.addEventListener('pointercancel',cancel);window.addEventListener('pointercancel',cancel);
+    canvas.addEventListener('lostpointercapture',e=>{
+      // 新手势已重新捕获时，忽略上一轮迟到的 lostpointercapture。
+      if(e.pointerId===this.pointerId&&!canvas.hasPointerCapture(e.pointerId))this.cancel();
+    });
+    canvas.addEventListener('contextmenu',e=>e.preventDefault());
+    window.addEventListener('keydown',e=>{
+      if(e.repeat)return;
+      if(e.code==='KeyP'||e.code==='Escape'){e.preventDefault();game.pause()}
+      else if(game.state==='UPGRADE'&&['Digit1','Digit2','Digit3'].includes(e.code)){e.preventDefault();const key=game.store.data.pending?.offers[Number(e.code.slice(-1))-1];if(key)game.chooseUpgrade(key)}
+      else if(e.code==='Enter'){
+        if(game.state==='MENU'||game.state==='MAP'){e.preventDefault();game.start()}
+        else if(game.state==='GAME_OVER'){e.preventDefault();game.startLevel(game.levelIndex)}
+        else if(game.state==='STAGE_CLEAR'){e.preventDefault();game.nextStage()}
+        else if(game.state==='WIN'){e.preventDefault();game.openMap()}
+      }
+    });
+    const suspend=()=>{
+      this.cancel();if(game.state==='PLAYING'||game.state==='WAVE_CLEAR')game.pause();
+      accumulator=0;lastTime=0;
+    };
+    window.addEventListener('blur',suspend);
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)suspend()});
+  }
+};
+
+const game=new Game();let lastTime=0,accumulator=0;
+input.init();
+function frame(time){
+  if(!lastTime)lastTime=time;const delta=Math.min(CONFIG.maxDelta,Math.max(0,(time-lastTime)/1000));lastTime=time;accumulator+=delta;
+  while(accumulator>=CONFIG.step){game.update(CONFIG.step);accumulator-=CONFIG.step}
+  game.draw();requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
