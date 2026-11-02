@@ -1,220 +1,112 @@
 <!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
-		<title>泡泡滚筒</title>
-		<style>
-html, body, #canvas {
-	margin: 0;
-	padding: 0;
-	border: 0;
-}
-
-body {
-	color: white;
-	background-color: black;
-	overflow: hidden;
-	touch-action: none;
-}
-
-#canvas {
-	display: block;
-}
-
-#canvas:focus {
-	outline: none;
-}
-
-#status, #status-splash, #status-progress {
-	position: absolute;
-	left: 0;
-	right: 0;
-}
-
-#status, #status-splash {
-	top: 0;
-	bottom: 0;
-}
-
-#status {
-	background-color: #242424;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	visibility: hidden;
-}
-
-#status-splash {
-	max-height: 100%;
-	max-width: 100%;
-	margin: auto;
-}
-
-#status-splash.show-image--false {
-	display: none;
-}
-
-#status-splash.fullsize--true {
-	height: 100%;
-	width: 100%;
-	object-fit: contain;
-}
-
-#status-splash.use-filter--false {
-	image-rendering: pixelated;
-}
-
-#status-progress, #status-notice {
-	display: none;
-}
-
-#status-progress {
-	bottom: 10%;
-	width: 50%;
-	margin: 0 auto;
-}
-
-#status-notice {
-	background-color: #5b3943;
-	border-radius: 0.5rem;
-	border: 1px solid #9b3943;
-	color: #e0e0e0;
-	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
-	line-height: 1.3;
-	margin: 0 2rem;
-	overflow: hidden;
-	padding: 1rem;
-	text-align: center;
-	z-index: 1;
-}
-		</style>
-		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>泡泡滚筒</title>
+<style>
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#edf0e7;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;color:#294b3d}
+#canvas{display:block;outline:0;touch-action:none}
+#loading{position:fixed;inset:0;display:grid;place-items:center;padding:24px;background:#edf0e7;z-index:10;box-sizing:border-box;overflow:auto}
+.panel{width:min(100%,420px);box-sizing:border-box;background:#fffef8;border:1px solid #dce2d5;border-radius:20px;padding:28px}
+h1{font-size:26px;margin:0 0 18px}#stage{font-size:16px;line-height:1.6}progress{width:100%;height:14px;accent-color:#527e65;margin:10px 0}
+#amount,#hint{font-size:13px;line-height:1.7;color:#647162}#hint{min-height:3.4em}#details{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;color:#865140;max-height:180px;overflow:auto}
+button,a{font:inherit;display:inline-block;border-radius:8px;padding:10px 14px;border:1px solid #cbd6c5;background:#fffef8;color:#294b3d;text-decoration:none;cursor:pointer}button{background:#365e46;color:white;margin-right:8px}button:focus-visible,a:focus-visible{outline:3px solid #b39658;outline-offset:3px}[hidden]{display:none!important}
+</style>
+<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
 <link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
 <meta name="theme-color" content="#f0f2ea">
-	</head>
-	<body>
-		<canvas id="canvas">
-			Your browser does not support the canvas tag.
-		</canvas>
-
-		<noscript>
-			Your browser does not support JavaScript.
-		</noscript>
-
-		<div id="status">
-			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
-			<progress id="status-progress"></progress>
-			<div id="status-notice"></div>
-		</div>
-
-		<script src="index.js"></script>
-		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":222200,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
-const GODOT_THREADS_ENABLED = false;
-const engine = new Engine(GODOT_CONFIG);
-
+</head>
+<body>
+<canvas id="canvas" aria-label="泡泡滚筒游戏画面">浏览器不支持 Canvas。</canvas>
+<section id="loading" aria-label="游戏加载状态">
+ <div class="panel">
+  <h1>泡泡滚筒</h1>
+  <p id="stage" role="status">正在连接游戏资源…</p>
+  <progress id="progress" max="100" value="0" aria-label="资源下载进度"></progress>
+  <p id="amount">准备下载</p>
+  <p id="hint">首次打开需要下载引擎资源。请保持页面在前台，加载完成后自动进入游戏。</p>
+  <pre id="details" hidden></pre>
+  <button id="retry" type="button" hidden>重新加载</button><a href="/games/">返回游戏页</a>
+  <noscript><p>请启用 JavaScript 后重新加载。</p></noscript>
+ </div>
+</section>
+<script>
 (function () {
-	const statusOverlay = document.getElementById('status');
-	const statusProgress = document.getElementById('status-progress');
-	const statusNotice = document.getElementById('status-notice');
-
-	let initializing = true;
-	let statusMode = '';
-
-	function setStatusMode(mode) {
-		if (statusMode === mode || !initializing) {
-			return;
-		}
-		if (mode === 'hidden') {
-			statusOverlay.remove();
-			initializing = false;
-			return;
-		}
-		statusOverlay.style.visibility = 'visible';
-		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
-		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
-		statusMode = mode;
-	}
-
-	function setStatusNotice(text) {
-		while (statusNotice.lastChild) {
-			statusNotice.removeChild(statusNotice.lastChild);
-		}
-		const lines = text.split('\n');
-		lines.forEach((line) => {
-			statusNotice.appendChild(document.createTextNode(line));
-			statusNotice.appendChild(document.createElement('br'));
-		});
-	}
-
-	function displayFailureNotice(err) {
-		console.error(err);
-		if (err instanceof Error) {
-			setStatusNotice(err.message);
-		} else if (typeof err === 'string') {
-			setStatusNotice(err);
-		} else {
-			setStatusNotice('An unknown error occurred.');
-		}
-		setStatusMode('notice');
-		initializing = false;
-	}
-
-	const missing = Engine.getMissingFeatures({
-		threads: GODOT_THREADS_ENABLED,
-	});
-
-	if (missing.length !== 0) {
-		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
-			let serviceWorkerRegistrationPromise;
-			try {
-				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
-			} catch (err) {
-				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
-			}
-			// There's a chance that installing the service worker would fix the issue
-			Promise.race([
-				serviceWorkerRegistrationPromise.then((registration) => {
-					if (registration != null) {
-						return Promise.reject(new Error('Service worker already exists.'));
-					}
-					return registration;
-				}).then(() => engine.installServiceWorker()),
-				// For some reason, `getRegistration()` can stall
-				new Promise((resolve) => {
-					setTimeout(() => resolve(), 2000);
-				}),
-			]).then(() => {
-				// Reload if there was no error.
-				window.location.reload();
-			}).catch((err) => {
-				console.error('Error while registering service worker:', err);
-			});
-		} else {
-			// Display the message as usual
-			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
-			displayFailureNotice(missingMsg + missing.join('\n'));
-		}
-	} else {
-		setStatusMode('progress');
-		engine.startGame({
-			'onProgress': function (current, total) {
-				if (current > 0 && total > 0) {
-					statusProgress.value = current;
-					statusProgress.max = total;
-				} else {
-					statusProgress.removeAttribute('value');
-					statusProgress.removeAttribute('max');
-				}
-			},
-		}).then(() => {
-			setStatusMode('hidden');
-		}, displayFailureNotice);
-	}
+ 'use strict';
+ var config = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":222200,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+ var threads = false;
+ var overlay = document.getElementById('loading');
+ var stage = document.getElementById('stage');
+ var amount = document.getElementById('amount');
+ var hint = document.getElementById('hint');
+ var bar = document.getElementById('progress');
+ var details = document.getElementById('details');
+ var retry = document.getElementById('retry');
+ var lastChange = Date.now(), previous = -1, phase = 'script', done = false;
+ var lastEngineError = '';
+ retry.onclick = function () { window.location.reload(); };
+ function failure(error) {
+  if (done) return;
+  done = true;
+  clearInterval(watchdog);
+  stage.textContent = '游戏未能加载';
+  hint.textContent = '请记录下方错误。可切换 Wi-Fi / 蜂窝网络后重试；如果多次失败，请将错误文字发给作者。';
+  details.hidden = false;
+  details.textContent = String(error && error.message || error);
+  retry.hidden = false;
+ }
+ var watchdog = setInterval(function () {
+  if (done || document.hidden) return;
+  if (Date.now() - lastChange > 30000) {
+   retry.hidden = false;
+   hint.textContent = phase === 'initializing'
+    ? '资源已下载，浏览器仍在初始化。如果长时间停留，请重试，并告知 iOS 版本和设备型号。'
+    : '已超过 30 秒没有新的下载进度。可能是网络慢或连接中断；可继续等待，或切换网络后重新加载。';
+   if (lastEngineError) { details.hidden = false; details.textContent = lastEngineError; }
+  }
+ }, 1000);
+ document.addEventListener('visibilitychange', function () { lastChange = Date.now(); });
+ var sdk = document.createElement('script');
+ sdk.src = 'index.js';
+ sdk.async = true;
+ sdk.onerror = function () { failure('无法下载引擎脚本：' + sdk.src); };
+ sdk.onload = function () {
+  try {
+   if (typeof Engine === 'undefined') throw new Error('引擎脚本没有成功执行，请提供 iOS 版本。');
+   if (typeof WebAssembly === 'undefined') throw new Error('当前浏览器不支持 WebAssembly。');
+   var missing = Engine.getMissingFeatures({ threads: threads });
+   if (missing.length) throw new Error('浏览器缺少运行能力：\n' + missing.join('\n'));
+   phase = 'download'; lastChange = Date.now();
+   stage.textContent = '正在下载游戏资源…';
+   var engine = new Engine(config);
+   engine.startGame({
+    onPrintError: function () { lastEngineError = Array.prototype.join.call(arguments, ' '); console.error(lastEngineError); },
+    onProgress: function (current, total) {
+     if (done) return;
+     if (current !== previous) {
+      lastChange = Date.now(); previous = current;
+      retry.hidden = true;
+      hint.textContent = '下载进度按解压后的资源大小计算，与实际网络流量不同。请保持页面在前台。';
+     }
+     if (total > 0) {
+      bar.value = Math.min(100, current / total * 100);
+      amount.textContent = (current / 1048576).toFixed(1) + ' / ' + (total / 1048576).toFixed(1) + ' MB · ' + Math.floor(Math.min(100, current / total * 100)) + '%';
+     } else {
+      amount.textContent = (current / 1048576).toFixed(1) + ' MB 已接收，等待总大小';
+     }
+     if (total > 0 && current >= total) {
+      phase = 'initializing'; stage.textContent = '下载完成，正在初始化游戏…';
+     } else {
+      phase = 'download'; stage.textContent = '正在下载游戏资源…';
+     }
+    }
+   }).then(function () { done = true; clearInterval(watchdog); overlay.remove(); }, failure);
+  } catch (error) { failure(error); }
+ };
+ document.body.appendChild(sdk);
 }());
-		</script>
-	</body>
+</script>
+</body>
 </html>
 
