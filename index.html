@@ -1140,6 +1140,17 @@ ViewDjango的视图层封装了HTTP Request和Response的一系列操作和数�
   
 </div>
 
+<div class="home-visit-stats" style="margin-top: 8px; font-size: 12px; line-height: 2;" aria-label="首页访问统计">
+  <span id="busuanzi_container_page_pv" style="display: none; margin: 0 8px; white-space: nowrap;">
+    <i class="fa fa-eye" aria-hidden="true"></i>
+    首页浏览 <span id="busuanzi_value_page_pv"></span> 次
+  </span>
+  <span id="busuanzi_container_site_uv" style="display: none; margin: 0 8px; white-space: nowrap;" title="由不蒜子统计，目前仅首页接入；访客数为服务估算值">
+    <i class="fa fa-user" aria-hidden="true"></i>
+    站点访客 <span id="busuanzi_value_site_uv"></span> 人
+  </span>
+</div>
+
 
 
 
@@ -1321,5 +1332,14 @@ ViewDjango的视图层封装了HTTP Request和Response的一系列操作和数�
 
 <!-- 页面点击小红心 -->
 <script defer type="text/javascript" src="/js/src/love.js"></script>
+<!-- 仅正式首页计数，本地预览不发送统计请求。统计失败时计数保持隐藏。 -->
+<script>
+  if (window.location.hostname === 'zmyymz.github.io') {
+    var visitCounter = document.createElement('script');
+    visitCounter.async = true;
+    visitCounter.src = 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js';
+    document.body.appendChild(visitCounter);
+  }
+</script>
 </body>
 </html>
