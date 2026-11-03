@@ -6,19 +6,25 @@
 <meta name="theme-color" content="#204f3a">
 <title>手掌护田 · Hand Guardian</title>
 <style>
-  *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}
-  body{display:grid;place-items:center;background:#153e30;font-family:system-ui,"PingFang SC","Microsoft YaHei","Arial Unicode MS",sans-serif;overscroll-behavior:none}
-  canvas{display:block;width:min(100vw,177.777778vh);height:min(100vh,56.25vw);background:#b8e5e4;touch-action:none;cursor:none;user-select:none;-webkit-user-select:none;outline:none}
-  @supports(height:100dvh){canvas{width:min(100vw,177.777778dvh);height:min(100dvh,56.25vw)}}
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden}
+  body{background:#153e30;font-family:system-ui,"PingFang SC","Microsoft YaHei","Arial Unicode MS",sans-serif;overscroll-behavior:none}
+  #stage{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;background:#153e30;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);touch-action:none}
+  @supports(height:100dvh){#stage{height:100dvh}}
+  #stage:fullscreen{width:100%;height:100%;background:#153e30}
+  canvas{position:absolute;left:50%;top:50%;display:block;width:min(100vw,177.777778vh);height:min(100vh,56.25vw);transform:translate(-50%,-50%);transform-origin:center;background:#b8e5e4;touch-action:none;cursor:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;outline:none}
 </style>
 </head>
 <body>
+<div id="stage">
 <canvas id="game" width="1280" height="720" tabindex="0" aria-label="手掌护田。按住握拳蓄力，松手张掌弹开周围动物。P 或 Escape 暂停，Enter 开始。">请使用支持 Canvas 的现代浏览器。</canvas>
+</div>
 <script>
 'use strict';
 // ── CONFIG：玩法、物理、场景与表现参数集中配置 ──────────────────────
 const CONFIG = {
   width:1280,height:720,step:1/60,maxDelta:0.1,
+  render:{minScale:1.5,maxDPR:3,maxWidth:3840,maxHeight:2160},
   farm:{maxHP:100,x:295,y:295,w:690,h:310,cropCols:6,cropRows:3,cellGap:14,eatRadius:88,damageTextInterval:0.8},
   hand:{radius:45,chargeTime:0.85,
     spring:160,damping:23,returnSpring:210,returnDamping:27,returnDistance:10,
@@ -444,8 +450,12 @@ class Hand{
 class Scene{
   constructor(){this.crops=[];const f=CONFIG.farm;for(let row=0;row<f.cropRows;row++)for(let col=0;col<f.cropCols;col++)this.crops.push({x:f.x+(col+.5)*f.w/f.cropCols,y:f.y+(row+.5)*f.h/f.cropRows+10,damage:0,phase:row*.8+col*1.7});this.back=document.createElement('canvas');this.back.width=CONFIG.width;this.back.height=CONFIG.height;this.cacheBackground()}
   reset(){for(const c of this.crops)c.damage=0}
+  resize(width,height){
+    if(this.back.width===width&&this.back.height===height)return;
+    this.back.width=width;this.back.height=height;this.cacheBackground();
+  }
   cacheBackground(){
-    const g=this.back.getContext('2d');g.fillStyle='#bde5e1';g.fillRect(0,0,1280,720);
+    const g=this.back.getContext('2d');g.setTransform(this.back.width/CONFIG.width,0,0,this.back.height/CONFIG.height,0,0);g.fillStyle='#bde5e1';g.fillRect(0,0,1280,720);
     const cloud=(x,y,s)=>{g.fillStyle='#f6fae9';g.beginPath();g.ellipse(x,y,58*s,17*s,0,0,TAU);g.ellipse(x-19*s,y-13*s,28*s,22*s,0,0,TAU);g.ellipse(x+12*s,y-20*s,29*s,28*s,0,0,TAU);g.fill()};cloud(157,134,1);cloud(517,105,.75);cloud(1082,149,1.2);
     g.fillStyle='#94c7ac';g.beginPath();g.moveTo(0,232);g.bezierCurveTo(210,60,340,239,524,186);g.bezierCurveTo(702,65,857,205,1015,177);g.bezierCurveTo(1120,125,1210,179,1280,168);g.lineTo(1280,380);g.lineTo(0,380);g.fill();
     g.fillStyle='#79ad89';g.beginPath();g.moveTo(0,270);g.bezierCurveTo(135,164,262,256,475,225);g.bezierCurveTo(769,158,870,287,1098,230);g.quadraticCurveTo(1220,209,1280,246);g.lineTo(1280,420);g.lineTo(0,420);g.fill();
@@ -465,13 +475,13 @@ class Scene{
       g.strokeStyle='#d0b981';g.lineWidth=2;g.beginPath();g.moveTo(x+15,y+10);g.lineTo(x+w-15,y+10);g.stroke();
       g.fillStyle='#99804f';for(let i=0;i<3;i++){g.beginPath();g.ellipse(x+22+i*27,y+h-17,2,1.5,0,0,TAU);g.fill()}
     }
-    // 确定性的小草与石子，背景只生成一次。
+    // 确定性的小草与石子，背景只在初始化或分辨率变化时重绘。
     for(let i=0;i<100;i++){const x=(i*137+41)%1280,y=307+(i*73)%360;if(x>248&&x<1030&&y<642)continue;g.strokeStyle=i%3?'#6f9f59':'#c2d291';g.lineWidth=2;g.beginPath();g.moveTo(x,y);g.lineTo(x-3,y-7);g.moveTo(x,y);g.lineTo(x+4,y-5);g.stroke()}
     g.fillStyle='#c4c79b';for(let i=0;i<14;i++){g.beginPath();g.ellipse((i*313+67)%1280,338+(i*97)%280,5+i%4,3,0,0,TAU);g.fill()}
     // 下沿留出视觉呼吸区。
     g.fillStyle='#83ad66';g.beginPath();g.moveTo(0,680);g.quadraticCurveTo(380,643,640,678);g.quadraticCurveTo(980,704,1280,661);g.lineTo(1280,720);g.lineTo(0,720);g.fill();
   }
-  draw(time){ctx.drawImage(this.back,0,0);for(const c of this.crops){const sway=Math.sin(time*2+c.phase)*.12;ctx.save();ctx.translate(c.x,c.y);ctx.rotate(sway+c.damage*.65);ctx.globalAlpha=1-c.damage*.25;const stem=c.damage>.55?'#9f914c':'#407541',leaf=c.damage>.55?'#d5bb60':'#82b957';line(0,8,0,-22,stem,3);ctx.save();ctx.rotate(-.65);ellipse(-6,-10,6,14,leaf,stem,1.5);ctx.restore();ctx.save();ctx.rotate(.7);ellipse(6,-15,6,14,leaf,stem,1.5);ctx.restore();ellipse(0,-23,4,7,c.damage>.55?'#e4cd78':'#c0d980');ctx.restore()}}
+  draw(time){ctx.drawImage(this.back,0,0,CONFIG.width,CONFIG.height);for(const c of this.crops){const sway=Math.sin(time*2+c.phase)*.12;ctx.save();ctx.translate(c.x,c.y);ctx.rotate(sway+c.damage*.65);ctx.globalAlpha=1-c.damage*.25;const stem=c.damage>.55?'#9f914c':'#407541',leaf=c.damage>.55?'#d5bb60':'#82b957';line(0,8,0,-22,stem,3);ctx.save();ctx.rotate(-.65);ellipse(-6,-10,6,14,leaf,stem,1.5);ctx.restore();ctx.save();ctx.rotate(.7);ellipse(6,-15,6,14,leaf,stem,1.5);ctx.restore();ellipse(0,-23,4,7,c.damage>.55?'#e4cd78':'#c0d980');ctx.restore()}}
 }
 
 // ── WaveManager：每关独立波次；首波保底种子；最后一波进入结算 ───────
@@ -614,7 +624,7 @@ class Game{
     this.waves.update(dt);
   }
   draw(){
-    ctx.clearRect(0,0,CONFIG.width,CONFIG.height);ctx.save();
+    display.applyTransform();ctx.clearRect(0,0,CONFIG.width,CONFIG.height);ctx.save();
     if(this.shakeTime>0&&this.state!=='PAUSED'){const m=this.shakeMag*this.shakeTime/CONFIG.fx.shakeDuration;ctx.translate(rand(-m,m),rand(-m,m))}
     this.scene.draw(this.visualTime);
     if(!['MENU','MAP','UPGRADE'].includes(this.state)){
@@ -757,8 +767,11 @@ const input={
   x:640,y:530,pointerId:null,
   position(e){
     const r=canvas.getBoundingClientRect();
-    this.x=clamp((e.clientX-r.left)*CONFIG.width/r.width,0,CONFIG.width);
-    this.y=clamp((e.clientY-r.top)*CONFIG.height/r.height,0,CONFIG.height);
+    // 画面顺时针旋转 90° 时反向映射，命中位置与手指保持一致。
+    const x=display.rotated?(e.clientY-r.top)/r.height:(e.clientX-r.left)/r.width;
+    const y=display.rotated?1-(e.clientX-r.left)/r.width:(e.clientY-r.top)/r.height;
+    this.x=clamp(x*CONFIG.width,0,CONFIG.width);
+    this.y=clamp(y*CONFIG.height,0,CONFIG.height);
     game.hand.targetX=this.x;game.hand.targetY=this.y;
   },
   dropCapture(){
@@ -769,7 +782,7 @@ const input={
   init(){
     canvas.addEventListener('pointerdown',e=>{
       if(!e.isPrimary||(e.pointerType==='mouse'&&e.button!==0)||this.pointerId!==null)return;
-      e.preventDefault();audio.unlock();canvas.focus();this.position(e);
+      e.preventDefault();display.sync();display.enterLandscape();audio.unlock();canvas.focus();this.position(e);
       if(UI.hit(this.x,this.y))return;
       if(game.hand.press()){
         this.pointerId=e.pointerId;
@@ -817,9 +830,67 @@ const input={
   }
 };
 
+// ── Display：逻辑坐标保持 1280×720，按屏幕密度重绘最高 4K 的画面 ────
+const display={
+  stage:document.getElementById('stage'),dirty:true,ready:false,rotated:false,
+  mobile:false,screenAttempted:false,dpr:0,layoutWidth:0,layoutHeight:0,
+  init(){
+    this.mobile=!!(window.matchMedia?.('(pointer: coarse)').matches||window.navigator?.maxTouchPoints>0);
+    const invalidate=()=>{this.dirty=true};
+    window.addEventListener('resize',invalidate);
+    window.addEventListener('orientationchange',invalidate);
+    document.addEventListener('fullscreenchange',invalidate);
+    window.visualViewport?.addEventListener('resize',invalidate);
+    window.screen?.orientation?.addEventListener('change',invalidate);
+    // 只创建一个观察器，背景缓存在尺寸实际变化时才重建。
+    if(window.ResizeObserver){this.observer=new window.ResizeObserver(invalidate);this.observer.observe(this.stage)}
+    this.sync();
+  },
+  sync(){
+    const dpr=Math.max(1,window.devicePixelRatio||1);
+    if(!this.dirty&&this.dpr===dpr)return;
+    this.dirty=false;this.dpr=dpr;
+    const bounds=this.stage.getBoundingClientRect(),viewport=window.visualViewport;
+    const style=window.getComputedStyle(this.stage);
+    const left=parseFloat(style.paddingLeft)||0,right=parseFloat(style.paddingRight)||0;
+    const top=parseFloat(style.paddingTop)||0,bottom=parseFloat(style.paddingBottom)||0;
+    const width=Math.max(1,Math.min(bounds.width,viewport?.width||bounds.width)-left-right);
+    const height=Math.max(1,Math.min(bounds.height,viewport?.height||bounds.height)-top-bottom);
+    const rotated=this.mobile&&width<height;
+    // 不支持系统横屏锁的手机也直接横向呈现，触摸坐标使用同一旋转规则。
+    const fit=Math.min((rotated?height:width)/CONFIG.width,(rotated?width:height)/CONFIG.height);
+    if(this.ready&&(this.rotated!==rotated||this.layoutWidth!==width||this.layoutHeight!==height))input.cancel();
+    this.rotated=rotated;this.layoutWidth=width;this.layoutHeight=height;
+    canvas.style.width=`${CONFIG.width*fit}px`;canvas.style.height=`${CONFIG.height*fit}px`;
+    canvas.style.left=`${left+width/2}px`;canvas.style.top=`${top+height/2}px`;
+    canvas.style.transform=`translate(-50%,-50%)${rotated?' rotate(90deg)':''}`;
+    const r=CONFIG.render,maxScale=Math.min(r.maxWidth/CONFIG.width,r.maxHeight/CONFIG.height);
+    const scale=clamp(fit*Math.min(dpr,r.maxDPR),r.minScale,maxScale);
+    const pixelWidth=Math.round(CONFIG.width*scale),pixelHeight=Math.round(CONFIG.height*scale);
+    if(canvas.width!==pixelWidth||canvas.height!==pixelHeight){
+      canvas.width=pixelWidth;canvas.height=pixelHeight;
+      this.applyTransform();game.scene.resize(pixelWidth,pixelHeight);
+    }
+    this.ready=true;
+  },
+  applyTransform(){
+    ctx.setTransform(canvas.width/CONFIG.width,0,0,canvas.height/CONFIG.height,0,0);
+    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  },
+  async enterLandscape(){
+    // 全屏及横屏锁必须由触摸手势触发；失败时沿用自动旋转，游戏照常运行。
+    if(!this.mobile||this.screenAttempted)return;
+    this.screenAttempted=true;
+    try{if(this.stage.requestFullscreen&&!document.fullscreenElement)await this.stage.requestFullscreen({navigationUI:'hide'})}catch(e){}
+    try{if(window.screen?.orientation?.lock)await window.screen.orientation.lock('landscape')}catch(e){}
+    this.dirty=true;
+  }
+};
+
 const game=new Game();let lastTime=0,accumulator=0;
-input.init();
+input.init();display.init();
 function frame(time){
+  display.sync();
   if(!lastTime)lastTime=time;const delta=Math.min(CONFIG.maxDelta,Math.max(0,(time-lastTime)/1000));lastTime=time;accumulator+=delta;
   while(accumulator>=CONFIG.step){game.update(CONFIG.step);accumulator-=CONFIG.step}
   game.draw();requestAnimationFrame(frame);

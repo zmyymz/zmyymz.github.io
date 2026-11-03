@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>MINI CIRCUIT · 迷你赛车场</title><link rel="stylesheet" href="style.css"><script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.js","three/addons/":"./vendor/three/examples/jsm/"}}</script></head>
+<body>
+<main id="app">
+ <div id="scene" aria-label="固定全景三维赛车场"></div>
+ <header><a class="brand" href="./"><span class="brand-icon">▰</span><span>迷你赛车场</span></a><div class="top-actions"><select id="level" aria-label="选择关卡" title="切换关卡会重新开始"></select><button id="sound" class="icon-button" aria-label="开启声音">声音 关</button><button id="pause" class="icon-button" disabled>暂停</button></div></header>
+ <section class="scoreboard" aria-label="比赛数据"><div><span class="label">圈数</span><strong><b id="lap">01</b><em> / 03</em></strong></div><div><span class="label">用时</span><strong id="time">00:00.00</strong></div><div><span class="label">最佳</span><strong class="best" id="best">--:--.--</strong></div></section>
+ <div id="car-marker" class="car-marker">▼<span id="car-warning"></span></div>
+ <div id="toast" role="status"></div>
+ <section class="drive-panel"><div class="speed-readout"><div><strong id="speed">0</strong><span>km/h</span></div><div class="speed-track"><i id="speed-fill"></i></div></div><button id="throttle" disabled><span class="pedal-symbol">⇧</span><span>按住油门</span><kbd>空格</kbd></button></section>
+ <div id="overlay"><section class="modal" id="welcome"><h1>迷你赛车场</h1><p>按住加速，弯前松手；轻点油门可以微调速度。</p><button id="start" class="primary" disabled>正在搭建赛车场…</button><small class="modal-foot">空格 / ↑ / W / 屏幕油门</small></section>
+ <section class="modal hidden" id="result"><h1>完赛</h1><div class="result-time" id="result-time"></div><p id="result-message"></p><div class="result-stats"><span>最快单圈<strong id="result-lap"></strong></span><span>脱轨次数<strong id="result-crashes"></strong></span></div><p id="next-info" aria-live="polite"></p><button id="again" class="primary">重跑本关 ↗</button></section>
+ <section class="modal hidden" id="paused"><h1>已暂停</h1><button id="resume" class="primary">继续比赛 ↗</button><button id="restart" class="secondary">重新开始</button></section></div>
+ <div id="countdown" aria-live="polite"></div>
+</main><script type="module" src="game.mjs"></script></body></html>

@@ -375,24 +375,24 @@
 <h2 id="Templates"><a href="#Templates" class="headerlink" title="Templates"></a>Templates</h2><p>是一套Django自己的页面渲染模板语言,用若干内置的tags和filters定义页面的生成方式.</p>
 <h2 id="View"><a href="#View" class="headerlink" title="View"></a>View</h2><p>Django的视图层封装了HTTP Request和Response的一系列操作和数据流,其主要功能包括URL映射机制,绑定模板等</p>
 <ul>
-<li><h6 id="简单点说"><a href="#简单点说" class="headerlink" title="简单点说"></a>简单点说</h6>view调配要加载的数据 ,找出对应的网站<br>model是一个托管数据的层级,view从model找出要加载的数据,然后装载在templates,这个过程称为”渲染”,view把渲染好的网页往回给访问者,并负责找到相应URL<br>MTV和MVC有一点区别</li>
+<li><h2 id="简单点说"><a href="#简单点说" class="headerlink" title="简单点说"></a>简单点说</h2>view调配要加载的数据 ,找出对应的网站<br>model是一个托管数据的层级,view从model找出要加载的数据,然后装载在templates,这个过程称为”渲染”,view把渲染好的网页往回给访问者,并负责找到相应URL<br>MTV和MVC有一点区别</li>
 </ul>
-<h5 id="安装Django"><a href="#安装Django" class="headerlink" title="安装Django"></a>安装Django</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pip install -i https://pypi.doubanio.com/simple django</div></pre></td></tr></table></figure>
-<h5 id="建立Django项目"><a href="#建立Django项目" class="headerlink" title="建立Django项目"></a>建立Django项目</h5><p>新建一个文件夹,比如<code>root</code>,进入文件夹执行以下命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">django-admin startproject firstsite</div></pre></td></tr></table></figure></p>
+<h2 id="安装Django"><a href="#安装Django" class="headerlink" title="安装Django"></a>安装Django</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pip install -i https://pypi.doubanio.com/simple django</div></pre></td></tr></table></figure>
+<h2 id="建立Django项目"><a href="#建立Django项目" class="headerlink" title="建立Django项目"></a>建立Django项目</h2><p>新建一个文件夹,比如<code>root</code>,进入文件夹执行以下命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">django-admin startproject firstsite</div></pre></td></tr></table></figure></p>
 <p>此时文件目录树如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">firstsite/</div><div class="line">    manage.py</div><div class="line">    firstsite/</div><div class="line">        _init_.py</div><div class="line">        settings.py</div><div class="line">        urls.py</div><div class="line">        wsgi.py</div></pre></td></tr></table></figure></p>
-<h5 id="建立Django应用"><a href="#建立Django应用" class="headerlink" title="建立Django应用"></a>建立Django应用</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python manage.py startapp firstapp</div></pre></td></tr></table></figure>
+<h2 id="建立Django应用"><a href="#建立Django应用" class="headerlink" title="建立Django应用"></a>建立Django应用</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python manage.py startapp firstapp</div></pre></td></tr></table></figure>
 <p>此时会多出一个firstapp文件夹</p>
 <p><img src="http://upload-images.jianshu.io/upload_images/4731059-a2be107d905bfee6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
 <p>要在firstsite项目的settings.py中告诉Django需要安装应用app中的模型,则方法是添加如下图<br><img src="http://upload-images.jianshu.io/upload_images/4731059-4fdcb6f8d341965b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>之后执行,此过程是将models.py中定义的数据表换成数据库生成脚本的过程.<br>(感觉在这里多余,以后测试后更改)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python manage.py migrate</div></pre></td></tr></table></figure></p>
 <p><img src="http://upload-images.jianshu.io/upload_images/4731059-6c1a99168aeae236.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>继续执行如下命令,启动Web服务器,用这种方式启动的Web服务器是Django内置的Web服务器,由于性能原因,一般只用于开发人员测试.正式运行网站应该使用WSGI方式启动.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python manage.py runserver</div></pre></td></tr></table></figure></p>
 <p><img src="http://upload-images.jianshu.io/upload_images/4731059-5b400acaea37ffb0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>然后在浏览器打开<code>http://127.0.0.1:8000/</code></p>
 <p><img src="http://upload-images.jianshu.io/upload_images/4731059-08a2407a9394b272.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
-<h3 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h3><p>在<code>models.py</code>中我们新建一个People类,代码如下先引入 <code>django.db</code>,所有Django模型必须继承自它,之后定义了该类的子类<code>People</code></p>
+<h2 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h2><p>在<code>models.py</code>中我们新建一个People类,代码如下先引入 <code>django.db</code>,所有Django模型必须继承自它,之后定义了该类的子类<code>People</code></p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> django.db <span class="keyword">import</span> models</div><div class="line"></div><div class="line"><span class="comment"># Create your models here.</span></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">People</span><span class="params">(models.Model)</span>:</span></div><div class="line">	name = models.CharField(null= <span class="keyword">True</span>,blank = <span class="keyword">True</span>,max_length = <span class="number">200</span>)</div><div class="line">	job = models.CharField(null = <span class="keyword">True</span>,blank = <span class="keyword">True</span>,max_length = <span class="number">200</span>)</div></pre></td></tr></table></figure>
-<h5 id="生成数据移植文件"><a href="#生成数据移植文件" class="headerlink" title="生成数据移植文件"></a>生成数据移植文件</h5><p>Django术语生成数据移植文件(makemigrations)是指将modes.py中定义的数据表转换成数据库生成脚本的过程,具体命令如下:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python manage.py makemigrations</div></pre></td></tr></table></figure></p>
+<h3 id="生成数据移植文件"><a href="#生成数据移植文件" class="headerlink" title="生成数据移植文件"></a>生成数据移植文件</h3><p>Django术语生成数据移植文件(makemigrations)是指将modes.py中定义的数据表转换成数据库生成脚本的过程,具体命令如下:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python manage.py makemigrations</div></pre></td></tr></table></figure></p>
 <p><img src="http://upload-images.jianshu.io/upload_images/4731059-7dbebbef851375eb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>通过输出可以看到完成了模型People的建立,输出中(生成的新文件)的0001_initial.py是数据库生成的中间件文件,通过他可以知道当前的数据库版本.在模型的修改过程中可以随时调用makemigrations生成中间移植文件.</p>
-<h4 id="移植到数据库"><a href="#移植到数据库" class="headerlink" title="移植到数据库"></a>移植到数据库</h4><p>而当需要使移植文件生效,修改真实数据库时,则需要通过<code>manage.py</code>的<code>migrate</code>命令使修改同步到数据库中<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python manage.py migrate</div></pre></td></tr></table></figure></p>
-<h4 id="开发视图函数"><a href="#开发视图函数" class="headerlink" title="开发视图函数"></a>开发视图函数</h4><p>view需要从model中获取数据,在view.py中加入如下函数<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> django.shortcuts <span class="keyword">import</span> render,HttpResponse</div><div class="line"><span class="keyword">from</span> firstapp.models <span class="keyword">import</span> People</div><div class="line"><span class="keyword">from</span> django.template <span class="keyword">import</span> Context,Template</div><div class="line"></div><div class="line"><span class="comment"># Create your views here.</span></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">first_try</span><span class="params">(request)</span>:</span></div><div class="line">	person = People(name = <span class="string">'jack'</span>,job = <span class="string">'worker'</span>)</div><div class="line">	html_string = <span class="string">'''</span></div><div class="line"><span class="string">	&lt;!DOCTYPE html&gt;</span></div><div class="line"><span class="string">&lt;html lang="en"&gt;</span></div><div class="line"><span class="string">&lt;head&gt;</span></div><div class="line"><span class="string">	&lt;meta charset="UTF-8"&gt;</span></div><div class="line"><span class="string">	&lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.css"&gt;</span></div><div class="line"><span class="string">&lt;/head&gt;</span></div><div class="line"><span class="string">&lt;body&gt;</span></div><div class="line"><span class="string">	&lt;h1 class="ui center aligned icon header"&gt;</span></div><div class="line"><span class="string">		&lt;i class="hand spock icon"&gt;&lt;/i&gt;</span></div><div class="line"><span class="string">		Hello,&#123;&#123;person.name&#125;&#125;</span></div><div class="line"><span class="string">	&lt;/h1&gt;</span></div><div class="line"><span class="string">&lt;/body&gt;</span></div><div class="line"><span class="string">&lt;/html&gt;</span></div><div class="line"><span class="string">	'''</span></div><div class="line">	t = Template(html_string)</div><div class="line">    <span class="comment">#数据库装载在模板</span></div><div class="line">	c = Context(&#123;<span class="string">'person'</span>:person&#125;)</div><div class="line">    <span class="comment">#对上下文进行渲染</span></div><div class="line">	web_page = t.render(c)</div><div class="line"><span class="comment">#将网页变成http对象</span></div><div class="line">	<span class="keyword">return</span> HttpResponse(web_page)</div></pre></td></tr></table></figure></p>
+<h3 id="移植到数据库"><a href="#移植到数据库" class="headerlink" title="移植到数据库"></a>移植到数据库</h3><p>而当需要使移植文件生效,修改真实数据库时,则需要通过<code>manage.py</code>的<code>migrate</code>命令使修改同步到数据库中<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python manage.py migrate</div></pre></td></tr></table></figure></p>
+<h3 id="开发视图函数"><a href="#开发视图函数" class="headerlink" title="开发视图函数"></a>开发视图函数</h3><p>view需要从model中获取数据,在view.py中加入如下函数<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> django.shortcuts <span class="keyword">import</span> render,HttpResponse</div><div class="line"><span class="keyword">from</span> firstapp.models <span class="keyword">import</span> People</div><div class="line"><span class="keyword">from</span> django.template <span class="keyword">import</span> Context,Template</div><div class="line"></div><div class="line"><span class="comment"># Create your views here.</span></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">first_try</span><span class="params">(request)</span>:</span></div><div class="line">	person = People(name = <span class="string">'jack'</span>,job = <span class="string">'worker'</span>)</div><div class="line">	html_string = <span class="string">'''</span></div><div class="line"><span class="string">	&lt;!DOCTYPE html&gt;</span></div><div class="line"><span class="string">&lt;html lang="en"&gt;</span></div><div class="line"><span class="string">&lt;head&gt;</span></div><div class="line"><span class="string">	&lt;meta charset="UTF-8"&gt;</span></div><div class="line"><span class="string">	&lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.css"&gt;</span></div><div class="line"><span class="string">&lt;/head&gt;</span></div><div class="line"><span class="string">&lt;body&gt;</span></div><div class="line"><span class="string">	&lt;h1 class="ui center aligned icon header"&gt;</span></div><div class="line"><span class="string">		&lt;i class="hand spock icon"&gt;&lt;/i&gt;</span></div><div class="line"><span class="string">		Hello,&#123;&#123;person.name&#125;&#125;</span></div><div class="line"><span class="string">	&lt;/h1&gt;</span></div><div class="line"><span class="string">&lt;/body&gt;</span></div><div class="line"><span class="string">&lt;/html&gt;</span></div><div class="line"><span class="string">	'''</span></div><div class="line">	t = Template(html_string)</div><div class="line">    <span class="comment">#数据库装载在模板</span></div><div class="line">	c = Context(&#123;<span class="string">'person'</span>:person&#125;)</div><div class="line">    <span class="comment">#对上下文进行渲染</span></div><div class="line">	web_page = t.render(c)</div><div class="line"><span class="comment">#将网页变成http对象</span></div><div class="line">	<span class="keyword">return</span> HttpResponse(web_page)</div></pre></td></tr></table></figure></p>
 <p>修改URL,在<code>urls.py</code>中修改如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">from django.conf.urls import url</div><div class="line">from django.contrib import admin</div><div class="line">from firstapp.views import first_try</div><div class="line"></div><div class="line">urlpatterns = [</div><div class="line">    url(r&apos;^admin/&apos;, admin.site.urls),</div><div class="line">    url(r&apos;^first_try/&apos;, first_try)</div><div class="line">]</div></pre></td></tr></table></figure></p>
 <p>然后执行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python manage.py runserver</div></pre></td></tr></table></figure></p>
 <p>效果图如下<br><img src="http://upload-images.jianshu.io/upload_images/4731059-fa58fa6e3a87e2b0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
@@ -582,7 +582,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Model"><span class="nav-number">1.</span> <span class="nav-text">Model</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Templates"><span class="nav-number">2.</span> <span class="nav-text">Templates</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#View"><span class="nav-number">3.</span> <span class="nav-text">View</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#简单点说"><span class="nav-number">3.0.0.0.1.</span> <span class="nav-text">简单点说</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#安装Django"><span class="nav-number">3.0.0.1.</span> <span class="nav-text">安装Django</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#建立Django项目"><span class="nav-number">3.0.0.2.</span> <span class="nav-text">建立Django项目</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#建立Django应用"><span class="nav-number">3.0.0.3.</span> <span class="nav-text">建立Django应用</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实例"><span class="nav-number">3.1.</span> <span class="nav-text">实例</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#生成数据移植文件"><span class="nav-number">3.1.0.1.</span> <span class="nav-text">生成数据移植文件</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#移植到数据库"><span class="nav-number">3.1.1.</span> <span class="nav-text">移植到数据库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#开发视图函数"><span class="nav-number">3.1.2.</span> <span class="nav-text">开发视图函数</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Model"><span class="nav-number">1.</span> <span class="nav-text">Model</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Templates"><span class="nav-number">2.</span> <span class="nav-text">Templates</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#View"><span class="nav-number">3.</span> <span class="nav-text">View</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#简单点说"><span class="nav-number">4.</span> <span class="nav-text">简单点说</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装Django"><span class="nav-number">5.</span> <span class="nav-text">安装Django</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#建立Django项目"><span class="nav-number">6.</span> <span class="nav-text">建立Django项目</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#建立Django应用"><span class="nav-number">7.</span> <span class="nav-text">建立Django应用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实例"><span class="nav-number">8.</span> <span class="nav-text">实例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#生成数据移植文件"><span class="nav-number">8.1.</span> <span class="nav-text">生成数据移植文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#移植到数据库"><span class="nav-number">8.2.</span> <span class="nav-text">移植到数据库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#开发视图函数"><span class="nav-number">8.3.</span> <span class="nav-text">开发视图函数</span></a></li></ol></li></ol></div>
             
 
           </div>
@@ -592,156 +592,6 @@
 
       
 	  
-	  <a title="High^_^" rel="alternate" class="mw-harlem_shake_slow wobble shake" href='javascript:(function() {
-    function c() {
-        var e = document.createElement("link");
-        e.setAttribute("type", "text/css");
-        e.setAttribute("rel", "stylesheet");
-        e.setAttribute("href", f);
-        e.setAttribute("class", l);
-        document.body.appendChild(e)
-    }
- 
-    function h() {
-        var e = document.getElementsByClassName(l);
-        for (var t = 0; t < e.length; t++) {
-            document.body.removeChild(e[t])
-        }
-    }
- 
-    function p() {
-        var e = document.createElement("div");
-        e.setAttribute("class", a);
-        document.body.appendChild(e);
-        setTimeout(function() {
-            document.body.removeChild(e)
-        }, 100)
-    }
- 
-    function d(e) {
-        return {
-            height : e.offsetHeight,
-            width : e.offsetWidth
-        }
-    }
- 
-    function v(i) {
-        var s = d(i);
-        return s.height > e && s.height < n && s.width > t && s.width < r
-    }
- 
-    function m(e) {
-        var t = e;
-        var n = 0;
-        while (!!t) {
-            n += t.offsetTop;
-            t = t.offsetParent
-        }
-        return n
-    }
- 
-    function g() {
-        var e = document.documentElement;
-        if (!!window.innerWidth) {
-            return window.innerHeight
-        } else if (e && !isNaN(e.clientHeight)) {
-            return e.clientHeight
-        }
-        return 0
-    }
- 
-    function y() {
-        if (window.pageYOffset) {
-            return window.pageYOffset
-        }
-        return Math.max(document.documentElement.scrollTop, document.body.scrollTop)
-    }
- 
-    function E(e) {
-        var t = m(e);
-        return t >= w && t <= b + w
-    }
- 
-    function S() {
-        var e = document.createElement("audio");
-        e.setAttribute("class", l);
-        e.src = i;
-        e.loop = false;
-        e.addEventListener("canplay", function() {
-            setTimeout(function() {
-                x(k)
-            }, 500);
-            setTimeout(function() {
-                N();
-                p();
-                for (var e = 0; e < O.length; e++) {
-                    T(O[e])
-                }
-            }, 15500)
-        }, true);
-        e.addEventListener("ended", function() {
-            N();
-            h()
-        }, true);
-        e.innerHTML = " <p>If you are reading this, it is because your browser does not support the audio element. We recommend that you get a new browser.</p> <p>";
-        document.body.appendChild(e);
-        e.play()
-    }
- 
-    function x(e) {
-        e.className += " " + s + " " + o
-    }
- 
-    function T(e) {
-        e.className += " " + s + " " + u[Math.floor(Math.random() * u.length)]
-    }
- 
-    function N() {
-        var e = document.getElementsByClassName(s);
-        var t = new RegExp("\\b" + s + "\\b");
-        for (var n = 0; n < e.length; ) {
-            e[n].className = e[n].className.replace(t, "")
-        }
-    }
- 
-    var e = 30;
-    var t = 30;
-    var n = 350;
-    var r = 350;
-    var i = "//s3.amazonaws.com/moovweb-marketing/playground/harlem-shake.mp3";
-    var s = "mw-harlem_shake_me";
-    var o = "im_first";
-    var u = ["im_drunk", "im_baked", "im_trippin", "im_blown"];
-    var a = "mw-strobe_light";
-    var f = "//s3.amazonaws.com/moovweb-marketing/playground/harlem-shake-style.css";
-    var l = "mw_added_css";
-    var b = g();
-    var w = y();
-    var C = document.getElementsByTagName("*");
-    var k = null;
-    for (var L = 0; L < C.length; L++) {
-        var A = C[L];
-        if (v(A)) {
-            if (E(A)) {
-                k = A;
-                break
-            }
-        }
-    }
-    if (A === null) {
-        console.warn("Could not find a node of the right size. Please try a different page.");
-        return
-    }
-    c();
-    S();
-    var O = [];
-    for (var L = 0; L < C.length; L++) {
-        var A = C[L];
-        if (v(A)) {
-            O.push(A)
-        }
-    }
-})()'><i class="fa fa-music"></i> High</a>
 
 
     </div>
