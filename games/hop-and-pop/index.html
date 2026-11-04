@@ -3,55 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f9eddf">
+  <meta name="theme-color" content="#f9e4cd">
   <title>跃跃小蓝</title>
   <link rel="icon" type="image/png" href="assets/sprites.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="page-shell">
-    <header class="brand-row">
-      <div class="brand"><span class="brand-mark" role="img" aria-label="主角小蓝：蓝色长耳小射手"></span><span>跃跃小蓝</span></div>
-    </header>
+  <main class="play-view" aria-label="跃跃小蓝游戏">
+    <div id="stage" class="stage">
+      <canvas id="game" width="384" height="216" aria-label="自动奔跑射击游戏，点击或按空格跳跃"></canvas>
 
-    <section class="game-frame" aria-label="跃跃小蓝游戏">
       <div class="hud">
-        <div class="level-meta"><span id="level-number" class="level-number">01</span><div><h1 id="level-name">林间起跑</h1><span id="level-tag">先热热身</span></div></div>
-        <div class="hud-stats"><div class="stat"><span class="stat-label">金币</span><span id="coin-count">0 / 0</span></div><div class="stat"><span class="stat-label">击破</span><span id="enemy-count">0 / 0</span></div><div class="stat time-stat"><span class="stat-label">用时</span><span id="time-count">0:00.0</span></div><button id="pause-button" class="icon-button" title="暂停 (P)" aria-label="暂停">Ⅱ</button></div>
+        <div class="hud-stats">
+          <div class="stat"><span class="stat-label">金币</span><span id="coin-count">0 / 0</span></div>
+          <div class="stat"><span class="stat-label">击破</span><span id="enemy-count">0 / 0</span></div>
+          <div class="stat time-stat"><span class="stat-label">用时</span><span id="time-count">0:00.0</span></div>
+        </div>
+        <button id="pause-button" class="icon-button" title="暂停 (P)" aria-label="暂停">Ⅱ</button>
       </div>
       <div class="progress-track"><div id="level-progress"></div></div>
+      <div class="top-tip" id="top-tip">空格 / 点击屏幕，跳起来！</div>
 
-      <div id="stage" class="stage">
-        <canvas id="game" width="384" height="216" aria-label="自动奔跑射击游戏，点击或按空格跳跃"></canvas>
-        <div class="world-label"><span class="live-dot"></span> 小蓝出战中 <span class="divider">/</span> 自动奔跑 <span class="divider">/</span> 自动射击</div>
-        <div class="top-tip" id="top-tip">空格 / 点击屏幕，跳起来！</div>
-        <div id="screen-overlay" class="screen-overlay">
-          <section id="start-panel" class="panel start-panel">
-            <span class="eyebrow">蓝耳小射手的自动冒险</span>
-            <h2>一路向前，<br><span>跳就完事！</span></h2>
-            <p>蓝色长耳的小蓝会自动奔跑、举枪射击。<br>你只管抓住节奏，越过山谷与坏蛋。</p>
-            <button id="start-button" class="primary-button">开始冒险 <span>→</span></button>
-            <div class="start-controls"><kbd>SPACE</kbd> 或点击跳跃 <span>·</span> 空中再按一次，二段跳</div>
-          </section>
-          <section id="result-panel" class="panel result-panel" hidden>
-            <span id="result-eyebrow" class="eyebrow">再试一次</span>
-            <h2 id="result-title">就差一点！</h2>
-            <p id="result-description">留意前方的路，下一跳会更好。</p>
-            <div id="result-stats" class="result-stats"></div>
-            <button id="result-button" class="primary-button">重新出发 <span>↻</span></button>
-            <button id="home-button" class="text-button">返回首页</button>
-          </section>
-          <section id="pause-panel" class="panel pause-panel" hidden>
-            <span class="eyebrow">喘口气</span><h2>暂停一下</h2><p>冒险会在这里等你。</p>
-            <button id="resume-button" class="primary-button">继续冒险 <span>→</span></button>
-            <button id="restart-button" class="text-button">重新开始本关</button>
-          </section>
-        </div>
+      <div id="screen-overlay" class="screen-overlay">
+        <section id="result-panel" class="panel result-panel" hidden>
+          <span id="result-eyebrow" class="eyebrow">再试一次</span>
+          <h2 id="result-title">就差一点！</h2>
+          <p id="result-description">留意前方的路，下一跳会更好。</p>
+          <div id="result-stats" class="result-stats"></div>
+          <button id="result-button" class="primary-button">重新出发 <span>↻</span></button>
+        </section>
+        <section id="pause-panel" class="panel pause-panel" hidden>
+          <span class="eyebrow">喘口气</span>
+          <h2>暂停一下</h2>
+          <p>冒险会在这里等你。</p>
+          <button id="resume-button" class="primary-button">继续冒险 <span>→</span></button>
+          <button id="restart-button" class="text-button">重新开始本关</button>
+        </section>
       </div>
 
-      <div class="game-controls"><div class="control-hint"><span class="keycap">SPACE</span><span>跳跃</span><span class="hint-divider">/</span><span class="double-jump-icon">↟</span><span>空中再按一次 · 二段跳</span></div><button id="jump-button" class="jump-button"><span class="jump-arrow">↑</span><span>跳一下！</span></button><button id="sound-button" class="sound-button" aria-label="关闭声音" title="开关声音"><span id="sound-icon">♪</span></button></div>
-    </section>
-
+      <div class="game-controls">
+        <div class="control-hint"><span class="keycap">SPACE</span><span>跳跃</span><span class="hint-divider">/</span><span class="double-jump-icon">↟</span><span>空中再按一次 · 二段跳</span></div>
+        <button id="jump-button" class="jump-button"><span class="jump-arrow">↑</span><span>跳一下！</span></button>
+        <button id="sound-button" class="sound-button" aria-label="关闭声音" title="开关声音"><span id="sound-icon">♪</span></button>
+      </div>
+    </div>
     <div id="announcer" class="sr-only" aria-live="polite"></div>
   </main>
   <script src="game.js"></script>

@@ -264,18 +264,10 @@ function renderStaticArt() {
   drawPortrait($('#red-canvas'), 'red');
   drawPortrait($('#blue-canvas'), 'blue');
   for (let i = 0; i < 3; i++) drawLevelPreview(i);
-  drawPortrait($('#hud-canvas'), selectedCharacter);
 }
 
 function selectCharacter(color) {
   selectedCharacter = color;
-  $$('.character-card').forEach((card) => {
-    const selected = card.dataset.character === color;
-    card.classList.toggle('selected', selected);
-    card.setAttribute('aria-pressed', String(selected));
-  });
-  drawPortrait($('#hud-canvas'), color);
-  if (game) $('#hud-character').textContent = color === 'red' ? '果果 · 高跳跃' : '泡泡 · 二段跳';
 }
 
 function updateLevelCards() {
@@ -397,8 +389,7 @@ function updateTraps(dt) {
 }
 
 function startGame(levelIndex = 0) {
-  if (levelIndex >= progress.unlocked) { showToast('先完成上一关，就能解锁这里啦'); return; }
-  if ($('#guide-dialog').open) $('#guide-dialog').close();
+  if (levelIndex >= progress.unlocked) levelIndex = 0;
   const level = levels[levelIndex];
   game = {
     level, levelIndex, state: 'playing', time: 0, lives: practiceMode ? 9 : 5, coins: 0, camera: 0, shake: 0,
@@ -410,37 +401,17 @@ function startGame(levelIndex = 0) {
     traps: createTraps(level, levelIndex), particles: [], popups: [], checkpoint: 0, overlayAction: null
   };
   document.body.style.overflow = 'hidden';
-  $('#play-view').hidden = false;
-  $('.site-shell').hidden = true;
-  $('#game-heading-title').textContent = level.name;
-  $('#game-level-count').textContent = `0${levelIndex + 1} / 03`;
   $('#game-overlay').hidden = true;
   $('#hud-total').textContent = game.coinsList.length;
-  $('#hud-character').textContent = practiceMode ? '练习模式' : selectedCharacter === 'red' ? '果果 · 高跳跃' : '泡泡 · 二段跳';
-  $('#trap-status').textContent = game.traps.map((trap) => trap.name).join(' · ');
   $('#practice-toggle').classList.toggle('active', practiceMode);
   $('#practice-toggle').setAttribute('aria-pressed', String(practiceMode));
-  drawPortrait($('#hud-canvas'), selectedCharacter);
   updateHud();
   clearKeys();
   window.scrollTo(0, 0);
   $('#game-canvas').focus({ preventScroll: true });
-  sound([[523, 0, .08], [659, .09, .08], [784, .18, .14]]);
   cancelAnimationFrame(animationFrame);
   lastFrame = performance.now(); accumulator = 0;
   animationFrame = requestAnimationFrame(gameLoop);
-}
-
-function exitGame() {
-  if (!game) return;
-  game.state = 'exited';
-  cancelAnimationFrame(animationFrame);
-  clearKeys();
-  game = null;
-  $('#play-view').hidden = true;
-  $('.site-shell').hidden = false;
-  document.body.style.overflow = '';
-  updateLevelCards();
 }
 
 function clearKeys() { keys.left = keys.right = keys.jump = false; $$('.touch-button').forEach((b) => b.classList.remove('pressed')); }
@@ -453,6 +424,15 @@ function requestJump() {
 function formatTime(seconds) {
   const total = Math.floor(seconds);
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+
+function resizeGame() {
+  const canvas = $('#game-canvas');
+  const scale = Math.max(innerWidth / VIEW_W, innerHeight / VIEW_H);
+  canvas.style.width = `${Math.ceil(VIEW_W * scale)}px`;
+  canvas.style.height = `${Math.ceil(VIEW_H * scale)}px`;
+  canvas.style.left = '0px';
+  canvas.style.top = `${Math.floor((innerHeight - VIEW_H * scale) / 2)}px`;
 }
 
 function updateHud() {
@@ -599,6 +579,7 @@ function showOverlay(type) {
   const overlay = $('#game-overlay');
   overlay.hidden = false;
   $('#result-stats').hidden = type !== 'complete';
+  $('#pause-options').hidden = type !== 'paused';
   if (type === 'paused') {
     $('#overlay-kicker').textContent = ''; $('#overlay-icon').textContent = 'Ⅱ';
     $('#overlay-title').textContent = '休息一下';
@@ -692,6 +673,7 @@ function drawTraps(ctx) {
 }
 
 function drawGame() {
+  if (!game) return;
   const canvas = $('#game-canvas');
   const ctx = canvas.getContext('2d');
   const p = game.player;
@@ -729,11 +711,6 @@ function drawGame() {
   ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center';
   game.popups.forEach((popup) => { ctx.globalAlpha = popup.life; ctx.fillStyle = '#fff9db'; ctx.fillText(popup.text, popup.x, popup.y); });
   ctx.restore(); ctx.globalAlpha = 1;
-  if (game.time < 8) {
-    ctx.fillStyle = '#fff9e8df'; ctx.fillRect(24, 25, 230, 38);
-    ctx.fillStyle = '#7c8a6c'; ctx.font = '12px "Noto Sans SC", sans-serif'; ctx.textAlign = 'left';
-    ctx.fillText(game.levelIndex === 0 ? 'A / D 移动 · 空格跳跃' : selectedCharacter === 'blue' ? '空中再按一次空格，二段跳' : '收集金币，抵达传送门 →', 39, 49);
-  }
 }
 
 function gameLoop(now) {
@@ -751,7 +728,7 @@ function gameLoop(now) {
 
 const keyMap = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', Space: 'jump', ArrowUp: 'jump', KeyW: 'jump' };
 window.addEventListener('keydown', (event) => {
-  if (!game || $('#play-view').hidden || $('#guide-dialog').open) return;
+  if (!game || $('#play-view').hidden) return;
   if (keyMap[event.code]) {
     event.preventDefault();
     if (game.state === 'playing') {
@@ -767,29 +744,23 @@ window.addEventListener('blur', () => { if (game && game.state === 'playing') to
 document.addEventListener('visibilitychange', () => { if (document.hidden && game && game.state === 'playing') togglePause(); });
 
 $$('.character-card').forEach((card) => card.addEventListener('click', () => { selectCharacter(card.dataset.character); sound([[660, 0, .07]], 'square', .018); }));
-$$('.level-card').forEach((card) => card.addEventListener('click', () => startGame(Number(card.dataset.level))));
-$$('.sound-toggle').forEach((button) => button.addEventListener('click', toggleSound));
-$('#start-button').addEventListener('click', () => startGame(0));
-$('#preview-play').addEventListener('click', () => startGame(0));
-$$('.brand[href="#"], .footer-brand').forEach((link) => link.addEventListener('click', (event) => { event.preventDefault(); if (game) exitGame(); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
-$('#game-home').addEventListener('click', (event) => { event.preventDefault(); exitGame(); });
-$('#exit-game').addEventListener('click', exitGame);
-$('#overlay-home').addEventListener('click', exitGame);
 $('#pause-button').addEventListener('click', togglePause);
 $('#practice-toggle').addEventListener('click', () => {
   practiceMode = !practiceMode;
   if (game) startGame(game.levelIndex);
 });
+$('#character-toggle').addEventListener('click', () => {
+  selectCharacter(selectedCharacter === 'red' ? 'blue' : 'red');
+  if (game) startGame(game.levelIndex);
+});
+$$('[data-pause-level]').forEach((button) => {
+  const index = Number(button.dataset.pauseLevel);
+  button.disabled = index >= progress.unlocked;
+  button.addEventListener('click', () => startGame(index));
+});
 $('#restart-button').addEventListener('click', () => game && startGame(game.levelIndex));
 $('#overlay-primary').addEventListener('click', () => game && game.overlayAction && game.overlayAction());
 $('#overlay-secondary').addEventListener('click', () => game && startGame(game.levelIndex));
-
-const guideDialog = $('#guide-dialog');
-function openGuide() { if (game && game.state === 'playing') togglePause(); guideDialog.showModal(); }
-['#guide-button', '#how-button', '#tip-guide'].forEach((selector) => $(selector).addEventListener('click', openGuide));
-$('#close-guide').addEventListener('click', () => guideDialog.close());
-$('#guide-start').addEventListener('click', () => { guideDialog.close(); if (!game) startGame(0); });
-guideDialog.addEventListener('click', (event) => { if (event.target === guideDialog) { const rect = guideDialog.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) guideDialog.close(); } });
 
 $$('.touch-button').forEach((button) => {
   const control = button.dataset.control;
@@ -805,6 +776,8 @@ $$('.touch-button').forEach((button) => {
   button.addEventListener('lostpointercapture', release);
 });
 
-tileSourcesLoaded.then(renderStaticArt);
 selectCharacter('red');
-updateLevelCards();
+window.addEventListener('resize', resizeGame);
+resizeGame();
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => startGame(0), { once: true });
+else startGame(0);

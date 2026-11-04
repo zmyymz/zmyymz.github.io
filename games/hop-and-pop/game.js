@@ -179,9 +179,6 @@
     completionTimer = 0;
     hintTimer = 0;
     shake = 0;
-    $('level-number').textContent = String(index + 1).padStart(2, '0');
-    $('level-name').textContent = source.name;
-    $('level-tag').textContent = source.tag;
     $('top-tip').classList.remove('visible');
     updateHud();
   }
@@ -189,16 +186,12 @@
   function setState(next) {
     state = next;
     const overlay = $('screen-overlay');
-    overlay.hidden = next === 'playing' || next === 'dying' || next === 'finishing';
-    $('start-panel').hidden = next !== 'ready';
+    overlay.hidden = next === 'ready' || next === 'playing' || next === 'dying' || next === 'finishing';
     $('result-panel').hidden = next !== 'dead' && next !== 'complete' && next !== 'won';
     $('pause-panel').hidden = next !== 'paused';
     $('pause-button').textContent = next === 'paused' ? '▶' : 'Ⅱ';
     $('pause-button').setAttribute('aria-label', next === 'paused' ? '继续' : '暂停');
     $('pause-button').title = next === 'paused' ? '继续 (P)' : '暂停 (P)';
-    if (next === 'ready') {
-      $('start-button').focus({ preventScroll: true });
-    }
     if (next === 'dead') {
       $('result-eyebrow').textContent = '再试一次';
       $('result-title').textContent = '就差一点！';
@@ -236,6 +229,10 @@
   }
 
   function jump() {
+    if (state === 'ready') {
+      setState('playing');
+      showTip(level.tip, 3.5);
+    }
     if (state !== 'playing') return;
     if (player.grounded || player.coyote > 0 || player.jumpsLeft > 0) performJump();
     player.jumpBuffer = .15;
@@ -457,11 +454,12 @@
     $('time-count').textContent = formatTime(elapsed);
     $('level-progress').style.width = `${Math.min(100, Math.max(0, player.x / (level.width - 48) * 100))}%`;
     const canDoubleJump = state === 'playing' && !player.grounded && player.jumpsLeft > 0;
+    const label = state === 'ready' ? '开始！' : canDoubleJump ? '再跳一下！' : '跳一下！';
     const jumpLabel = $('jump-button').lastElementChild;
-    if (jumpLabel.textContent !== (canDoubleJump ? '再跳一下！' : '跳一下！')) {
-      jumpLabel.textContent = canDoubleJump ? '再跳一下！' : '跳一下！';
+    if (jumpLabel.textContent !== label) {
+      jumpLabel.textContent = label;
       $('jump-button').classList.toggle('double-ready', canDoubleJump);
-      $('jump-button').setAttribute('aria-label', canDoubleJump ? '再跳一下，使用二段跳' : '跳跃');
+      $('jump-button').setAttribute('aria-label', state === 'ready' ? '开始游戏' : canDoubleJump ? '再跳一下，使用二段跳' : '跳跃');
     }
   }
 
@@ -482,7 +480,6 @@
     drawPlayer();
     drawParticles();
     ctx.restore();
-    if (state === 'playing' || state === 'finishing') drawGoalHint();
   }
 
   function drawBackground() {
@@ -621,16 +618,6 @@
     ctx.globalAlpha = 1;
   }
 
-  function drawGoalHint() {
-    const remaining = level.width - 48 - player.x;
-    if (remaining > VIEW_W * .75) return;
-    ctx.fillStyle = '#9b8d6b';
-    ctx.font = '7px sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText('终点就在前方 →', VIEW_W - 12, 24);
-    ctx.textAlign = 'left';
-  }
-
   function loop(now) {
     const dt = Math.min((now - lastFrame) / 1000, .025);
     lastFrame = now;
@@ -639,13 +626,11 @@
     requestAnimationFrame(loop);
   }
 
-  $('start-button').addEventListener('click', startLevel);
   $('result-button').addEventListener('click', () => {
     if (state === 'complete') { selectedLevel++; startLevel(); }
     else if (state === 'won') { selectedLevel = 0; startLevel(); }
     else startLevel();
   });
-  $('home-button').addEventListener('click', () => { prepareLevel(selectedLevel); setState('ready'); });
   $('pause-button').addEventListener('click', togglePause);
   $('resume-button').addEventListener('click', togglePause);
   $('restart-button').addEventListener('click', startLevel);
@@ -672,7 +657,7 @@
       event.preventDefault();
       togglePause();
     }
-    if (event.code === 'KeyR' && !event.repeat && state !== 'ready') startLevel();
+    if (event.code === 'KeyR' && !event.repeat) startLevel();
     if (event.code === 'Enter' && !event.repeat && state === 'dead') startLevel();
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'playing') setState('paused'); });
@@ -681,5 +666,6 @@
 
   prepareLevel(0);
   setState('ready');
+  showTip('点击 / 空格开始', 999);
   requestAnimationFrame(loop);
 })();

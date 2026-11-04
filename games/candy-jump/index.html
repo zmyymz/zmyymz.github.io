@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#f7f5ed">
   <meta name="description" content="跳跳糖，一场甜甜的像素冒险。跑跳、踩怪、收集金币，穿过三个手工打造的小关卡。">
-  <title>跳跳糖 · 小小怪兽，大大冒险</title>
+  <title>跳跳糖</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23264236' d='M4 8h4V4h16v4h4v16h-4v4H8v-4H4z'/%3E%3Cpath fill='%23f47662' d='M8 8h16v16H8z'/%3E%3Cpath fill='%23fff' d='M11 12h4v4h-4zm7 0h4v4h-4z'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
-  <div class="site-shell">
+  <!-- Legacy landing page kept out of the full-screen build.
+  <div class="site-shell" hidden>
     <header class="header">
       <a class="brand" href="#" aria-label="跳跳糖首页">
         <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b><b></b></span>
@@ -118,26 +119,25 @@
 
     <footer class="footer"><a class="footer-brand" href="#"><span>✦</span> 跳跳糖</a><span class="credits">素材 <a href="https://kenney.nl" target="_blank" rel="noreferrer">KENNEY</a> · CC0</span></footer>
   </div>
+  -->
 
-  <section class="play-view" id="play-view" hidden aria-label="跳跳糖游戏">
-    <div class="play-topbar"><a class="brand game-brand" href="#" id="game-home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b><b></b></span><span class="brand-name">跳跳糖</span></a><div class="play-top-actions"><button class="icon-button sound-toggle" aria-label="关闭音效"><svg class="sound-on" viewBox="0 0 24 24" fill="none"><path d="M11 5L6 9H3v6h3l5 4V5zM15 8c1.4 1 2 2.3 2 4s-.6 3-2 4M18 5c2.1 1.8 3 4 3 7s-.9 5.2-3 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><svg class="sound-off" viewBox="0 0 24 24" fill="none"><path d="M11 5L6 9H3v6h3l5 4V5zM16 9l5 6m0-6l-5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="exit-button" id="exit-game">退出游戏 <span>×</span></button></div></div>
+  <section class="play-view" id="play-view" aria-label="跳跳糖游戏">
     <div class="game-container">
-      <div class="game-heading"><div class="game-heading-left"><h2 id="game-heading-title">薄荷森林</h2><span class="game-level-count" id="game-level-count">01 / 03</span></div><div class="game-heading-actions"><div class="trap-status" id="trap-status" title="本次挑战的陷阱"></div><button class="practice-toggle" id="practice-toggle" aria-pressed="false" title="练习模式可预览陷阱，不记录成绩">练习</button></div></div>
       <div class="game-window active-game-window">
         <div class="game-hud">
-          <div class="hud-left"><span class="hud-avatar"><canvas id="hud-canvas" width="32" height="32"></canvas></span><div class="hud-lives"><span id="hud-hearts" aria-label="5 点生命">♥ ♥ ♥ ♥ ♥</span></div><span class="hud-separator"></span><div class="hud-stat"><span class="hud-value"><i class="mini-coin"></i><b id="hud-coins">00</b><small>/ <span id="hud-total">12</span></small></span></div><span class="hud-separator time-separator"></span><div class="hud-stat hud-time"><span class="hud-value" id="hud-time">00:00</span></div></div>
-          <div class="hud-right"><span class="hud-character" id="hud-character">果果 · 高跳跃</span><button class="hud-button" id="restart-button" title="重新开始 (R)" aria-label="重新开始">↻</button><button class="hud-button" id="pause-button" title="暂停 (P)" aria-label="暂停">Ⅱ</button></div>
+          <div class="hud-left"><div class="hud-lives"><span id="hud-hearts" aria-label="5 点生命">♥ ♥ ♥ ♥ ♥</span></div><span class="hud-separator"></span><div class="hud-stat"><span class="hud-value"><i class="mini-coin"></i><b id="hud-coins">00</b><small>/ <span id="hud-total">12</span></small></span></div><div class="hud-stat hud-time"><span class="hud-value" id="hud-time">00:00</span></div></div>
+          <div class="hud-right"><button class="hud-button" id="restart-button" title="重新开始 (R)" aria-label="重新开始">↻</button><button class="hud-button" id="pause-button" title="暂停 (P)" aria-label="暂停">Ⅱ</button></div>
         </div>
         <div class="game-stage" id="game-stage">
           <canvas id="game-canvas" width="1200" height="600" tabindex="0" aria-label="横版平台游戏。方向键或 A D 移动，空格跳跃，P 暂停，R 重开。"></canvas>
-          <div class="game-overlay" id="game-overlay" hidden><div class="overlay-card"><span class="overlay-kicker" id="overlay-kicker">TAKE A BREATH</span><div class="overlay-icon" id="overlay-icon">Ⅱ</div><h2 id="overlay-title">休息一下</h2><p id="overlay-description">冒险不会跑掉，准备好再出发。</p><div class="result-stats" id="result-stats" hidden><div><span>金币</span><b id="result-coins">12 / 12</b></div><div><span>用时</span><b id="result-time">00:42</b></div><div><span>评价</span><b id="result-stars">★★★</b></div></div><div class="overlay-buttons"><button class="button button-primary" id="overlay-primary">继续冒险 <span>→</span></button><button class="button button-secondary" id="overlay-secondary">重新开始</button></div><button class="overlay-home" id="overlay-home">返回首页</button></div></div>
+          <div class="game-overlay" id="game-overlay" hidden><div class="overlay-card"><span class="overlay-kicker" id="overlay-kicker">TAKE A BREATH</span><div class="overlay-icon" id="overlay-icon">Ⅱ</div><h2 id="overlay-title">休息一下</h2><p id="overlay-description">冒险不会跑掉，准备好再出发。</p><div class="result-stats" id="result-stats" hidden><div><span>金币</span><b id="result-coins">12 / 12</b></div><div><span>用时</span><b id="result-time">00:42</b></div><div><span>评价</span><b id="result-stars">★★★</b></div></div><div class="overlay-buttons"><button class="button button-primary" id="overlay-primary">继续冒险 <span>→</span></button><button class="button button-secondary" id="overlay-secondary">重新开始</button></div><div class="pause-options" id="pause-options"><button class="practice-toggle" id="practice-toggle" aria-pressed="false">练习模式</button><button class="character-toggle" id="character-toggle">换角色</button><div class="pause-levels"><button data-pause-level="0">第一关</button><button data-pause-level="1">第二关</button><button data-pause-level="2">第三关</button></div></div></div></div>
         </div>
         <div class="touch-controls" aria-label="触屏游戏操作"><div class="touch-direction"><button class="touch-button" data-control="left" aria-label="向左移动">←</button><button class="touch-button" data-control="right" aria-label="向右移动">→</button></div><button class="touch-button jump-button" data-control="jump" aria-label="跳跃">↑<span>跳</span></button></div>
-        <div class="game-controls-footer"><span><kbd>A</kbd><kbd>D</kbd> 或 <kbd>←</kbd><kbd>→</kbd> 移动</span><span><kbd class="space-key">SPACE</kbd> 跳跃 <i>·</i> 泡泡可二段跳</span><span><kbd>P</kbd> 暂停 <kbd>R</kbd> 重开</span></div>
       </div>
     </div>
   </section>
 
+  <!-- Legacy guide removed with the landing page.
   <dialog class="guide-dialog" id="guide-dialog" aria-labelledby="guide-title">
     <button class="dialog-close icon-button" id="close-guide" aria-label="关闭玩法指南">×</button>
     <h2 id="guide-title">操作指南</h2>
@@ -145,7 +145,8 @@
     <div class="guide-buddies"><span><i class="red-dot"></i><b>果果</b> 跳得更高</span><span><i class="blue-dot"></i><b>泡泡</b> 可以二段跳</span><span><kbd>P</kbd> 暂停 <kbd>R</kbd> 重开</span></div>
     <button class="button button-primary guide-start" id="guide-start">知道啦，去冒险 <span>→</span></button>
   </dialog>
+  -->
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="game.js"></script>
+  <script src="game.js?v=5"></script>
 </body>
 </html>
