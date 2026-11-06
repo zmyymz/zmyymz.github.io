@@ -32,32 +32,39 @@
       platforms: [[0, 192, 16], [18, 176, 13], [34, 160, 13], [49, 176, 17], [69, 160, 18], [90, 176, 32]],
       ledges: [], trees: [[9, 192], [20, 176], [37, 160], [52, 176], [74, 160]],
       springs: [[26, 176], [57, 176]],
-      decorations: [['sprout', 20, 176], ['flowerYellow', 37, 160], ['flowerRed', 52, 176], ['vine', 81, 160]],
+      poisons: [[42.5, 160]],
+      decorations: [['flowerYellow', 37, 160], ['flowerRed', 52, 176], ['vine', 81, 160]],
       coins: [[210, 145], [255, 135], [304, 120], [360, 127], [416, 131], [465, 117], [510, 104], [552, 112], [596, 122], [676, 123], [720, 125], [808, 108], [858, 116], [906, 130], [1010, 124], [1070, 124]],
-      enemies: [['grub', 370, 144], ['fly', 610, 115, 0], ['bee', 815, 100, 1], ['grub', 950, 160]]
+      enemies: [['grub', 370, 176], ['fly', 610, 115, 0], ['bee', 815, 100, 1], ['grub', 950, 176]]
     },
     {
-      name: '云朵之间', tag: '再跳一次，就能到达', short: '云朵之间', tip: '空中再按一次，完成二段跳', width: 1408, startY: 162,
-      platforms: [[0, 176, 16], [18, 176, 13], [34, 160, 13], [49, 160, 17], [69, 144, 18], [90, 160, 32]],
-      ledges: [], trees: [[9, 176], [20, 176], [36, 160], [52, 160], [72, 144], [93, 160]],
-      springs: [[24, 176], [63, 160]],
-      decorations: [['flowerRed', 5, 176], ['vine2', 33, 160], ['flowerYellow', 45, 144], ['sprout', 87, 144], ['flowerRed2', 111, 160]],
-      coins: [[200, 130], [240, 115], [280, 101], [325, 88], [365, 88], [410, 99], [460, 79], [505, 84], [550, 100], [610, 84], [655, 90], [700, 77], [745, 93], [810, 110], [850, 96], [890, 82], [935, 88], [990, 100], [1050, 105], [1110, 112], [1180, 112]],
-      enemies: [['fly', 324, 76, 0], ['grub', 468, 128], ['bee', 640, 92, 1], ['fly', 750, 101, 0], ['grub', 875, 128], ['bee', 1010, 99, 1], ['grub', 1160, 144]]
+      name: '云朵之间', tag: '蘑菇走高线，跳跃走低线', short: '云朵之间', tip: '踩蘑菇走高线，跳过蘑菇走低线', width: 1760, startY: 162,
+      platforms: [[0, 176, 28], [29, 176, 21], [52, 176, 20], [74, 176, 36], [29, 104, 22], [53, 88, 14], [69, 120, 12], [83, 152, 10]],
+      ledges: [], trees: [[6, 176], [16, 176], [34, 176], [56, 176], [78, 176], [100, 176]],
+      springs: [[27, 176], [84, 176]],
+      poisons: [[42, 176], [73, 120], [90, 176]],
+      decorations: [['flowerRed', 3, 176], ['flowerYellow', 12, 176], ['flowerRed2', 40, 176], ['flowerYellow', 48, 176], ['vine2', 66, 176]],
+      coins: [[170, 150], [230, 150], [520, 150], [570, 150], [620, 132], [670, 150], [730, 150], [500, 72], [525, 64], [550, 60], [600, 54], [650, 55], [675, 58], [700, 66], [755, 78], [860, 150], [910, 150], [960, 128], [1010, 145], [1060, 150], [875, 55], [900, 48], [925, 44], [975, 44], [1000, 48], [1025, 55], [1120, 90], [1145, 84], [1170, 78], [1220, 94], [1245, 90], [1340, 116], [1365, 108], [1390, 104], [1415, 100], [1440, 116], [1210, 150], [1260, 150], [1310, 132], [1365, 150], [1425, 132], [1480, 150], [1580, 150], [1620, 138], [1660, 150]],
+      enemies: [['grub', 600, 176], ['bee', 760, 95, 1], ['grub', 700, 104], ['fly', 960, 58, 0], ['fly', 900, 100, 0], ['bee', 1180, 72, 1], ['grub', 1240, 176], ['grub', 1380, 152], ['bee', 1500, 95, 1]]
     },
     {
       name: '花园大冒险', tag: '把节奏串起来', short: '花园大冒险', tip: '跳得更高，也能命中空中的敌人', width: 1568, startY: 178,
       platforms: [[0, 192, 16], [18, 176, 13], [34, 160, 13], [49, 176, 17], [69, 160, 18], [90, 144, 15], [108, 160, 14], [124, 160, 23]],
       ledges: [], trees: [[9, 192], [20, 176], [36, 160], [52, 176], [72, 160], [92, 144]],
       springs: [[24, 176], [41, 160]],
-      decorations: [['flowerRed', 23, 176], ['sprout', 40, 160], ['flowerYellow', 56, 176], ['vine', 78, 144], ['flowerRed2', 99, 160], ['flowerYellow', 143, 160]],
+      poisons: [[40, 160], [58, 176]],
+      decorations: [['flowerRed', 23, 176], ['flowerYellow', 56, 176], ['vine', 78, 144], ['flowerRed2', 99, 160], ['flowerYellow', 143, 160]],
       coins: [[190, 135], [230, 125], [270, 107], [310, 92], [350, 91], [395, 99], [440, 115], [490, 105], [530, 93], [575, 79], [620, 83], [665, 92], [715, 101], [760, 87], [805, 72], [850, 77], [900, 89], [945, 103], [990, 93], [1030, 82], [1070, 93], [1110, 104], [1160, 115], [1210, 111], [1260, 101], [1310, 99], [1360, 106], [1430, 110]],
-      enemies: [['grub', 228, 160], ['fly', 325, 100, 1], ['bee', 440, 99, 1], ['grub', 504, 144], ['fly', 625, 85, 1], ['grub', 715, 160], ['bee', 815, 83, 1], ['fly', 910, 100, 0], ['grub', 988, 144], ['bee', 1120, 85, 0], ['fly', 1200, 110, 0], ['grub', 1320, 144], ['bee', 1460, 85, 0]]
+      enemies: [['grub', 228, 192], ['fly', 325, 100, 1], ['bee', 440, 99, 1], ['grub', 460, 176], ['fly', 625, 85, 1], ['grub', 715, 160], ['bee', 815, 83, 1], ['fly', 910, 100, 0], ['grub', 988, 176], ['bee', 1120, 85, 0], ['fly', 1200, 110, 0], ['grub', 1320, 160], ['bee', 1460, 85, 0]]
     }
   ];
 
   const sprites = new Image();
   sprites.src = 'assets/sprites.png';
+  const poisonSprite = document.createElement('canvas');
+  poisonSprite.width = 16;
+  poisonSprite.height = 16;
+  let poisonReady = false;
   let selectedLevel = 0;
   let state = 'ready';
   let level;
@@ -71,6 +78,7 @@
   let deathTimer = 0;
   let completionTimer = 0;
   let hintTimer = 0;
+  let muzzleFlash = 0;
   let shake = 0;
   let soundEnabled = true;
   let audioContext;
@@ -103,6 +111,35 @@
     } else {
       ctx.drawImage(sprites, sx * 16, sy * 16, 16, 16, Math.round(x), Math.round(y), 16, 16);
     }
+  }
+
+  function buildPoisonSprite() {
+    if (!sprites.complete || !sprites.naturalWidth) return;
+    const poisonCtx = poisonSprite.getContext('2d');
+    const [sx, sy] = TILES.sprout;
+    poisonCtx.imageSmoothingEnabled = false;
+    poisonCtx.clearRect(0, 0, 16, 16);
+    poisonCtx.drawImage(sprites, sx * 16, sy * 16, 16, 16, 0, 0, 16, 16);
+    const image = poisonCtx.getImageData(0, 0, 16, 16);
+    for (let i = 0; i < image.data.length; i += 4) {
+      if (image.data[i + 3] === 0) continue;
+      const r = image.data[i];
+      const g = image.data[i + 1];
+      const b = image.data[i + 2];
+      if (Math.abs(r - 252) < 3 && Math.abs(g - 223) < 3 && Math.abs(b - 205) < 3) {
+        image.data[i + 3] = 0;
+        continue;
+      }
+      const brightness = Math.max(r, g, b) / 255;
+      image.data[i] = Math.round(72 + brightness * 68);
+      image.data[i + 1] = Math.round(28 + brightness * 30);
+      image.data[i + 2] = Math.round(100 + brightness * 78);
+    }
+    poisonCtx.putImageData(image, 0, 0);
+    poisonCtx.fillStyle = '#d7e97c';
+    poisonCtx.fillRect(7, 7, 1, 1);
+    poisonCtx.fillRect(9, 8, 1, 1);
+    poisonReady = true;
   }
   function drawCloud(x, y, scale = 1) {
     ctx.save();
@@ -165,11 +202,18 @@
       platforms: source.platforms.map(([x, y, w]) => rect(x * 16, y, w * 16, VIEW_H - y + 32)),
       ledges: source.ledges.map(([x, y, w]) => rect(x * 16, y, w * 16, 8)),
       springs: source.springs.map(([x, y], index) => ({ x: x * 16, y, compress: 0, phase: index * 1.9 })),
+      poisons: source.poisons.map(([x, y], index) => ({ x: x * 16, y, phase: index * 2.2 })),
       springHintShown: false,
+      stompHintShown: false,
+      branchHintShown: false,
+      poisonHintShown: false,
       coins: source.coins.map(([x, y]) => ({ x, y, collected: false, bob: Math.random() * Math.PI * 2 })),
-      enemies: source.enemies.map(([type, x, y, vertical], id) => ({ id, type, x, y, baseX: x, baseY: y, vertical: !!vertical, dead: false, phase: id * 1.7 }))
+      enemies: source.enemies.map(([type, x, y, vertical], id) => {
+        const spriteY = type === 'grub' ? y - 16 : y;
+        return { id, type, x, y: spriteY, baseX: x, baseY: spriteY, vertical: !!vertical, dead: false, phase: id * 1.7 };
+      })
     };
-    player = { x: 48, y: source.startY, previousY: source.startY, vy: 0, grounded: false, jumpsLeft: 1, coyote: 0, jumpBuffer: 0, rotation: 0 };
+    player = { x: 48, y: source.startY, previousY: source.startY, vy: 0, grounded: false, jumpsLeft: 1, airJumpUnlocked: false, coyote: 0, jumpBuffer: 0, rotation: 0 };
     bullets = [];
     particles = [];
     camera = 0;
@@ -178,6 +222,7 @@
     deathTimer = 0;
     completionTimer = 0;
     hintTimer = 0;
+    muzzleFlash = 0;
     shake = 0;
     $('top-tip').classList.remove('visible');
     updateHud();
@@ -242,21 +287,24 @@
 
   function performJump() {
     const canGroundJump = player.grounded || player.coyote > 0;
+    const mushroomJump = !canGroundJump && player.airJumpUnlocked;
     if (!canGroundJump && player.jumpsLeft <= 0) return;
     player.vy = -JUMP_SPEED;
     player.y += canGroundJump ? -1 : -3;
     player.grounded = false;
     player.coyote = 0;
     player.jumpBuffer = 0;
+    player.jumpsLeft = 0;
+    player.airJumpUnlocked = false;
     if (canGroundJump) {
-      player.jumpsLeft = 1;
       playSound('jump');
-    } else {
-      player.jumpsLeft = 0;
+    } else if (mushroomJump) {
       playSound('doubleJump');
       for (let i = 0; i < 7; i++) {
         particles.push({ x: player.x + 6, y: player.y + 13, vx: (Math.random() - .5) * 45, vy: Math.random() * 22 + 8, life: .35, maxLife: .35, color: '#fff3d5', size: 2 });
       }
+    } else {
+      playSound('jump');
     }
   }
 
@@ -272,7 +320,13 @@
   }
 
   function shoot() {
-    bullets.push({ x: player.x + 16, y: player.y + 9, previousX: player.x + 16, life: 1.5 });
+    const muzzleX = player.x + 15;
+    const muzzleY = player.y + 10;
+    bullets.push({ x: muzzleX, y: muzzleY, previousX: muzzleX, life: 1.5 });
+    muzzleFlash = .07;
+    for (let i = 0; i < 3; i++) {
+      particles.push({ x: muzzleX, y: muzzleY, vx: 25 + Math.random() * 35, vy: (Math.random() - .5) * 24, life: .16, maxLife: .16, color: i ? '#f1c55b' : '#fff3b5', size: 1 });
+    }
     playSound('shoot');
     if (bullets.length > 8) bullets.shift();
   }
@@ -354,12 +408,31 @@
         player.vy = 0;
         player.grounded = true;
         player.jumpsLeft = 1;
+        player.airJumpUnlocked = false;
         if (!wasGrounded) {
           for (let i = 0; i < 3; i++) particles.push({ x: player.x + 7, y: player.y + 14, vx: (Math.random() - .7) * 30, vy: -Math.random() * 12, life: .25, maxLife: .25, color: '#d9c69e', size: 1 });
         }
       }
     }
     if (wasGrounded && !player.grounded) player.coyote = COYOTE_TIME;
+    if (!level.poisonHintShown) {
+      const nextPoison = level.poisons.find((poison) => Math.abs(poison.y - (player.y + 14)) < 36 && poison.x >= player.x && poison.x - player.x < 95);
+      if (nextPoison) {
+        level.poisonHintShown = true;
+        showTip('紫色蘑菇有毒，记得跳过去！', 2.2);
+      }
+    }
+    for (const poison of level.poisons) {
+      if (intersects(rect(player.x + 3, player.y + 3, 9, 11), rect(poison.x + 3, poison.y - 15, 10, 15))) {
+        spawnParticles(poison.x + 8, poison.y - 8, '#9d63ae', 8);
+        die();
+        return;
+      }
+    }
+    if (selectedLevel === 1 && !level.branchHintShown && player.x > 320) {
+      level.branchHintShown = true;
+      showTip('踩蘑菇走高线，跳过蘑菇走低线', 2.8);
+    }
     for (const spring of level.springs) {
       spring.compress = Math.max(0, spring.compress - dt);
       if (player.vy < 0 || spring.compress > 0) continue;
@@ -368,6 +441,7 @@
       player.vy = -360;
       player.grounded = false;
       player.jumpsLeft = 1;
+      player.airJumpUnlocked = true;
       player.coyote = 0;
       player.jumpBuffer = 0;
       spring.compress = .2;
@@ -375,7 +449,7 @@
       playSound('spring');
       spawnParticles(spring.x + 8, spring.y - 10, '#f0bd55', 8);
       if (!level.springHintShown) {
-        showTip('弹簧蘑菇：自动高跳，还能再补一次二段跳', 2.6);
+        showTip('弹簧蘑菇：自动高跳，还能补一次空中跳', 2.6);
         level.springHintShown = true;
       }
     }
@@ -383,6 +457,7 @@
     if (player.y > VIEW_H + 16) { die(); return; }
 
     shotTimer -= dt;
+    muzzleFlash = Math.max(0, muzzleFlash - dt);
     if (shotTimer <= 0) {
       shoot();
       shotTimer = .32;
@@ -407,15 +482,31 @@
       const enemyHitbox = rect(enemy.x + 2, enemy.y + 3, 12, 11);
       for (const bullet of bullets) {
         if (bullet.life <= 0) continue;
-        if (bullet.y + 3 > enemyHitbox.y && bullet.y < enemyHitbox.y + enemyHitbox.h && bullet.x + 5 >= enemyHitbox.x && bullet.previousX <= enemyHitbox.x + enemyHitbox.w) {
+        if (bullet.y + 3 > enemyHitbox.y && bullet.y - 3 < enemyHitbox.y + enemyHitbox.h && bullet.x + 5 >= enemyHitbox.x && bullet.previousX - 5 <= enemyHitbox.x + enemyHitbox.w) {
           bullet.life = 0;
           killEnemy(enemy);
           break;
         }
       }
       if (!enemy.dead && intersects(rect(player.x + 3, player.y + 3, 9, 11), enemyHitbox)) {
-        die();
-        return;
+        const stomped = player.vy > 0 && player.previousY + 14 <= enemyHitbox.y + 6;
+        if (stomped) {
+          killEnemy(enemy);
+          player.y = enemyHitbox.y - 14;
+          player.vy = -250;
+          player.grounded = false;
+          player.jumpsLeft = 0;
+          player.airJumpUnlocked = false;
+          player.coyote = 0;
+          spawnParticles(enemy.x + 8, enemy.y + 4, '#fff1c7', 5);
+          if (!level.stompHintShown) {
+            showTip('踩中怪物可以击败，撞到侧面才会失败', 2.6);
+            level.stompHintShown = true;
+          }
+        } else {
+          die();
+          return;
+        }
       }
     }
 
@@ -453,13 +544,13 @@
     $('enemy-count').textContent = `${totalKills} / ${level.enemies.length}`;
     $('time-count').textContent = formatTime(elapsed);
     $('level-progress').style.width = `${Math.min(100, Math.max(0, player.x / (level.width - 48) * 100))}%`;
-    const canDoubleJump = state === 'playing' && !player.grounded && player.jumpsLeft > 0;
-    const label = state === 'ready' ? '开始！' : canDoubleJump ? '再跳一下！' : '跳一下！';
+    const canDoubleJump = state === 'playing' && !player.grounded && player.airJumpUnlocked && player.jumpsLeft > 0;
+    const label = state === 'ready' ? '开始！' : state === 'playing' && !player.grounded && !canDoubleJump ? '稳住！' : canDoubleJump ? '再跳一下！' : '跳一下！';
     const jumpLabel = $('jump-button').lastElementChild;
     if (jumpLabel.textContent !== label) {
       jumpLabel.textContent = label;
       $('jump-button').classList.toggle('double-ready', canDoubleJump);
-      $('jump-button').setAttribute('aria-label', state === 'ready' ? '开始游戏' : canDoubleJump ? '再跳一下，使用二段跳' : '跳跃');
+      $('jump-button').setAttribute('aria-label', state === 'ready' ? '开始游戏' : canDoubleJump ? '再跳一下，使用蘑菇空中跳' : '跳跃');
     }
   }
 
@@ -474,6 +565,7 @@
     drawScenery();
     drawPlatforms();
     drawSprings();
+    drawPoisons();
     drawCoins();
     drawEnemies();
     drawBullets();
@@ -525,6 +617,20 @@
     }
   }
 
+  function drawPoisons() {
+    for (const poison of level.poisons) {
+      const sway = Math.sin(animationTime * 3 + poison.phase) * .6;
+      if (poisonReady) {
+        ctx.drawImage(poisonSprite, 0, 0, 16, 16, Math.round(poison.x), Math.round(poison.y - 16 + sway), 16, 16);
+      } else {
+        drawTile('sprout', poison.x, poison.y - 16 + sway);
+      }
+      const sporeY = poison.y - 22 + Math.sin(animationTime * 2.4 + poison.phase) * 2;
+      ctx.fillStyle = '#b7d663aa';
+      ctx.fillRect(Math.round(poison.x + 7), Math.round(sporeY), 2, 2);
+    }
+  }
+
   function drawPlatforms() {
     for (const platform of level.platforms) {
       const tiles = platform.w / 16;
@@ -546,12 +652,16 @@
       }
     }
     const finishX = level.width - 32;
+    const finishPlatform = level.platforms.find((platform) => finishX >= platform.x && finishX <= platform.x + platform.w);
+    const finishY = finishPlatform ? finishPlatform.y : 176;
     ctx.fillStyle = '#a4ac73';
-    ctx.fillRect(finishX, 112, 2, 64);
+    ctx.fillRect(finishX, finishY - 56, 2, 56);
     ctx.fillStyle = '#d47d5e';
-    ctx.fillRect(finishX + 2, 112, 20, 12);
+    ctx.fillRect(finishX + 2, finishY - 52, 20, 12);
     ctx.fillStyle = '#f6d595';
-    ctx.fillRect(finishX + 2, 118, 20, 6);
+    ctx.fillRect(finishX + 2, finishY - 46, 20, 6);
+    ctx.fillStyle = '#8e9563';
+    ctx.fillRect(finishX - 2, finishY - 2, 6, 2);
   }
 
   function drawCoins() {
@@ -584,9 +694,7 @@
 
   function drawBullets() {
     for (const bullet of bullets) {
-      if (bullet.life <= 0) continue;
-      drawTile('muzzle', bullet.x - 7, bullet.y - 1);
-      drawTile('bullet', bullet.x, bullet.y);
+      if (bullet.life > 0) drawTile('bullet', bullet.x - 8, bullet.y - 8);
     }
   }
 
@@ -603,7 +711,13 @@
       ctx.drawImage(sprites, sx * 16, sy * 16, 16, 16, -8, -8, 16, 16);
     }
     ctx.restore();
-    if (state === 'playing' && !player.grounded && player.jumpsLeft > 0) {
+    if (muzzleFlash > 0) {
+      ctx.fillStyle = '#fff3b5';
+      ctx.fillRect(Math.round(player.x + 15), Math.round(player.y + 9), 4, 2);
+      ctx.fillStyle = '#efbd52';
+      ctx.fillRect(Math.round(player.x + 18), Math.round(player.y + 8), 2, 4);
+    }
+    if (state === 'playing' && !player.grounded && player.airJumpUnlocked) {
       ctx.fillStyle = '#a4b371';
       ctx.fillRect(Math.round(player.x + 7), Math.round(player.y - 5), 2, 2);
     }
@@ -662,7 +776,11 @@
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'playing') setState('paused'); });
   window.addEventListener('blur', () => { if (state === 'playing') setState('paused'); });
-  sprites.addEventListener('load', render);
+  sprites.addEventListener('load', () => {
+    buildPoisonSprite();
+    render();
+  });
+  if (sprites.complete && sprites.naturalWidth) buildPoisonSprite();
 
   prepareLevel(0);
   setState('ready');

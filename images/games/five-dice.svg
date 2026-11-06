@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360">
+ <defs><radialGradient id="felt"><stop stop-color="#28624d"/><stop offset="1" stop-color="#10392e"/></radialGradient><g id="die"><rect width="74" height="74" rx="14" y="5" fill="#b8ac91"/><rect width="74" height="74" rx="14" fill="#fff4d9"/></g></defs>
+ <path fill="url(#felt)" d="M0 0h600v360H0z"/>
+ <rect x="25" y="24" width="550" height="312" rx="28" fill="none" stroke="#ba9c58" stroke-opacity=".35" stroke-width="2"/>
+ <g transform="translate(142 91) rotate(-13 37 37)"><use href="#die"/><circle cx="37" cy="37" r="8" fill="#bf624b"/></g>
+ <g transform="translate(265 77) rotate(9 37 37)"><use href="#die"/><g fill="#284b3d"><circle cx="22" cy="22" r="7"/><circle cx="52" cy="52" r="7"/><circle cx="37" cy="37" r="7"/></g></g>
+ <g transform="translate(383 113) rotate(22 37 37)"><use href="#die"/><g fill="#284b3d"><circle cx="22" cy="22" r="7"/><circle cx="52" cy="52" r="7"/><circle cx="52" cy="22" r="7"/><circle cx="22" cy="52" r="7"/><circle cx="37" cy="37" r="7"/></g></g>
+ <g transform="translate(211 203) rotate(12 37 37)"><use href="#die"/><g fill="#284b3d"><circle cx="22" cy="22" r="7"/><circle cx="52" cy="52" r="7"/><circle cx="52" cy="22" r="7"/><circle cx="22" cy="52" r="7"/></g></g>
+ <g transform="translate(327 215) rotate(-11 37 37)"><use href="#die"/><g fill="#284b3d"><circle cx="22" cy="22" r="7"/><circle cx="52" cy="52" r="7"/></g></g>
+ <g fill="#d6a34e" stroke="#f5d991" stroke-width="3"><circle cx="119" cy="264" r="23"/><circle cx="468" cy="253" r="23"/></g>
+</svg>

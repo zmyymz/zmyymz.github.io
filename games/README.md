@@ -5,6 +5,14 @@
 
 ## 添加已部署的游戏
 
+《叠码 / STACKED》位于 `games/stacked/`，源项目为 `/Users/zhangmeiyue.zmy/Documents/Qoder/2026-11-06/f8f7b774`。虚拟筹码卡牌策略游戏，通过牌型计分与刻印强化挑战六层关卡，横屏 Canvas 界面。脚本、PNG 牌面、XML 图集、OGG 音效与素材许可均随站点托管，无外部引擎。手机操作及 OGG 音效兼容性需实机确认。
+
+后续在博客仓库运行 `python3 tools/sync-stacked.py /Users/zhangmeiyue.zmy/Documents/Qoder/2026-11-06/f8f7b774`，预览 `/games/stacked/`。脚本只更新本地运行文件，不会提交或部署；新增其他格式资源时需更新同步清单。
+
+《五骰押注》位于 `games/five-dice/index.html`，是虚拟筹码骰子策略游戏：选择牌型、投掷锁骰、应对十关任务牌。原样复制单文件 HTML，图片和概率数据均内嵌，无外部运行依赖。
+
+更新后在博客仓库运行 `python3 tools/sync-five-dice.py /Users/zhangmeiyue.zmy/.qwenworkcn/workspace/2026-11-06/mw4d265fybrxh0ui/outputs/骰子押注.html`，预览 `/games/five-dice/`。脚本只更新本地文件，不会提交或部署。段位保存在当前浏览器站点下，不会从原地址自动迁移。
+
 《跳跳糖》位于 `games/candy-jump/`，源项目为 `/Users/zhangmeiyue.zmy/Documents/Qoder/2026-11-03/bf80d4e3`。三关像素平台冒险，支持移动、跳跃、踩怪及触屏控制。保留素材 CC0 许可；发布副本移除 Google 字体导入，使用 CSS 字体回退，玩法不改动。
 
 更新后在博客仓库运行 `python3 tools/sync-candy-jump.py /Users/zhangmeiyue.zmy/Documents/Qoder/2026-11-03/bf80d4e3`，再预览 `/games/candy-jump/`。脚本只同步五个运行及许可文件，不会提交推送；新增资源时需更新文件清单。

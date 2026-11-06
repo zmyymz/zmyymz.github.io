@@ -1,0 +1,37 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #05100d;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  display: grid;
+  place-items: center;
+}
+
+canvas {
+  display: block;
+  border-radius: 6px;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.75);
+  cursor: default;
+  touch-action: none;
+}
+
+#boot {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #8fa79b;
+  font-size: 15px;
+  letter-spacing: 0.3em;
+  background: #05100d;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+
+#boot.gone { opacity: 0; }

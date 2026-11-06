@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360">
+ <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#293648"/><stop offset="1" stop-color="#121b2c"/></linearGradient><g id="chip"><ellipse cy="7" rx="43" ry="16" fill="#987339"/><ellipse rx="43" ry="16" fill="#d7b96a" stroke="#fae5a5" stroke-width="3"/><ellipse rx="30" ry="10" fill="none" stroke="#9e7c3c" stroke-width="2"/></g></defs>
+ <path fill="url(#bg)" d="M0 0h600v360H0z"/>
+ <g fill="none" stroke="#c6ac6b" stroke-opacity=".15"><path d="M0 290 600 90M0 340 600 140M0 240 600 40"/></g>
+ <g transform="translate(120 103) rotate(-15 62 87)"><rect x="5" y="6" width="124" height="174" rx="10" fill="#080f1b"/><rect width="124" height="174" rx="10" fill="#f4e8cc"/><text x="15" y="35" font-size="29" fill="#293443" font-family="Georgia,serif">A</text><text x="36" y="120" font-size="65" fill="#293443">♠</text></g>
+ <g transform="translate(236 83) rotate(10 62 87)"><rect x="5" y="6" width="124" height="174" rx="10" fill="#080f1b"/><rect width="124" height="174" rx="10" fill="#fff3da"/><text x="15" y="35" font-size="29" fill="#b95e50" font-family="Georgia,serif">A</text><text x="33" y="120" font-size="65" fill="#b95e50">♥</text></g>
+ <g transform="translate(436 278)"><use href="#chip"/><use href="#chip" y="-14"/><use href="#chip" y="-28"/><use href="#chip" y="-42"/><use href="#chip" y="-56"/></g>
+ <g transform="translate(354 307) scale(.75)"><use href="#chip"/><use href="#chip" y="-14"/></g>
+ <path d="m464 91 6 14 15 6-15 6-6 15-6-15-15-6 15-6Z" fill="#dfc483"/>
+</svg>
