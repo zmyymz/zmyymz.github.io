@@ -1,6 +1,11 @@
 import { W, H, THEME, FLOORS } from './config.js';
 import { A, cardFrame, chipDims, drawChip, pieceArt } from './assets.js';
-import { COLORS, SHAPES, LEVEL_LABEL, engravingDesc, canEngrave } from './engravings.js';
+import { COLORS, SHAPES, LEVEL_LABEL, engravingDesc, engravingApplies, canEngrave } from './engravings.js';
+import { HANDS, RANK_LABEL } from './cards.js';
+
+const HAND_ORDER = ['high', 'pair', 'two', 'trips', 'straight', 'flush', 'full', 'quads', 'sflush'];
+const SUIT_GLYPH = { S: '♠', H: '♥', D: '♦', C: '♣' };
+const cardLabel = (c) => `${RANK_LABEL[c.rank] || c.rank}${SUIT_GLYPH[c.suit]}`;
 import { Tower } from './tower.js';
 import { sfx } from './audio.js';
 
@@ -130,6 +135,10 @@ export class Renderer {
     this.bgCanvas = null;
     this.bgDpr = 0;
     this.shadowCache = new Map();
+    this.leaving = [];
+    this.chartOpen = false;
+    this.chartTab = 0;
+    this.hoverInfo = null;
   }
 
   dpr() {
@@ -189,6 +198,26 @@ export class Renderer {
   buttonAt(x, y) {
     for (const b of [...this.buttons, ...this.betButtons]) {
       if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return b;
+    }
+    return null;
+  }
+
+  // 只用于悬停：出牌区和手牌都算，且不影响选择逻辑
+  hoverTarget(x, y, game) {
+    if (game.phase !== 'play' && game.phase !== 'bet') return null;
+
+    if (game.played.length) {
+      const pl = playLayout(game.played.length);
+      for (let i = game.played.length - 1; i >= 0; i--) {
+        if (inRotated(pl[i], x, y)) return { card: game.played[i], rect: pl[i] };
+      }
+    }
+
+    const layout = handLayout(game.hand.length);
+    for (let i = layout.length - 1; i >= 0; i--) {
+      const r = { ...layout[i] };
+      if (game.selected.has(i) && game.phase === 'play') r.y -= HAND_LIFT;
+      if (inRotated(r, x, y)) return { card: game.hand[i], rect: layout[i] };
     }
     return null;
   }
@@ -263,6 +292,9 @@ export class Renderer {
     }
     this.particles = this.particles.filter((p) => p.t < p.dur + 0.25);
 
+    for (const l of this.leaving) l.t += dt;
+    this.leaving = this.leaving.filter((l) => l.t < l.dur);
+
     for (const f of this.floats) {
       f.t += dt;
       f.y -= dt * 42;
@@ -295,6 +327,7 @@ export class Renderer {
     this.drawPlayed(ctx, game);
     if (!showOutcome) this.drawScorePanel(ctx, game);
     this.drawHand(ctx, game);
+    this.drawLeaving(ctx);
     this.drawParticles(ctx);
 
     if (game.phase === 'play') this.drawActionBar(ctx, game);
@@ -303,7 +336,12 @@ export class Renderer {
     if (game.phase === 'pick') this.drawPicker(ctx, game);
     if (showOutcome) this.drawOutcome(ctx, game);
 
+    if (!this.chartOpen && this.hoverInfo && this.hoverInfo.card.engraving) {
+      this.drawTooltip(ctx, this.hoverInfo);
+    }
+
     this.drawFloats(ctx);
+    if (this.chartOpen) this.drawChart(ctx, game);
     ctx.restore();
   }
 
@@ -369,6 +407,202 @@ export class Renderer {
     drawChip(ctx, 'chipWhite', startX, 40 - chipH / 2, cs, chipH);
     text(ctx, stackStr, startX + cs + 10, 40, { size: 24, weight: 700, color: THEME.ink });
     text(ctx, '筹码', startX + cs + 10 + numW + 8, 42, { size: 14, color: THEME.dim });
+
+    const chartBtn = { x: W - 448, y: 22, w: 106, h: 34, id: 'chart', label: '牌型表', enabled: true };
+    this.buttons.push(chartBtn);
+    this.drawPill(ctx, chartBtn);
+  }
+
+  drawPill(ctx, b) {
+    const hovered = this.hoverButton === b.id;
+    ctx.save();
+    roundRect(ctx, b.x, b.y, b.w, b.h, b.h / 2);
+    ctx.fillStyle = hovered ? 'rgba(230,193,105,0.16)' : 'rgba(244,236,217,0.06)';
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = hovered ? THEME.gold : 'rgba(244,236,217,0.18)';
+    ctx.stroke();
+    ctx.restore();
+    text(ctx, b.label, b.x + b.w / 2, b.y + b.h / 2 + 1, {
+      size: 14, weight: 600, color: hovered ? THEME.gold : THEME.dim, align: 'center',
+    });
+  }
+
+  drawTooltip(ctx, info) {
+    const card = info.card;
+    const e = card.engraving;
+    const c = COLORS[e.color];
+    const S = SHAPES[e.shape];
+    const active = engravingApplies(card);
+
+    const w = 336;
+    const h = 126;
+    let x = info.rect.x + info.rect.w / 2 - w / 2;
+    x = Math.max(24, Math.min(W - w - 24, x));
+    let y = info.rect.y - h - 16;
+    if (y < 96) y = info.rect.y + info.rect.h + 16;
+    y = Math.min(y, BTN_Y - h - 14); // 不遮住出牌/弃牌按钮
+
+    ctx.save();
+    roundRect(ctx, x, y, w, h, 14);
+    ctx.fillStyle = 'rgba(5, 18, 14, 0.975)';
+    ctx.fill();
+    ctx.strokeStyle = active ? c.ring : 'rgba(150, 165, 158, 0.45)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    const art = pieceArt(c.set, e.shape, e.level);
+    ctx.drawImage(art.img, art.sx, art.sy, art.sw, art.sh, x + 16, y + 15, 48, 48);
+
+    text(ctx, `${c.label} · ${S.name} ${LEVEL_LABEL[e.level]}`, x + 76, y + 32, {
+      size: 18, weight: 700, color: active ? THEME.ink : THEME.dim,
+    });
+    this.wrapText(ctx, S.desc(e.level), x + 76, y + 50, w - 96, 18, 13.5, THEME.dim);
+
+    const statusY = y + h - 24;
+    if (active) {
+      const extra = card.bonusChips > 0 ? ` · 另有 +${card.bonusChips} 永久筹码` : '';
+      text(ctx, `✓ 生效${extra}`, x + 18, statusY, { size: 13, color: THEME.green });
+    } else {
+      text(ctx, `✕ 不生效：${c.label}刻印只能刻在 ${c.glyph} 上`, x + 18, statusY, {
+        size: 13, color: '#d98b80',
+      });
+    }
+  }
+
+  drawChart(ctx, game) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(3, 12, 9, 0.74)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+
+    const pw = 640;
+    const ph = 660;
+    const px = W / 2 - pw / 2;
+    const py = H / 2 - ph / 2;
+
+    ctx.save();
+    roundRect(ctx, px, py, pw, ph, 22);
+    ctx.fillStyle = 'rgba(5, 18, 14, 0.975)';
+    ctx.fill();
+    ctx.strokeStyle = THEME.panelEdge;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    const engravings = game.deckView().filter((c) => c.engraving);
+    const tabs = [
+      { x: px + 32, y: py + 20, w: 128, h: 40, id: 'tab0', label: '牌型表', tab: 0 },
+      { x: px + 172, y: py + 20, w: 190, h: 40, id: 'tab1', label: `我的刻印 ${engravings.length}`, tab: 1 },
+    ];
+
+    for (const t of tabs) {
+      this.buttons.push(t);
+      const on = this.chartTab === t.tab;
+      const hov = this.hoverButton === t.id;
+      ctx.save();
+      roundRect(ctx, t.x, t.y, t.w, t.h, t.h / 2);
+      ctx.fillStyle = on ? 'rgba(230,193,105,0.2)' : hov ? 'rgba(244,236,217,0.1)' : 'rgba(244,236,217,0.05)';
+      ctx.fill();
+      ctx.strokeStyle = on ? THEME.gold : 'rgba(244,236,217,0.16)';
+      ctx.lineWidth = on ? 2 : 1.5;
+      ctx.stroke();
+      ctx.restore();
+      text(ctx, t.label, t.x + t.w / 2, t.y + t.h / 2 + 1, {
+        size: 15, weight: on ? 700 : 500, color: on ? THEME.gold : THEME.dim, align: 'center',
+      });
+    }
+
+    if (this.chartTab === 0) this.drawChartTable(ctx, px, py);
+    else this.drawChartEngravings(ctx, engravings, px, py);
+
+    text(ctx, '点击任意处关闭', W / 2, py + ph - 26, { size: 13, color: THEME.faint, align: 'center' });
+  }
+
+  drawChartEngravings(ctx, engravings, px, py) {
+    if (!engravings.length) {
+      text(ctx, '牌库里还没有刻印', W / 2, py + 240, { size: 18, color: THEME.dim, align: 'center' });
+      text(ctx, '过关后进商店买一个，再挑一张花色对得上的牌刻上去', W / 2, py + 274, {
+        size: 14, color: THEME.faint, align: 'center',
+      });
+      return;
+    }
+
+    const rowH = 52;
+    const top = py + 92;
+    const maxRows = 9;
+
+    engravings.slice(0, maxRows).forEach((card, i) => {
+      const e = card.engraving;
+      const c = COLORS[e.color];
+      const S = SHAPES[e.shape];
+      const y = top + i * rowH;
+
+      if (i % 2 === 0) {
+        ctx.fillStyle = 'rgba(244,236,217,0.035)';
+        roundRect(ctx, px + 28, y, 584, rowH - 6, 8);
+        ctx.fill();
+      }
+
+      const art = pieceArt(c.set, e.shape, e.level);
+      ctx.drawImage(art.img, art.sx, art.sy, art.sw, art.sh, px + 40, y + 8, 32, 32);
+
+      const active = engravingApplies(card);
+      const suitColor = card.suit === 'H' || card.suit === 'D' ? '#e0574a' : '#cfe0d8';
+
+      text(ctx, `${c.label} · ${S.name} ${LEVEL_LABEL[e.level]}`, px + 84, y + 23, {
+        size: 16, weight: 600, color: THEME.ink,
+      });
+      text(ctx, cardLabel(card), px + 268, y + 23, { size: 16, weight: 700, color: suitColor, align: 'right' });
+      if (!active) {
+        text(ctx, '未生效', px + 282, y + 23, { size: 11, color: '#d98b80' });
+      }
+      text(ctx, S.desc(e.level), px + 330, y + 23, {
+        size: 12.5, color: active ? THEME.dim : 'rgba(217,139,128,0.85)',
+      });
+    });
+
+    if (engravings.length > maxRows) {
+      text(ctx, `还有 ${engravings.length - maxRows} 个……`, W / 2, top + maxRows * rowH + 12, {
+        size: 13, color: THEME.faint, align: 'center',
+      });
+    }
+  }
+
+  drawChartTable(ctx, px, py) {
+    text(ctx, '只有组成牌型的那几张牌会贡献点数：A=11，J/Q/K=10，其余按面值', W / 2, py + 88, {
+      size: 13.5, color: THEME.dim, align: 'center',
+    });
+
+    text(ctx, '牌型', px + 48, py + 120, { size: 12, color: THEME.faint, spacing: 2 });
+    text(ctx, '筹码', px + 352, py + 120, { size: 12, color: THEME.faint, align: 'right' });
+    text(ctx, '倍率', px + 452, py + 120, { size: 12, color: THEME.faint, align: 'right' });
+
+    const rowH = 48;
+    const top = py + 136;
+    const maxPower = Math.max(...HAND_ORDER.map((k) => HANDS[k].chips * HANDS[k].mult));
+
+    HAND_ORDER.forEach((key, i) => {
+      const h = HANDS[key];
+      const y = top + i * rowH;
+
+      if (i % 2 === 0) {
+        ctx.fillStyle = 'rgba(244,236,217,0.035)';
+        roundRect(ctx, px + 28, y, 584, rowH - 8, 8);
+        ctx.fill();
+      }
+
+      text(ctx, h.name, px + 48, y + 20, { size: 19, weight: 600, color: THEME.ink });
+      text(ctx, String(h.chips), px + 352, y + 20, { size: 19, weight: 700, color: THEME.gold, align: 'right' });
+      text(ctx, '×', px + 382, y + 20, { size: 14, color: THEME.faint, align: 'center' });
+      text(ctx, String(h.mult), px + 452, y + 20, { size: 19, weight: 700, color: '#e8805f', align: 'right' });
+
+      const barW = Math.max(4, (h.chips * h.mult / maxPower) * 108);
+      ctx.fillStyle = 'rgba(230,193,105,0.30)';
+      roundRect(ctx, px + 470, y + 13, barW, 8, 4);
+      ctx.fill();
+    });
   }
 
   drawTowers(ctx, game) {
@@ -408,9 +642,16 @@ export class Renderer {
       return;
     }
     const layout = playLayout(game.played.length);
+    const now = performance.now();
     game.played.forEach((card, i) => {
       const r = layout[i];
-      this.drawCard(ctx, card, r.x, r.y, r.w, r.h, { angle: r.angle });
+      let p = 1;
+      if (card.enterAt) p = Math.min(1, Math.max(0, (now - card.enterAt - i * 32) / 240));
+      const e = 1 - Math.pow(1 - p, 3);
+      ctx.save();
+      ctx.globalAlpha = 0.1 + 0.9 * e;
+      this.drawCard(ctx, card, r.x, r.y + (1 - e) * 60, r.w, r.h, { angle: r.angle });
+      ctx.restore();
     });
   }
 
@@ -446,19 +687,25 @@ export class Renderer {
     }
 
     if (card.bonusChips > 0) {
-      ctx.font = `700 ${Math.round(w * 0.12)}px ${FONT}`;
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
-      ctx.fillStyle = 'rgba(20, 40, 32, 0.85)';
-      roundRect(ctx, -w / 2 + 8, -h / 2 + 8, w * 0.34, w * 0.17, w * 0.05);
+      // 右上角：左上是点数，右下是倒置点数，只有这里是空的
+      const bw = w * 0.34;
+      const bh = w * 0.17;
+      const bx = w / 2 - bw - w * 0.055;
+      const by = -h / 2 + w * 0.055;
+      ctx.fillStyle = 'rgba(20, 40, 32, 0.86)';
+      roundRect(ctx, bx, by, bw, bh, bh * 0.5);
       ctx.fill();
+      ctx.font = `700 ${Math.round(w * 0.115)}px ${FONT}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.fillStyle = THEME.gold;
-      ctx.fillText(`+${card.bonusChips}`, -w / 2 + 12, -h / 2 + 10);
+      ctx.fillText(`+${card.bonusChips}`, bx + bw / 2, by + bh / 2 + 1);
     }
 
     if (card.engraving) {
       const c = COLORS[card.engraving.color];
       const art = pieceArt(c.set, card.engraving.shape, card.engraving.level);
+      const active = engravingApplies(card);
       const bs = w * 0.3;
       const bx = -w / 2 + w * 0.055;
       const by = h / 2 - bs - h * 0.055;
@@ -469,11 +716,18 @@ export class Renderer {
       ctx.arc(cx, cy, bs * 0.62, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(6, 18, 14, 0.9)';
       ctx.fill();
-      ctx.strokeStyle = c.ring;
-      ctx.lineWidth = 2;
-      ctx.stroke();
 
+      // 花色对不上时画灰色虚线框 + 淡化棋子，一眼能看出“这枚没生效”
+      ctx.strokeStyle = active ? c.ring : 'rgba(150, 165, 158, 0.55)';
+      ctx.lineWidth = active ? 2 : 1.5;
+      if (!active) ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      const prevAlpha = ctx.globalAlpha;
+      ctx.globalAlpha = prevAlpha * (active ? 1 : 0.32);
       ctx.drawImage(art.img, art.sx, art.sy, art.sw, art.sh, bx, by, bs, bs);
+      ctx.globalAlpha = prevAlpha;
     }
 
     ctx.restore();
@@ -523,16 +777,68 @@ export class Renderer {
     if (game.phase !== 'bet' && game.phase !== 'play') return;
 
     const layout = handLayout(game.hand.length);
+    const now = performance.now();
+
     layout.forEach((r, i) => {
+      const card = game.hand[i];
       const selected = game.selected.has(i) && game.phase === 'play';
       const hovered = this.hoverCard === i && game.phase === 'play';
       const dy = selected ? -HAND_LIFT : hovered ? -14 : 0;
-      this.drawCard(ctx, game.hand[i], r.x, r.y + dy, r.w, r.h, {
-        angle: r.angle,
+
+      let p = 1;
+      if (card.enterAt) {
+        p = Math.min(1, Math.max(0, (now - card.enterAt - i * 32) / 240));
+      }
+      const e = 1 - Math.pow(1 - p, 3);
+
+      ctx.save();
+      ctx.globalAlpha = 0.1 + 0.9 * e;
+      this.drawCard(ctx, card, r.x, r.y + dy + (1 - e) * 56, r.w, r.h, {
+        angle: r.angle + (1 - e) * 0.06,
         selected,
         glow: selected ? 0.5 : 0,
       });
+      ctx.restore();
     });
+  }
+
+  // 弃牌时先把选中牌的当前位置记下来，牌被移走后再播放飞出的动画
+  snapshotSelected(game) {
+    const layout = handLayout(game.hand.length);
+    return [...game.selected].map((i) => ({
+      card: game.hand[i],
+      x: layout[i].x,
+      y: layout[i].y - HAND_LIFT,
+      w: layout[i].w,
+      h: layout[i].h,
+      angle: layout[i].angle,
+    }));
+  }
+
+  leaveCards(list) {
+    for (const item of list) {
+      this.leaving.push({
+        ...item,
+        t: 0,
+        dur: 0.38,
+        dx: 170 + Math.random() * 110,
+        dy: -110 - Math.random() * 70,
+        spin: (Math.random() - 0.5) * 0.55,
+      });
+    }
+  }
+
+  drawLeaving(ctx) {
+    for (const l of this.leaving) {
+      const k = Math.min(1, l.t / l.dur);
+      const e = k * k;
+      ctx.save();
+      ctx.globalAlpha = 1 - e;
+      this.drawCard(ctx, l.card, l.x + l.dx * e, l.y + l.dy * e, l.w * (1 - 0.12 * e), l.h * (1 - 0.12 * e), {
+        angle: l.angle + l.spin * e,
+      });
+      ctx.restore();
+    }
   }
 
   drawActionBar(ctx, game) {
@@ -549,7 +855,7 @@ export class Renderer {
     }
 
     const cx = W / 2;
-    const playBtn = { x: cx - BTN_W - 8, y: BTN_Y, w: BTN_W, h: BTN_H, id: 'play', label: '出牌', enabled: sel.length > 0 };
+    const playBtn = { x: cx - BTN_W - 8, y: BTN_Y, w: BTN_W, h: BTN_H, id: 'play', label: `出牌 ${game.handsLeft}`, enabled: sel.length > 0 };
     const discBtn = { x: cx + 8, y: BTN_Y, w: BTN_W, h: BTN_H, id: 'discard', label: `弃牌 ${game.discardsLeft}`, enabled: sel.length > 0 && game.discardsLeft > 0 };
 
     for (const b of [playBtn, discBtn]) {

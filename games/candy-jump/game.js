@@ -322,21 +322,36 @@ function toggleSound() {
   if (soundEnabled) sound([[660, 0, .08]]);
 }
 
+function placeOnGround(level, x, width) {
+  const fits = level.grounds.filter(([start, end]) => end - start >= width + 24);
+  const current = fits.find(([start, end]) => x >= start + 12 && x + width <= end - 12);
+  if (current) return x;
+  const nearest = fits
+    .map(([start, end]) => ({ start, end, distance: Math.abs(x - Math.min(Math.max(x, start), end - width)) }))
+    .sort((a, b) => a.distance - b.distance)[0];
+  return nearest ? clamp(x, nearest.start + 12, nearest.end - width - 12) : x;
+}
+
 function createTraps(level, levelIndex) {
-  const selected = [...trapTypes].sort(() => Math.random() - .5).slice(0, 3);
+  const shuffled = [...trapTypes];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  const selected = shuffled.slice(0, 3);
   const positions = [
-    { spikes: 470, collapse: 800, coin: 2, block: 1010, ambush: 1530, door: level.door.x - 290 },
-    { spikes: 390, collapse: 780, coin: 3, block: 1500, ambush: 2150, door: level.door.x - 330 },
-    { spikes: 300, collapse: 710, coin: 4, block: 1390, ambush: 1980, door: level.door.x - 320 }
+    { spikes: 470, collapse: 800, coin: 2, block: 1180, ambush: 1530, door: 2250 },
+    { spikes: 350, collapse: 780, coin: 3, block: 1660, ambush: 2250, door: 2980 },
+    { spikes: 260, collapse: 900, coin: 4, block: 1500, ambush: 1980, door: 2760 }
   ][levelIndex];
   return selected.map((type, index) => {
     const trap = { type: type.id, name: type.name, triggered: false, activated: false, timer: 0, slot: index };
-    if (type.id === 'spikes') Object.assign(trap, { x: positions.spikes, y: FLOOR - 28, w: 28, h: 28 });
-    if (type.id === 'collapse') Object.assign(trap, { x: positions.collapse, y: FLOOR, w: 112, h: 300 });
+    if (type.id === 'spikes') Object.assign(trap, { x: placeOnGround(level, positions.spikes, 28), y: FLOOR - 28, w: 28, h: 28 });
+    if (type.id === 'collapse') Object.assign(trap, { x: placeOnGround(level, positions.collapse, 112), y: FLOOR, w: 112, h: 300 });
     if (type.id === 'coin') Object.assign(trap, { coinIndex: positions.coin, x: level.coins[positions.coin][0], y: level.coins[positions.coin][1], w: 30, h: 34 });
-    if (type.id === 'block') Object.assign(trap, { x: positions.block, y: -60, w: 60, h: 60 });
-    if (type.id === 'ambush') Object.assign(trap, { x: positions.ambush + 100, y: 465, w: 36, h: 35 });
-    if (type.id === 'door') Object.assign(trap, { x: positions.door, y: FLOOR - 80, w: 80, h: 80 });
+    if (type.id === 'block') Object.assign(trap, { x: placeOnGround(level, positions.block, 60), y: -60, w: 60, h: 60 });
+    if (type.id === 'ambush') Object.assign(trap, { x: placeOnGround(level, positions.ambush + 100, 36), y: 465, w: 36, h: 35, originX: placeOnGround(level, positions.ambush + 100, 36), travel: 0 });
+    if (type.id === 'door') Object.assign(trap, { x: placeOnGround(level, positions.door, 80), y: FLOOR - 80, w: 80, h: 80 });
     return trap;
   });
 }
@@ -363,19 +378,34 @@ function updateTraps(dt) {
       trap.activated = true;
       hurtPlayer();
     }
-    if (trap.type === 'block') {
+    if (trap.type === 'block' && !trap.spent) {
       if (trap.timer > .22) trap.activated = true;
-      if (trap.activated && trap.y < FLOOR - 60) trap.y = Math.min(FLOOR - 60, trap.y + 900 * dt);
-      if (trap.activated && overlap(p, trap)) hurtPlayer();
+      if (trap.activated) {
+        trap.y = Math.min(FLOOR - 60, trap.y + 900 * dt);
+        if (overlap(p, trap)) hurtPlayer();
+        if (trap.y >= FLOOR - 60) {
+          trap.activated = false;
+          trap.spent = true;
+          burst(trap.x + 30, FLOOR - 16, '#e9c177', 14);
+          sound([[120, 0, .1], [90, .08, .12]], 'square', .025);
+        }
+      }
     }
-    if (trap.type === 'ambush') {
+    if (trap.type === 'ambush' && !trap.spent) {
       if (trap.timer > .2) trap.activated = true;
       if (trap.activated) {
-        trap.x -= 230 * dt;
+        const step = 230 * dt;
+        trap.x -= step;
+        trap.travel += step;
         if (overlap(p, trap)) {
           trap.activated = false;
+          trap.spent = true;
           burst(trap.x + 18, trap.y + 15, '#ffe0a1', 12);
           hurtPlayer();
+        } else if (trap.travel >= 210) {
+          trap.activated = false;
+          trap.spent = true;
+          burst(trap.x + 18, trap.y + 18, '#8c7155', 8);
         }
       }
     }
@@ -396,13 +426,15 @@ function startGame(levelIndex = 0) {
     player: { x: level.spawn.x, y: level.spawn.y, w: 34, h: 40, vx: 0, vy: 0, grounded: false, coyote: 0, jumpBuffer: 0, jumps: 0, facing: false, invincible: 0, squash: 0 },
     spawn: { ...level.spawn },
     coinsList: level.coins.map(([x, y]) => ({ x, y, w: 30, h: 34, collected: false })),
-    enemies: level.enemies.map(([x, y, min, max]) => ({ x, y, w: 36, h: 35, min, max, direction: 1, dead: false, deathTime: 0 })),
+    enemies: level.enemies.map(([x, y, min, max]) => ({ x, y, w: 36, h: 35, min, max, direction: 1, vy: 0, dead: false, deathTime: 0 })),
     movers: level.movers.map(([x, y, w, range, speed], i) => ({ x, y, baseX: x, baseY: y, w, h: 20, range, speed, phase: i, oldX: x, oldY: y })),
     traps: createTraps(level, levelIndex), particles: [], popups: [], checkpoint: 0, overlayAction: null
   };
+  const fakeCoin = game.traps.find((trap) => trap.type === 'coin');
+  if (fakeCoin) game.coinsList[fakeCoin.coinIndex].fake = true;
   document.body.style.overflow = 'hidden';
   $('#game-overlay').hidden = true;
-  $('#hud-total').textContent = game.coinsList.length;
+  $('#hud-total').textContent = game.coinsList.filter((coin) => !coin.fake).length;
   $('#practice-toggle').classList.toggle('active', practiceMode);
   $('#practice-toggle').setAttribute('aria-pressed', String(practiceMode));
   updateHud();
@@ -519,7 +551,7 @@ function physicsStep(dt) {
     }
   }
   for (const coin of game.coinsList) {
-    if (!coin.collected && overlap(p, coin)) {
+    if (!coin.collected && !coin.fake && overlap(p, coin)) {
       coin.collected = true; game.coins++;
       burst(coin.x + 15, coin.y + 15, '#f7bf45', 9);
       game.popups.push({ x: coin.x, y: coin.y, text: '+100', life: .75 });
@@ -532,8 +564,19 @@ function physicsStep(dt) {
   }
   for (const enemy of game.enemies) {
     if (enemy.dead) { enemy.deathTime += dt; continue; }
-    enemy.x += enemy.direction * 55 * dt;
-    if (enemy.x <= enemy.min || enemy.x + enemy.w >= enemy.max) { enemy.direction *= -1; enemy.x = clamp(enemy.x, enemy.min, enemy.max - enemy.w); }
+    const support = solids.find((solid) => !(solid.trap?.activated)
+      && enemy.x + enemy.w > solid.x && enemy.x < solid.x + solid.w
+      && Math.abs(enemy.y + enemy.h - solid.y) < 3);
+    if (support) {
+      enemy.y = support.y - enemy.h;
+      enemy.vy = 0;
+      enemy.x += enemy.direction * 55 * dt;
+      if (enemy.x <= enemy.min || enemy.x + enemy.w >= enemy.max) { enemy.direction *= -1; enemy.x = clamp(enemy.x, enemy.min, enemy.max - enemy.w); }
+    } else {
+      enemy.vy += 1500 * dt;
+      enemy.y += enemy.vy * dt;
+      if (enemy.y > VIEW_H + 80) { enemy.dead = true; enemy.deathTime = .3; }
+    }
     if (overlap(p, enemy)) {
       if (p.vy > 80 && p.y + p.h - enemy.y < 24) {
         enemy.dead = true; p.vy = -440; p.y = enemy.y - p.h;
@@ -595,8 +638,8 @@ function showOverlay(type) {
     $('#overlay-secondary').textContent = '返回首页'; $('#overlay-secondary').hidden = true;
     game.overlayAction = () => startGame(game.levelIndex);
   } else {
-    const total = game.coinsList.length;
-    const stars = 1 + (game.coins === total ? 1 : 0) + (game.lives === 3 ? 1 : 0);
+    const total = game.coinsList.filter((coin) => !coin.fake).length;
+    const stars = 1 + (game.coins === total ? 1 : 0) + (game.lives === (practiceMode ? 9 : 5) ? 1 : 0);
     if (!practiceMode) {
       const old = progress.records[game.levelIndex];
       if (!old || stars > old.stars || (stars === old.stars && game.time < old.time)) progress.records[game.levelIndex] = { stars, time: game.time, coins: game.coins };
@@ -610,7 +653,7 @@ function showOverlay(type) {
     $('#result-coins').textContent = `${game.coins} / ${total}`;
     $('#result-time').textContent = formatTime(game.time);
     $('#result-stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
-    $('#overlay-primary').innerHTML = game.levelIndex < 2 ? '下一关 <span>→</span>' : '再玩一次 <span>↻</span>';
+    $('#overlay-primary').innerHTML = practiceMode ? '再来一次 <span>↻</span>' : game.levelIndex < 2 ? '下一关 <span>→</span>' : '再玩一次 <span>↻</span>';
     $('#overlay-secondary').textContent = '重玩本关'; $('#overlay-secondary').hidden = false;
     game.overlayAction = () => startGame(practiceMode ? game.levelIndex : game.levelIndex < 2 ? game.levelIndex + 1 : 0);
   }
@@ -644,27 +687,53 @@ function drawTrapWarning(ctx, trap, y = trap.y - 35) {
   ctx.fillText('!', trap.x + trap.w / 2, y + 22);
 }
 
+function drawBomb(ctx, x, y) {
+  ctx.fillStyle = '#38404b';
+  ctx.fillRect(x + 9, y + 7, 18, 22);
+  ctx.fillRect(x + 6, y + 11, 24, 14);
+  ctx.fillStyle = '#232b34';
+  ctx.fillRect(x + 12, y + 16, 5, 5);
+  ctx.fillRect(x + 21, y + 16, 5, 5);
+  ctx.fillStyle = '#cf9560';
+  ctx.fillRect(x + 24, y, 4, 8);
+  ctx.fillStyle = Math.floor(game.time * 12) % 2 ? '#f2c65b' : '#ee7862';
+  ctx.fillRect(x + 27, y - 4, 6, 6);
+}
+
 function drawTraps(ctx) {
   for (const trap of game.traps) {
-    if (practiceMode && !trap.triggered) drawTrapWarning(ctx, trap);
+    if (practiceMode && !trap.triggered) drawTrapWarning(ctx, trap, trap.type === 'block' ? FLOOR - 110 : trap.y - 35);
     if (trap.type === 'spikes') {
       if (practiceMode || trap.triggered) {
         const height = trap.activated ? 28 : 8;
         sprite(ctx, 45, trap.x, FLOOR - height, 28, height);
       }
-    } else if (trap.type === 'collapse' && trap.triggered && !trap.activated) {
-      ctx.fillStyle = '#f5c66d';
-      for (let x = trap.x + 5; x < trap.x + trap.w - 8; x += 18) ctx.fillRect(x, FLOOR + 2, 11, 4);
-    } else if (trap.type === 'coin' && (practiceMode || trap.triggered)) {
-      if (trap.activated) sprite(ctx, 112, trap.x - 3, trap.y, 36, 36);
-      else {
-        ctx.strokeStyle = '#d65e5e'; ctx.lineWidth = 3;
-        ctx.strokeRect(trap.x - 4, trap.y - 4, 38, 42);
+    } else if (trap.type === 'collapse') {
+      if (trap.activated) {
+        ctx.fillStyle = '#354238';
+        ctx.fillRect(trap.x, FLOOR, trap.w, VIEW_H - FLOOR);
+        ctx.fillStyle = '#28322d';
+        ctx.fillRect(trap.x + 8, FLOOR + 18, trap.w - 16, VIEW_H - FLOOR - 18);
+        ctx.fillStyle = '#d7df83';
+        ctx.fillRect(trap.x, FLOOR, 5, 10);
+        ctx.fillRect(trap.x + trap.w - 5, FLOOR, 5, 10);
+      } else if (trap.triggered) {
+        ctx.fillStyle = '#f5c66d';
+        for (let x = trap.x + 5; x < trap.x + trap.w - 8; x += 18) ctx.fillRect(x, FLOOR + 2, 11, 4);
       }
-    } else if (trap.type === 'block' && (trap.triggered || practiceMode)) {
-      sprite(ctx, 52, trap.x, trap.y, 60, 60);
-    } else if (trap.type === 'ambush' && (trap.activated || practiceMode)) {
-      sprite(ctx, 112, trap.x, trap.y, 36, 36, true);
+    } else if (trap.type === 'coin' && (practiceMode || trap.triggered)) {
+      ctx.strokeStyle = '#d65e5e'; ctx.lineWidth = 3;
+      if (trap.activated) {
+        ctx.beginPath(); ctx.moveTo(trap.x + 4, trap.y + 6); ctx.lineTo(trap.x + 28, trap.y + 30); ctx.moveTo(trap.x + 28, trap.y + 6); ctx.lineTo(trap.x + 4, trap.y + 30); ctx.stroke();
+      } else ctx.strokeRect(trap.x - 4, trap.y - 4, 38, 42);
+    } else if (trap.type === 'block') {
+      if (trap.activated) sprite(ctx, 52, trap.x, trap.y, 60, 60);
+      else if (practiceMode && !trap.triggered) {
+        ctx.strokeStyle = '#d65e5e'; ctx.lineWidth = 3;
+        ctx.strokeRect(trap.x + 2, FLOOR - 62, 56, 56);
+      }
+    } else if (trap.type === 'ambush') {
+      if ((trap.triggered && !trap.spent) || (practiceMode && !trap.triggered)) drawBomb(ctx, trap.x, trap.triggered ? trap.y : 465);
     } else if (trap.type === 'door' && !trap.activated) {
       drawDoor(ctx, trap.x, trap.y, game.time);
       if (practiceMode) drawTrapWarning(ctx, trap, trap.y - 30);
@@ -691,7 +760,7 @@ function drawGame() {
   drawDoor(ctx, game.level.door.x, game.level.door.y, game.time);
   drawTraps(ctx);
   for (const [x, count] of game.level.spikes) for (let i = 0; i < count; i++) sprite(ctx, 45, x + i * 28, FLOOR - 28, 28, 28);
-  game.coinsList.forEach((coin, i) => { if (!coin.collected) drawCoin(ctx, coin.x, coin.y, game.time, i); });
+  game.coinsList.forEach((coin, i) => { if (!coin.collected && !coin.fake) drawCoin(ctx, coin.x, coin.y, game.time, i); });
   game.enemies.forEach((enemy) => {
     if (enemy.dead) { if (enemy.deathTime < .3) sprite(ctx, 111, enemy.x, enemy.y + 12, 36, 24); return; }
     sprite(ctx, 112 + (Math.floor(game.time * 4) % 2), enemy.x, enemy.y, 36, 36, enemy.direction < 0);

@@ -156,6 +156,46 @@
   .rules::-webkit-scrollbar{width:0;}
   .rules th:first-child,.rules td:first-child{text-align:left;}
 
+  /* ============ 热度 / 遗物 / 动态赔率 ============ */
+  .heat{display:none;font-size:10px;font-weight:800;color:#ffd97a;white-space:nowrap;
+    border:1px solid rgba(216,161,58,.45);background:rgba(216,161,58,.14);
+    padding:2px 7px;border-radius:999px;letter-spacing:.02em;}
+  .heat.on{display:inline-block;}
+  .heat.flash{animation:pop .45s ease;}
+  .runbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px;}
+  .relicbar{display:flex;flex-wrap:wrap;gap:4px;}
+  .relicbar:empty{display:none;}
+  .relicbar .r{font-size:9.5px;padding:2px 7px;border-radius:999px;color:#c9e8d7;
+    background:rgba(106,208,150,.12);border:1px solid rgba(106,208,150,.32);white-space:nowrap;}
+
+  .slot.spent{opacity:.42;cursor:not-allowed;border-style:dashed;}
+  .slot.spent .odds{color:#7c9c8d;}
+  .slot.spent .bar{display:none;}
+
+  .die.rolling{animation:tumble .42s cubic-bezier(.2,.8,.3,1) both;}
+  @keyframes tumble{
+    0%{transform:translateY(-18px) rotate(-14deg) scale(.86);opacity:.35}
+    55%{transform:translateY(3px) rotate(5deg) scale(1.04);opacity:1}
+    100%{transform:translateY(0) rotate(0) scale(1)}
+  }
+  #app.big-win .dicezone{animation:bigshake .5s ease;}
+  @keyframes bigshake{
+    0%,100%{transform:translate(0,0)}
+    20%{transform:translate(-4px,2px)}
+    40%{transform:translate(4px,-2px)}
+    60%{transform:translate(-3px,-1px)}
+    80%{transform:translate(2px,1px)}
+  }
+
+  .relicGrid{display:grid;grid-template-columns:1fr;gap:8px;width:100%;max-width:430px;margin:2px 0;}
+  .relicCard{background:rgba(0,0,0,.28);border:1px solid var(--line);color:var(--cream);
+    border-radius:11px;padding:11px 13px;text-align:left;box-shadow:none;font-family:inherit;}
+  .relicCard .rn{display:block;font-size:14px;font-weight:800;color:var(--gold);letter-spacing:.04em;}
+  .relicCard .rd{display:block;font-size:11.5px;color:#9dc4b4;margin-top:3px;line-height:1.4;}
+  .relicCard:active{transform:translateY(1px);}
+  #ovRelic p{max-width:430px;}
+  #ovRelic .btn-side{margin-top:6px;}
+
   /* ============ 平板 / 大屏手机 ============ */
   @media (min-width:560px){
     #app{max-width:660px;}
@@ -252,6 +292,16 @@
     .rules h3{font-size:13px;margin:12px 0 4px;}
     .rules table{font-size:11.5px;}
     .rules th,.rules td{padding:3px 6px;}
+
+    .heat{font-size:11px;padding:3px 9px;}
+    .runbar{gap:5px;margin-top:8px;}
+    .relicbar{gap:5px;}
+    .relicbar .r{font-size:10.5px;padding:3px 9px;}
+    .relicGrid{grid-template-columns:repeat(3,1fr);max-width:760px;gap:10px;}
+    .relicCard{padding:14px 16px;min-height:104px;display:flex;flex-direction:column;justify-content:center;}
+    .relicCard .rn{font-size:15px;}
+    .relicCard .rd{font-size:12px;}
+    #ovRelic p{max-width:760px;}
   }
 
   /* 笔记本 / 矮屏 PC：压缩纵向空间 */
@@ -322,6 +372,10 @@
         <div class="ds" id="cardDesc">—</div>
       </div>
     </div>
+    <div class="runbar">
+      <div class="relicbar" id="relicBar"></div>
+      <div class="heat" id="heat"></div>
+    </div>
   </div>
 
   <div class="dicezone">
@@ -336,7 +390,7 @@
 
   <div class="betzone">
     <div class="bhead">
-      <span>选一个注位下注</span>
+      <span id="betHead">看牌面选一个注位下注</span>
       <span id="betTotal" style="color:#ffd97a;font-weight:700;"></span>
       <span class="chipsel" id="chipsel"></span>
     </div>
@@ -352,21 +406,33 @@
     <button class="btn-main" id="ovBtn">再来一局</button>
   </div>
 
+  <div class="overlay" id="ovRelic">
+    <h2>遗 物 三 选 一</h2>
+    <p>选一件带到下一关，构筑这一局的打法</p>
+    <div class="relicGrid" id="relicGrid"></div>
+    <button class="btn-side btn-fold" id="relicSkip">跳过 · +100 筹码</button>
+  </div>
+
   <div class="overlay" id="ovRules">
     <h2>玩 法</h2>
     <div class="rules">
-      <p style="margin:0 0 8px">起始 <b>1000</b> 筹码，打 <b>10 关</b>。每关翻 1 张任务牌，改赔率或改规则。</p>
-      <h3>每关三步</h3>
+      <p style="margin:0 0 8px">起始 <b>1000</b> 筹码，打 <b>10 关</b>。每关先掷骰，看牌面再下注，然后决定追不追。</p>
+      <h3>每关流程</h3>
       <ul>
-        <li><b>选注位</b>：10 选 1，决定你要掷出什么牌型</li>
-        <li><b>投掷</b>：3 次，点骰子锁定，只重掷没锁的</li>
-        <li><b>结算</b>：成型后按赔率领取；未成型可弃注退 <b>25%</b></li>
+        <li><b>先掷</b>：免费掷 5 颗骰子，不扣筹码</li>
+        <li><b>下注</b>：看牌面选注位，赔率按当前命中率计算，<b>下注时锁定</b></li>
+        <li><b>重掷</b>：点骰子锁定再重掷；未成型可弃注退 <b>25%</b></li>
+        <li><b>结算</b>：命中按锁定赔率领取，未命中清零热度</li>
       </ul>
-      <h3>赔率表（3 次投掷）</h3>
+      <h3>动态赔率</h3>
+      <p style="margin:0 0 8px">赔率 ≈ <b>0.95 ÷ 当前命中率</b>：命中越低赔率越高。已成型或概率过低的注位不可下注。</p>
+      <h3>热度与遗物</h3>
+      <p style="margin:0 0 8px">连续命中累积热度，每层 <b>+8%</b> 赔率（上限 5 层），弃注或未命中清零。每关结算后从 3 件遗物中选 1 件。</p>
+      <h3>参考赔率（未掷骰，3 次投掷）</h3>
       <table id="oddsTable"></table>
       <p style="margin:8px 0 0;color:#8fb5a5;font-size:10.5px;line-height:1.5">
       段位：铜 ≥1050 ｜ 银 ≥1400 ｜ 金 ≥1700 ｜ 传奇 ≥2200<br>
-      注位上的「命中 %」按最优锁骰算出，照着选就行。</p>
+      实际赔率会随每次掷出的牌面实时变化。</p>
     </div>
     <button class="btn-main" id="ovRulesBtn">开始</button>
   </div>
@@ -476,9 +542,40 @@ var CARDS = [
 ];
 
 var MAX_LV = 10;
+var HEAT_MAX = 5, HEAT_STEP = .08;
+var RELICS = [
+  {id:'fold',    nm:'保险箱',   ds:'弃注返还 +25%'},
+  {id:'straight',nm:'顺子猎人', ds:'小顺 / 大顺赔率 ×1.5'},
+  {id:'yacht',   nm:'豹子头',   ds:'快艇赔率 ×1.8'},
+  {id:'streak',  nm:'连赢',     ds:'热度每层加成 +5%'},
+  {id:'stake',   nm:'高额桌',   ds:'单注上限 40% → 55%'},
+  {id:'insure',  nm:'再保险',   ds:'未命中返还 15% 本金'},
+  {id:'shield',  nm:'护心镜',   ds:'每局第一次未命中不清空热度'},
+  {id:'cash',    nm:'筹码商',   ds:'每关开始获得 5% 筹码'}
+];
+var RELIC_MAP = {};
+RELICS.forEach(function(r){ RELIC_MAP[r.id] = r; });
 var CHIP_FRACS = [0.05, 0.10, 0.20];
 var TIERS = [{nm:'传奇',min:2200},{nm:'金',min:1700},{nm:'银',min:1400},{nm:'铜',min:1050}];
-var S = null, audio = {};
+var S = null;
+
+/* 部分音效缺失：用已有素材做变调复用，避免静音 */
+var SFX_ALIAS = {dieThrow2:'dieThrow1', cardPlace2:'cardPlace1'};
+var sfxPool = {}, sfxPos = {};
+
+function sfxPoolOf(key){
+  var src = ASSETS.sfx[key];
+  if(!src) return null;
+  if(!sfxPool[key]){
+    sfxPool[key] = [];
+    for(var i=0;i<3;i++){
+      var el = new Audio(src);
+      el.preload = 'auto';
+      sfxPool[key].push(el);
+    }
+  }
+  return sfxPool[key];
+}
 
 /* ================= 工具 ================= */
 function $(id){return document.getElementById(id);}
@@ -490,42 +587,91 @@ function shuffle(a){
     var t=a[i];a[i]=a[j];a[j]=t;}
   return a;
 }
-function sfx(nm){
+function sfx(nm, opt){
   try{
-    if(!ASSETS.sfx[nm]) return;
-    if(!audio[nm]) audio[nm] = new Audio(ASSETS.sfx[nm]);
-    var a = audio[nm].cloneNode();
-    a.volume = nm.indexOf('die')===0 ? .32 : .26;
-    a.play().catch(function(){});
+    var key = SFX_ALIAS[nm] || nm;
+    var pool = sfxPoolOf(key);
+    if(!pool) return;
+    opt = opt || {};
+
+    var start = sfxPos[key] || 0, idx = start, a = null;
+    for(var i=0;i<pool.length;i++){
+      idx = (start+i)%pool.length;
+      if(pool[idx].paused || pool[idx].ended){ a = pool[idx]; break; }
+    }
+    if(!a){ a = pool[start]; idx = start; }
+    sfxPos[key] = (idx+1)%pool.length;
+
+    var isDie = nm.indexOf('die') === 0;
+    try{ a.playbackRate = opt.rate || (isDie ? .9 + Math.random()*.22 : 1); }catch(e){}
+    a.volume = clamp((isDie ? .34 : .28) * (opt.vol == null ? (isDie ? .92 + Math.random()*.16 : 1) : opt.vol), 0, 1);
+    try{ a.currentTime = 0; }
+    catch(e){ try{ a.load(); }catch(_){} }
+
+    var p = a.play();
+    if(p && p.catch) p.catch(function(){});
   }catch(e){}
 }
+/* 预热，首次投掷不再等音频初始化 */
+['dieThrow1','cardPlace1','cardSlide1','chipsCollide1'].forEach(function(k){ sfxPoolOf(k); });
 
 /* ================= 规则 ================= */
 function mod(){ return (S.card && S.card.mod) || {}; }
 function rollsMax(){ return mod().rolls || 3; }
 function twoRoll(){ return rollsMax() === 2; }
 function isBanned(slot){ return (mod().ban || []).indexOf(slot) >= 0; }
+function hasRelic(id){ return !!(S.relics && S.relics.indexOf(id) >= 0); }
 
 function baseOdds(slot){ return twoRoll() ? O2[slot] : O3[slot]; }
 function baseProb(slot){ return twoRoll() ? P2[slot] : P3[slot]; }
 
-function oddsOf(slot){
-  var o = baseOdds(slot), m = mod();
+function heatStep(){ return HEAT_STEP + (hasRelic('streak') ? .05 : 0); }
+function heatMul(){ return 1 + (S.heat || 0) * heatStep(); }
+
+function relicMult(slot){
+  var k = 1;
+  if((slot === 'ss' || slot === 'ls') && hasRelic('straight')) k *= 1.5;
+  if(slot === 'yz' && hasRelic('yacht')) k *= 1.8;
+  return k;
+}
+
+/* 庄家优势约 5%：赔率 = 0.95 / 当前命中率，再叠加关卡牌、连庄与遗物加成 */
+function adjustOdds(o, slot){
+  var m = mod();
   if(m.mul && m.mul[slot]) o *= m.mul[slot];
   if(m.add && m.add[slot]) o += m.add[slot];
   if(m.mulAll) o *= m.mulAll;
-  return o * (1 + S.carry);
+  return clamp(o * (1 + S.carry) * relicMult(slot), 1.02, 120);
 }
-function foldRate(){ return mod().foldRate || .25; }
+function oddsFromProb(p, slot){
+  if(!(p > 0)) return 0;
+  return adjustOdds(.95 / p, slot);
+}
+
+function foldRate(){ return Math.min(.75, (mod().foldRate || .25) + (hasRelic('fold') ? .25 : 0)); }
 
 function handKey(d){ return d.slice().sort(function(a,b){return a-b;}).join(''); }
 
-/* 再掷 n 次仍命中的概率（预计算表，n=1..2） */
-function pNext(slot, n){
+/* 当前牌面下、再掷 n 次仍命中的概率（预计算表，n=1..2） */
+function slotProb(slot, n){
   if(!S.dice[0]) return baseProb(slot);
+  if(n <= 0) return satisfies(slot) ? 1 : 0;
   var row = CONT[handKey(S.dice)];
   if(!row) return 0;
-  return row[String(clamp(n,1,2))][SLOTS.indexOf(slot)] / 1000;
+  return row[String(clamp(n, 1, 2))][SLOTS.indexOf(slot)] / 1000;
+}
+function pNext(slot, n){ return slotProb(slot, n); }
+
+function oddsOf(slot){
+  if((S.phase === 'rolled' || S.phase === 'settle') && S.pick === slot && S.oddsLocked) return S.oddsLocked;
+  if(!S.dice[0]) return adjustOdds(baseOdds(slot), slot);
+  var n = S.phase === 'bet' ? rollsMax() - 1 : Math.max(0, rollsMax() - S.rollsUsed);
+  return oddsFromProb(slotProb(slot, n), slot);
+}
+
+function canBet(slot){
+  if(S.phase !== 'bet' || isBanned(slot) || satisfies(slot)) return false;
+  return slotProb(slot, rollsMax() - 1) >= .001;
 }
 
 /* ================= 牌型判定 ================= */
@@ -556,7 +702,10 @@ function satisfies(slot){
 
 /* ================= 下注额度 ================= */
 function minBet(){ return Math.max(10, Math.ceil(S.chips * (mod().minBetPct || .05))); }
-function maxBet(){ return Math.floor(S.chips * .40); }
+function maxBet(){
+  var cap = Math.floor(S.chips * (hasRelic('stake') ? .55 : .40));
+  return Math.min(S.chips, Math.max(minBet(), cap));
+}
 function chipAmount(){ return Math.max(10, Math.floor(S.chips * S.chipFrac)); }
 function hasBet(){ return !!S.pick; }
 
@@ -568,7 +717,30 @@ function renderAll(){
     b.textContent = t;
     b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash');
   }
-  renderPips(); renderCard(); renderDice(); renderSlots(); renderControls();
+  renderPips(); renderCard(); renderDice(); renderSlots(); renderControls(); renderHeat(); renderRelics();
+}
+
+function renderHeat(){
+  var el = $('heat');
+  if(!el) return;
+  var txt = S.heat > 0
+    ? ('连中 ' + S.heat + ' · +' + Math.round(S.heat * heatStep() * 100) + '%')
+    : '';
+  if(el.textContent !== txt){
+    el.textContent = txt;
+    el.classList.remove('flash'); void el.offsetWidth;
+    if(txt) el.classList.add('flash');
+  }
+  el.classList.toggle('on', !!txt);
+}
+
+function renderRelics(){
+  var bar = $('relicBar');
+  if(!bar) return;
+  bar.innerHTML = (S.relics || []).map(function(id){
+    var r = RELIC_MAP[id];
+    return r ? '<span class="r" title="' + r.ds + '">' + r.nm + '</span>' : '';
+  }).join('');
 }
 
 function renderPips(){
@@ -605,6 +777,10 @@ function renderDice(){
       img.src = locked ? ASSETS.diceR[String(S.dice[i])] : ASSETS.dice[String(S.dice[i])];
       d.appendChild(img);
       if(locked) d.classList.add('locked');
+      if(S.anim && !locked){
+        d.classList.add('rolling');
+        d.style.animationDelay = (i * 26) + 'ms';
+      }
       if(S.phase === 'rolled' && !locked && rollsMax() - S.rollsUsed > 0 && !satisfies(S.pick)){
         d.onclick = (function(idx){ return function(){ toggleLock(idx); }; })(i);
       }
@@ -613,20 +789,40 @@ function renderDice(){
     }
     box.appendChild(d);
   }
+  if(S.anim){
+    S.anim = false;
+    clearTimeout(renderDice._t);
+    renderDice._t = setTimeout(function(){
+      var els = document.querySelectorAll('.die.rolling');
+      for(var k=0;k<els.length;k++){
+        els[k].classList.remove('rolling');
+        els[k].style.animationDelay = '';
+      }
+    }, 560);
+  }
 }
 
 function renderSlots(){
   var box = $('slots');
   box.innerHTML = '';
   var maxP = 0;
-  SLOTS.forEach(function(s){ if(!isBanned(s)) maxP = Math.max(maxP, baseProb(s)); });
+  SLOTS.forEach(function(s){
+    if(isBanned(s)) return;
+    var p;
+    if(!S.dice[0]) p = baseProb(s);
+    else if(S.phase === 'bet') p = satisfies(s) ? 0 : slotProb(s, rollsMax() - 1);
+    else p = satisfies(s) ? 1 : slotProb(s, Math.max(0, rollsMax() - S.rollsUsed));
+    if(p > maxP) maxP = p;
+  });
 
   SLOTS.forEach(function(s){
     var el = document.createElement('div');
     el.className = 'slot';
     var banned = isBanned(s);
     var picked = S.pick === s;
-    var p = 0, l1 = '', l2 = '', bar = true;
+    var formedNow = !!(S.dice[0] && satisfies(s));
+    var left = Math.max(0, rollsMax() - S.rollsUsed);
+    var p = 0, l1 = '', l2 = '', bar = true, oddsTxt = '', available = false;
 
     if(banned) el.classList.add('banned');
     if(picked) el.classList.add('on');
@@ -636,38 +832,64 @@ function renderSlots(){
       if(picked){
         el.classList.add(S.result.hit ? 'win' : 'lose');
         l1 = S.result.hit ? ('赢 +' + fmt(S.result.pay)) : '未命中';
-        l2 = '注' + fmt(S.betAmt);
+        l2 = '注' + fmt(S.betAmt) + ' · ' + (S.oddsLocked ? S.oddsLocked.toFixed(2) + '×' : '');
       }else{
         l1 = banned ? '本关禁用' : '未选中';
         l2 = '';
       }
-    }else if(S.phase === 'rolled' && picked){
-      var formed = satisfies(s);
-      var left = rollsMax() - S.rollsUsed;
-      if(formed) el.classList.add('formed');
-      p = formed ? 1 : pNext(s, left);
-      l1 = formed ? '已成型' : ('命中 ' + (p*100).toFixed(1) + '%');
-      l2 = '注' + fmt(S.betAmt) + ' · 赢' + fmt(S.betAmt * oddsOf(s));
+      oddsTxt = (picked && S.oddsLocked) ? S.oddsLocked.toFixed(2) + '×' : '—';
+    }else if(S.phase === 'rolled'){
+      if(picked){
+        var formed = formedNow;
+        if(formed) el.classList.add('formed');
+        el.classList.add('hot');
+        p = formed ? 1 : slotProb(s, left);
+        l1 = formed ? '已成型' : ('命中 ' + (p*100).toFixed(1) + '%');
+        l2 = '注' + fmt(S.betAmt) + ' · 赢' + fmt(S.betAmt * (S.oddsLocked || 0) * heatMul());
+        oddsTxt = (S.oddsLocked ? S.oddsLocked.toFixed(2) : '—') + '×';
+      }else{
+        l1 = banned ? '本关禁用' : '未选中';
+        l2 = '';
+        oddsTxt = '—';
+        bar = false;
+      }
+    }else if(S.phase === 'bet'){
+      available = canBet(s);
+      p = formedNow ? 1 : (available ? slotProb(s, rollsMax() - 1) : 0);
+      if(banned){ l1 = '本关禁用'; oddsTxt = '—'; }
+      else if(formedNow){ l1 = '已成牌 · 不可押'; oddsTxt = '—'; }
+      else if(!available){ l1 = '概率过低'; oddsTxt = '—'; }
+      else { l1 = '命中 ' + (p*100).toFixed(1) + '%'; oddsTxt = oddsFromProb(p, s).toFixed(2) + '×'; }
+      if(!available){ el.classList.add('spent'); bar = false; }
+      l2 = (picked && available)
+        ? ('注' + fmt(S.betAmt) + ' · 赢' + fmt(S.betAmt * oddsFromProb(p, s) * heatMul()))
+        : INFO[s].sub;
     }else{
       p = baseProb(s);
       l1 = banned ? '本关禁用' : ('命中 ' + (p*100).toFixed(1) + '%');
-      l2 = picked
-        ? ('注' + fmt(S.betAmt) + ' · 赢' + fmt(S.betAmt * oddsOf(s)))
-        : INFO[s].sub;
+      l2 = INFO[s].sub;
+      oddsTxt = banned ? '—' : oddsOf(s).toFixed(2) + '×';
     }
 
     el.innerHTML =
       '<div class="nm">' + INFO[s].name + '</div>' +
-      '<div class="odds">' + oddsOf(s).toFixed(2) + '×</div>' +
+      '<div class="odds">' + oddsTxt + '</div>' +
       '<div class="meta">' + l1 + '</div>' +
       '<div class="stake' + (picked?'':' dim') + '">' + l2 + '</div>' +
-      (bar && !banned ? '<div class="bar" style="width:' + (p/maxP*100).toFixed(0) + '%"></div>' : '');
+      (bar && !banned && maxP > 0 ? '<div class="bar" style="width:' + (p/maxP*100).toFixed(0) + '%"></div>' : '');
 
-    if(S.phase === 'bet' && !banned) el.onclick = function(){ pickSlot(s); };
+    if(available) el.onclick = function(){ pickSlot(s); };
     box.appendChild(el);
   });
 
   $('betTotal').textContent = S.pick ? ('· ' + INFO[S.pick].name + ' ' + fmt(S.betAmt)) : '';
+  var bh = $('betHead');
+  if(bh){
+    bh.textContent = S.phase === 'ready' ? '先掷骰，再看牌面下注'
+      : S.phase === 'bet' ? '看牌面选一个注位下注'
+      : S.phase === 'rolled' ? '已下注 · 锁骰后重掷'
+      : '本关结算';
+  }
 }
 
 function renderControls(){
@@ -675,13 +897,24 @@ function renderControls(){
   fold.style.display = 'none';
   main.classList.remove('green');
 
-  if(S.phase === 'bet'){
+  if(S.phase === 'ready'){
     main.textContent = '掷 骰';
-    var msg = '', ok = true;
-    if(!S.pick){ ok = false; msg = '先选一个注位'; }
-    else if(S.betAmt < minBet()){ ok = false; msg = '最低下注 ' + fmt(minBet()) + ' 筹码'; }
-    else if(S.betAmt > maxBet()){ ok = false; msg = '单关上限 ' + fmt(maxBet()) + '（筹码 40%）'; }
-    else msg = '掷骰后可点骰子锁定，再重掷';
+    main.disabled = false;
+    setHint('先免费掷 5 颗骰子，再决定押哪一注');
+    return;
+  }
+
+  if(S.phase === 'bet'){
+    main.textContent = '下 注';
+    var msg = '', ok = !!S.pick;
+    if(!S.pick) msg = '看牌面选一个注位';
+    else if(!canBet(S.pick)){ ok = false; msg = '这个注位当前不可押'; }
+    else if(S.betAmt < minBet()){ ok = false; msg = '最低下注 ' + fmt(minBet()); }
+    else if(S.betAmt > maxBet()){ ok = false; msg = '单关上限 ' + fmt(maxBet()); }
+    else {
+      var o = oddsFromProb(slotProb(S.pick, rollsMax() - 1), S.pick);
+      msg = '赔率 ' + o.toFixed(2) + '× · 下注后锁定';
+    }
     main.disabled = !ok;
     setHint(msg);
     return;
@@ -696,12 +929,12 @@ function renderControls(){
     if(formed){
       main.textContent = '结 算';
       main.classList.add('green');
-      setHint('已成型 · 点结算领取 +' + fmt(Math.floor(S.betAmt * oddsOf(S.pick))));
+      setHint('已成型 · 结算 +' + fmt(Math.floor(S.betAmt * S.oddsLocked * heatMul())));
     }else{
       var canRoll = left > 0 && nLock < 5;
       main.textContent = canRoll ? ('重 掷 (' + left + ')') : '结 算';
       if(canRoll){
-        setHint(left > 0 ? ('命中 ' + (pNext(S.pick,left)*100).toFixed(1) + '% · 已锁 ' + nLock + ' 颗') : '');
+        setHint('命中 ' + (slotProb(S.pick, left)*100).toFixed(1) + '% · 已锁 ' + nLock + ' 颗');
       }else if(nLock === 5){
         setHint('5 颗全锁 · 直接结算');
       }else{
@@ -717,7 +950,7 @@ function renderControls(){
 
   main.textContent = '下一关';
   main.disabled = false;
-  setHint('点「下一关」继续');
+  setHint('点「下一关」抽取遗物');
 }
 
 function setHint(t){ $('hint').textContent = t; }
@@ -726,11 +959,14 @@ function setHint(t){ $('hint').textContent = t; }
 function renderChipSel(){
   var box = $('chipsel');
   box.innerHTML = '';
+  var lockable = S.phase === 'bet' || S.phase === 'ready';
   CHIP_FRACS.forEach(function(f){
     var b = document.createElement('button');
     b.textContent = fmt(Math.max(10, Math.floor(S.chips * f)));
     if(Math.abs(S.chipFrac - f) < 1e-9) b.className = 'on';
+    b.disabled = !lockable;
     b.onclick = function(){
+      if(S.phase !== 'bet' && S.phase !== 'ready') return;
       S.chipFrac = f;
       if(S.pick) S.betAmt = clamp(chipAmount(), minBet(), maxBet());
       renderAll(); renderChipSel();
@@ -739,13 +975,14 @@ function renderChipSel(){
   });
   var c = document.createElement('button');
   c.textContent = '撤注';
-  c.onclick = function(){ S.pick = null; S.betAmt = 0; renderAll(); renderChipSel(); };
+  c.disabled = !lockable;
+  c.onclick = function(){ S.pick = null; S.betAmt = 0; S.oddsLocked = 0; renderAll(); renderChipSel(); };
   box.appendChild(c);
 }
 
 function pickSlot(slot){
-  if(S.phase !== 'bet' || isBanned(slot)) return;
-  if(S.pick === slot){ S.pick = null; S.betAmt = 0; }
+  if(!canBet(slot)) return;
+  if(S.pick === slot){ S.pick = null; S.betAmt = 0; S.oddsLocked = 0; }
   else {
     S.pick = slot;
     S.betAmt = clamp(chipAmount(), minBet(), maxBet());
@@ -754,29 +991,42 @@ function pickSlot(slot){
   renderAll(); renderChipSel();
 }
 
-/* ================= 投掷 ================= */
+/* ================= 投掷与下注 ================= */
 function rollDice(idx){
   S.dice = S.dice.slice();
   idx.forEach(function(i){ S.dice[i] = d6(); });
 }
 
-function startRoll(){
-  S.chips -= S.betAmt;
-  S.phase = 'rolled';
-  S.rollsUsed = 0;
-  S.locked = [false,false,false,false,false];
+function firstRoll(){
+  if(S.phase !== 'ready') return;
+  S.pick = null;
+  S.betAmt = 0;
+  S.oddsLocked = 0;
   S.result = null;
+  S.locked = [false,false,false,false,false];
+  S.rollsUsed = 0;
   rollDice([0,1,2,3,4]);
   S.rollsUsed = 1;
+  S.anim = true;
+  S.phase = 'bet';
   sfx('dieThrow1');
   renderAll();
-  if(rollsMax() - S.rollsUsed <= 0){
-    setTimeout(function(){ if(S.phase === 'rolled') settle(); }, 420);
-  }
+}
+
+function placeBet(){
+  if(S.phase !== 'bet' || !S.pick || !canBet(S.pick)) return;
+  if(S.betAmt < minBet() || S.betAmt > maxBet()) return;
+  S.oddsLocked = oddsFromProb(slotProb(S.pick, rollsMax() - 1), S.pick);
+  S.chips -= S.betAmt;
+  S.phase = 'rolled';
+  sfx('chipsCollide1');
+  renderAll();
+  renderChipSel();
 }
 
 function doMain(){
-  if(S.phase === 'bet'){ startRoll(); return; }
+  if(S.phase === 'ready'){ firstRoll(); return; }
+  if(S.phase === 'bet'){ placeBet(); return; }
   if(S.phase === 'rolled'){
     var left = rollsMax() - S.rollsUsed;
     if(left <= 0 || S.locked.every(Boolean) || satisfies(S.pick)){ settle(); return; }
@@ -792,10 +1042,11 @@ function rerollOnce(){
   if(toRoll.length === 0) return;
   rollDice(toRoll);
   S.rollsUsed++;
+  S.anim = true;
   sfx('dieThrow2');
   renderAll();
   if(rollsMax() - S.rollsUsed <= 0){
-    setTimeout(function(){ if(S.phase === 'rolled') settle(); }, 420);
+    setTimeout(function(){ if(S.phase === 'rolled') settle(); }, 480);
   }
 }
 
@@ -807,6 +1058,36 @@ function toggleLock(i){
   renderAll();
 }
 
+function breakHeat(){
+  if(S.heat > 0 && hasRelic('shield') && !S.shieldUsed){
+    S.shieldUsed = true;
+    return;
+  }
+  S.heat = 0;
+}
+
+/* 只差一颗骰子就能成型时，返回需要改成的点数 */
+function nearMiss(slot){
+  var orig = S.dice.slice(), need = null;
+  for(var i=0;i<5 && !need;i++){
+    for(var v=1;v<=6;v++){
+      if(v === orig[i]) continue;
+      S.dice = orig.slice();
+      S.dice[i] = v;
+      if(satisfies(slot)){ need = v; break; }
+    }
+  }
+  S.dice = orig;
+  return need;
+}
+
+function bigWin(){
+  var app = $('app');
+  if(!app) return;
+  app.classList.add('big-win');
+  setTimeout(function(){ app.classList.remove('big-win'); }, 620);
+}
+
 /* ================= 弃注 ================= */
 function doFold(){
   if(S.phase !== 'rolled') return;
@@ -814,10 +1095,13 @@ function doFold(){
   var refund = Math.floor(S.betAmt * foldRate());
   S.chips += refund;
   S.result = {hit:false, pay:0, folded:true};
+  S.lastDelta = refund - S.betAmt;
   S.phase = 'settle';
+  breakHeat();
   sfx('cardPlace2');
   toast('−' + fmt(S.betAmt - refund), '弃注 · 退回 ' + fmt(refund));
   renderAll();
+  renderChipSel();
   setTimeout(afterSettle, 480);
 }
 
@@ -825,14 +1109,18 @@ function doFold(){
 function settle(){
   if(S.phase !== 'rolled') return;
   var hit = satisfies(S.pick);
-  var pay = 0;
+  var pay = 0, heatBefore = S.heat;
 
   if(hit){
-    pay = Math.floor(S.betAmt * oddsOf(S.pick));
+    pay = Math.floor(S.betAmt * (S.oddsLocked || 0) * heatMul());
     S.chips += pay;
+    S.heat = Math.min(HEAT_MAX, S.heat + 1);
     sfx('chipsCollide1');
+    if(S.pick === 'yz' || S.pick === 'ls' || (S.oddsLocked || 0) >= 10) bigWin();
   }else{
     if(mod().refund){ pay = S.betAmt; S.chips += pay; }
+    else if(hasRelic('insure')){ pay = Math.floor(S.betAmt * .15); S.chips += pay; }
+    breakHeat();
     sfx('cardPlace2');
   }
 
@@ -840,18 +1128,25 @@ function settle(){
   var net = pay - S.betAmt;
   S.lastDelta = net;
 
-  if(net > 0) toast('+' + fmt(net), INFO[S.pick].name + ' 命中 +' + fmt(pay));
+  if(net > 0){
+    var heatTxt = heatBefore > 0 ? (' · 热度 +' + Math.round(heatBefore * heatStep() * 100) + '%') : '';
+    toast('+' + fmt(net), INFO[S.pick].name + ' 命中 +' + fmt(pay) + heatTxt);
+  }
   else if(net === 0) toast('±0', '退本 ' + fmt(pay));
-  else toast('−' + fmt(-net), hit ? '命中但未覆盖本注' : '本关未命中');
+  else {
+    var need = hit ? null : nearMiss(S.pick);
+    toast('−' + fmt(-net), (hit ? '命中但未覆盖本注' : '本关未命中') + (need ? (' · 只差一个 ' + need) : ''));
+  }
 
   S.phase = 'settle';
   renderAll();
+  renderChipSel();
   setTimeout(afterSettle, 480);
 }
 
 function afterSettle(){
   if(S.lv >= MAX_LV){ finish(); return; }
-  setHint('点「下一关」继续');
+  setHint('点「下一关」抽取遗物');
 }
 
 /* ================= 关卡流 ================= */
@@ -864,28 +1159,73 @@ function dealCard(){
 
 function startLevel(){
   dealCard();
-  S.phase = 'bet';
+  S.phase = 'ready';
   S.pick = null;
   S.betAmt = 0;
+  S.oddsLocked = 0;
   S.result = null;
   S.dice = [0,0,0,0,0];
   S.locked = [false,false,false,false,false];
   S.rollsUsed = 0;
+  S.anim = false;
   S.chipFrac = 0.10;
   renderAll();
   renderChipSel();
 }
 
+/* ================= 遗物三选一 ================= */
+function openDraft(){
+  if($('ovRelic').classList.contains('show')) return;
+  var pool = shuffle(RELICS.filter(function(r){ return S.relics.indexOf(r.id) < 0; })).slice(0, 3);
+  if(pool.length === 0){
+    S.chips += 100;
+    advanceLevel();
+    return;
+  }
+  var grid = $('relicGrid');
+  grid.innerHTML = '';
+  pool.forEach(function(r){
+    var b = document.createElement('button');
+    b.className = 'relicCard';
+    b.innerHTML = '<span class="rn">' + r.nm + '</span><span class="rd">' + r.ds + '</span>';
+    b.onclick = function(){ takeRelic(r.id); };
+    grid.appendChild(b);
+  });
+  $('relicSkip').onclick = function(){
+    S.chips += 100;
+    sfx('chipsCollide1');
+    closeDraft();
+    advanceLevel();
+  };
+  $('ovRelic').classList.add('show');
+  sfx('cardSlide1');
+}
+
+function takeRelic(id){
+  S.relics.push(id);
+  sfx('cardPlace1');
+  closeDraft();
+  advanceLevel();
+}
+
+function closeDraft(){ $('ovRelic').classList.remove('show'); }
+
 function nextLevel(){
+  if(S.phase !== 'settle') return;
   if(S.lv >= MAX_LV){ finish(); return; }
+  openDraft();
+}
+
+function advanceLevel(){
   if(mod().carry && S.lastDelta > 0) S.carry += mod().carry;
   else S.carry = 0;
 
   S.lv++;
-  if(S.chips < 10){
+  if(S.chips < 30){
     S.chips = 1000;
     toast('破 产', '筹码补足至 1000');
   }
+  if(hasRelic('cash')) S.chips += Math.max(30, Math.floor(S.chips * .05));
   startLevel();
 }
 
@@ -913,7 +1253,9 @@ function finish(){
   $('ovBody').innerHTML =
     '最终筹码 <span class="num">' + fmt(S.chips) + '</span><br>' +
     line2 +
-    '<br><span style="color:#6f9686">起始 1000 · 2200 达成传奇</span>';
+    '<br><span style="color:#b6d2c5">遗物：' +
+    (S.relics.length ? S.relics.map(function(id){ return RELIC_MAP[id].nm; }).join(' · ') : '无') +
+    '</span><br><span style="color:#6f9686">起始 1000 · 2200 达成传奇</span>';
   $('ov').classList.add('show');
 }
 
@@ -947,8 +1289,10 @@ $('helpBtn').onclick = function(){ $('ovRules').classList.add('show'); };
 function resetRun(){
   S = {lv:1, chips:1000, carry:0, deck:[], pick:null, betAmt:0, chipFrac:.10,
        dice:[0,0,0,0,0], locked:[false,false,false,false,false],
-       phase:'bet', rollsUsed:0, result:null,
+       phase:'ready', rollsUsed:0, result:null, oddsLocked:0, anim:false,
+       heat:0, shieldUsed:false, relics:[],
        lastDelta:0, card:null};
+  closeDraft();
   startLevel();
 }
 

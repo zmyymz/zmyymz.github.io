@@ -69,7 +69,9 @@ export class Game {
         this.drawPile = shuffle(this.discardPile);
         this.discardPile = [];
       }
-      out.push(this.drawPile.pop());
+      const card = this.drawPile.pop();
+      card.enterAt = performance.now();
+      out.push(card);
     }
     return out;
   }
@@ -130,6 +132,8 @@ export class Game {
     const keep = this.hand.filter((_, i) => !this.selected.has(i));
     this.selected.clear();
     this.played = sortByRank(cards.slice());
+    const now = performance.now();
+    for (const c of this.played) c.enterAt = now;
     this.hand = keep;
 
     const returnCards = result.post.returnCards;

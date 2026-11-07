@@ -44,11 +44,32 @@ function doPlay() {
 }
 
 function doDiscard() {
-  if (game.discard()) sfx('cardSlide', { gain: 0.4 });
+  const ghosts = view.snapshotSelected(game);
+  if (game.discard()) {
+    sfx('cardSlide', { gain: 0.4 });
+    view.leaveCards(ghosts);
+  }
 }
 
 function onClick(x, y) {
+  view.hoverInfo = null;
   const b = view.buttonAt(x, y);
+
+  if (b && b.id === 'chart') {
+    view.chartOpen = !view.chartOpen;
+    sfx('cardSlide', { gain: 0.2, rate: 1.4 });
+    return;
+  }
+  if (b && (b.id === 'tab0' || b.id === 'tab1')) {
+    view.chartTab = b.id === 'tab1' ? 1 : 0;
+    sfx('cardSlide', { gain: 0.18, rate: 1.4 });
+    return;
+  }
+  if (view.chartOpen) {
+    view.chartOpen = false;
+    return;
+  }
+
   if (b) {
     if (b.id.startsWith('bet')) {
       game.chooseStake(b.value);
@@ -128,11 +149,21 @@ canvas.addEventListener('pointermove', (e) => {
 
   view.hoverButton = hoverId;
   view.hoverCard = game.phase === 'pick' ? view.pickAt(x, y) : view.cardAt(x, y, game);
+  view.hoverInfo = view.chartOpen ? null : view.hoverTarget(x, y, game);
   canvas.style.cursor = hoverId || view.hoverCard >= 0 ? 'pointer' : 'default';
 });
 
 window.addEventListener('keydown', (e) => {
   unlockAudio();
+  if (e.key === 'Escape' && view.chartOpen) {
+    view.chartOpen = false;
+    return;
+  }
+  if (e.key.toLowerCase() === 'tab') {
+    e.preventDefault();
+    view.chartOpen = !view.chartOpen;
+    return;
+  }
   if (game.phase === 'play') {
     if (e.key === ' ') { e.preventDefault(); doPlay(); }
     else if (e.key.toLowerCase() === 'x') doDiscard();
