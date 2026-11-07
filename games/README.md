@@ -77,6 +77,16 @@ git diff -- games/hand-guardian/index.html
 
 ## 游戏文件直接放在本仓库
 
+《憋茅坑》位于 `games/bie-mao-keng/index.html`，保留原单文件游戏，支持五孔 / 九点棋盘、本地双人和人机对战。封面为 `images/games/bie-mao-keng.svg`。
+
+后续在原项目修改后运行（仅同步，不提交或部署）：
+
+```sh
+python3 tools/sync-bie-mao-keng.py /Users/zhangmeiyue.zmy/Documents/Qoder/2026-11-07/044bb774/index.html
+```
+
+本地预览 `/games/bie-mao-keng/`，确认后再发布。原项目保持不变；以后新增外部资源时需扩展同步范围。
+
 如果游戏导出后是静态 HTML/CSS/JS/WASM 文件，也可以将完整导出目录放在 `games/游戏英文名/`，保留其中的 `index.html` 及所有资源文件。链接写成 `/games/游戏英文名/`。资源路径应支持子目录，避免 `/assets/` 之类的站点根路径导致资源丢失。
 
 GitHub Pages 不能运行后端服务。需要账号、联机服务或数据库的游戏应另行部署后端。Godot Web 导出若启用线程，还需要核实跨源隔离响应头支持；在普通 GitHub Pages 上优先使用无线程导出，并实际测试浏览器兼容性。
