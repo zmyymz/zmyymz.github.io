@@ -9,7 +9,7 @@
 
 后续在博客仓库运行 `python3 tools/sync-stacked.py /Users/zhangmeiyue.zmy/Documents/Qoder/2026-11-06/f8f7b774`，预览 `/games/stacked/`。脚本只更新本地运行文件，不会提交或部署；新增其他格式资源时需更新同步清单。
 
-《五骰押注》位于 `games/five-dice/index.html`，是虚拟筹码骰子策略游戏：选择牌型、投掷锁骰、应对十关任务牌。原样复制单文件 HTML，图片和概率数据均内嵌，无外部运行依赖。
+《再来一骰》位于 `games/five-dice/index.html`，原名五骰押注，现为七桌骰子闯关游戏：投掷锁骰、达到配额，利用商店千术构筑得分组合。保留原 five-dice 地址。原样复制单文件 HTML，图片和概率数据均内嵌，无外部运行依赖。
 
 更新后在博客仓库运行 `python3 tools/sync-five-dice.py /Users/zhangmeiyue.zmy/.qwenworkcn/workspace/2026-11-06/mw4d265fybrxh0ui/outputs/骰子押注.html`，预览 `/games/five-dice/`。脚本只更新本地文件，不会提交或部署。段位保存在当前浏览器站点下，不会从原地址自动迁移。
 
@@ -76,6 +76,18 @@ git diff -- games/hand-guardian/index.html
 使用真实的 HTTPS 游玩地址。游戏可以部署在独立的 GitHub Pages 仓库，或其他静态站点托管平台；这里保存链接即可。添加截图时，将图片放到 `images/games/`，添加有 `alt` 描述、宽高及 `loading="lazy"` 的图片标签。
 
 ## 游戏文件直接放在本仓库
+
+### 拾光童趣合集
+
+游戏列表以「拾光童趣合集」为入口，选择页为 `games/childhood/index.html`。包含憋茅坑、扒尿炕·沙堆插棍、竹筛接石·抓石子、跳房子。游戏在新标签页打开，合集页保留供继续选择。憋茅坑继续使用原地址 `/games/bie-mao-keng/`，兼容已分享链接；其余三款位于 `games/childhood/` 的各自子目录。
+
+四款均为单文件游戏，原项目不修改，不复制历史版本和检查截图。后续统一同步：
+
+```sh
+python3 tools/sync-childhood.py /Users/zhangmeiyue.zmy/Documents/Qoder/2026-11-07
+```
+
+脚本先检查全部入口，再复制四款游戏，不提交或部署。合集页和封面独立维护。如游戏新增外部资源，请同步扩展脚本。本地检查合集 `/games/childhood/` 和游戏入口后，再按需发布。
 
 《憋茅坑》位于 `games/bie-mao-keng/index.html`，保留原单文件游戏，支持五孔 / 九点棋盘、本地双人和人机对战。封面为 `images/games/bie-mao-keng.svg`。
 

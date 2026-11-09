@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>跳房子</title>
+<style>
+  :root{
+    --cement:#8e9186;
+    --chalk:#f6f2e6;
+    --yellow:#ecd69a;
+    --red:#c9604f;
+  }
+  html,body{margin:0;height:100%;overflow:hidden;background:#84877d;
+    -webkit-user-select:none;user-select:none;touch-action:none;
+    font-family:"HanziPen SC","Hannotate SC","Xingkai SC","STKaiti","PingFang SC",cursive}
+  #bg{position:fixed;inset:0;z-index:0;
+    background:
+      radial-gradient(46% 40% at 15% 86%, rgba(58,64,55,.30), transparent 70%),
+      radial-gradient(40% 34% at 86% 18%, rgba(246,242,230,.10), transparent 70%),
+      radial-gradient(90% 60% at 14% 6%, rgba(255,252,240,.20), transparent 60%),
+      radial-gradient(80% 60% at 88% 96%, rgba(38,42,36,.30), transparent 65%),
+      linear-gradient(155deg,#9a9d92 0%,#8d9086 42%,#767a71 100%);
+  }
+  #bg::before{content:"";position:absolute;inset:0;
+    background:radial-gradient(74% 74% at 50% 47%, transparent 52%, rgba(24,28,22,.42) 100%)}
+  #bg::after{content:"";position:absolute;inset:0;opacity:.55;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/><feColorMatrix type='saturate' values='0'/></filter><rect width='300' height='300' filter='url(%23n)' opacity='0.75'/></svg>");
+  }
+  #stage{position:fixed;left:50%;top:50%;width:1600px;height:900px;margin:-450px 0 0 -800px;
+    transform-origin:50% 50%;will-change:transform;z-index:1}
+  svg{display:block;width:1600px;height:900px;overflow:visible}
+
+  .chalk{fill:var(--chalk);font-family:"HanziPen SC","Hannotate SC","Xingkai SC","STKaiti",cursive}
+  .num{font-size:40px;opacity:.48;text-anchor:middle}
+  .lbl{letter-spacing:.28em;opacity:.55}
+
+  #startOverlay,#endOverlay{transition:opacity .5s ease}
+  #startOverlay.hide,#endOverlay.hide{opacity:0;pointer-events:none}
+  .t1{font-size:96px;letter-spacing:.18em;opacity:.92}
+  .t2{font-size:22px;letter-spacing:.34em;opacity:.55}
+  .hint{font-size:19px;letter-spacing:.16em;opacity:.5}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="stage">
+<svg id="world" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="rough" x="-12%" y="-12%" width="124%" height="124%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035 0.05" numOctaves="3" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="4.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="fine" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.7" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="21" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <radialGradient id="cementGrad" cx="30%" cy="18%" r="95%">
+      <stop offset="0%" stop-color="#a3a69b"/>
+      <stop offset="48%" stop-color="#8e9186"/>
+      <stop offset="100%" stop-color="#75796f"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="50%" cy="46%" r="72%">
+      <stop offset="55%" stop-color="#1e221c" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#1e221c" stop-opacity=".38"/>
+    </radialGradient>
+    <radialGradient id="footShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2a2e28" stop-opacity=".45"/>
+      <stop offset="100%" stop-color="#2a2e28" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="stainDark" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3f463d" stop-opacity=".22"/>
+      <stop offset="100%" stop-color="#3f463d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="stainLight" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f6f2e6" stop-opacity=".07"/>
+      <stop offset="100%" stop-color="#f6f2e6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="titleScrim" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#14180f" stop-opacity=".74"/>
+      <stop offset="62%" stop-color="#14180f" stop-opacity=".52"/>
+      <stop offset="100%" stop-color="#14180f" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="grainF">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" result="n"/>
+      <feColorMatrix in="n" type="saturate" values="0"/>
+    </filter>
+  </defs>
+
+  <g id="courtLayer"></g>
+  <g id="markLayer"></g>
+  <g id="playerLayer"></g>
+  <g id="fxLayer"></g>
+  <g id="hudLayer"></g>
+  <g id="overlayLayer"></g>
+</svg>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ============================================================
+   基础
+   ============================================================ */
+const W = 1600, H = 900, CX = 800;
+const NS = "http://www.w3.org/2000/svg";
+const $ = id => document.getElementById(id);
+const el = (tag, attrs = {}, parent) => {
+  const n = document.createElementNS(NS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+};
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rand = (a, b) => a + Math.random() * (b - a);
+
+/* ============================================================
+   房子几何：6 行 + 顶上的「家」
+   ============================================================ */
+const ROWS = [
+  { y0: 856, y1: 746, hw0: 400, hw1: 383, kind: "single", num: "1" },
+  { y0: 746, y1: 636, hw0: 383, hw1: 366, kind: "single", num: "2" },
+  { y0: 636, y1: 526, hw0: 366, hw1: 349, kind: "single", num: "3" },
+  { y0: 526, y1: 416, hw0: 349, hw1: 332, kind: "double", nums: ["4", "5"] },
+  { y0: 416, y1: 306, hw0: 332, hw1: 315, kind: "single", num: "6" },
+  { y0: 306, y1: 196, hw0: 315, hw1: 298, kind: "double", nums: ["7", "8"] }
+];
+const HOME = { y: 196, rx: 228, ry: 76 };
+
+ROWS.forEach((r, i) => {
+  r.index = i;
+  r.cx = CX;
+  r.scale = 0.92 - i * 0.03;
+  r.foot = r.kind === "double" ? "double" : "single";
+});
+const HOME_SCALE = 0.74;
+const cellY = (r, p) => lerp(r.y0 - 9, r.y1 + 5, p);
+
+/* ============================================================
+   场地绘制
+   ============================================================ */
+const courtLayer = $("courtLayer");
+const passWide = el("g", { fill: "none", stroke: "var(--chalk)", "stroke-linecap": "round", "stroke-linejoin": "round", filter: "url(#rough)" }, courtLayer);
+const passThin = el("g", { fill: "none", stroke: "var(--chalk)", "stroke-linecap": "round", "stroke-linejoin": "round", filter: "url(#fine)" }, courtLayer);
+const textLayer = el("g", { class: "chalk" }, courtLayer);
+
+function strokePair(d, w = 2.6, op = .82) {
+  el("path", { d, "stroke-width": w * 2.2, opacity: op * .22 }, passWide);
+  el("path", { d, "stroke-width": w, opacity: op }, passThin);
+}
+function jit(v, amp = 1.8) { return v + rand(-amp, amp); }
+
+function quad(x1, y1, x2, y2, x3, y3, x4, y4) {
+  return `M ${x1} ${y1} L ${x2} ${y2} L ${x3} ${y3} L ${x4} ${y4} Z`;
+}
+
+ROWS.forEach(r => {
+  const cy = (r.y0 + r.y1) / 2;
+  const py = cellY(r, 0.5);
+  if (r.kind === "double") {
+    strokePair(quad(CX - r.hw0, jit(r.y0), CX, jit(r.y0), CX, jit(r.y1), CX - r.hw1, jit(r.y1)), 2.7, .84);
+    strokePair(quad(CX, jit(r.y0), CX + r.hw0, jit(r.y0), CX + r.hw1, jit(r.y1), CX, jit(r.y1)), 2.7, .84);
+    r.nums.forEach((n, k) => {
+      const x = CX + (k === 0 ? -1 : 1) * r.hw1 * 0.5;
+      drawNum(n, x, cy + 40, 44);
+      drawFootGlyph(x, cy + 60, "double");
+    });
+    perfectMark(CX, py, 20);
+  } else {
+    strokePair(quad(CX - r.hw0, jit(r.y0), CX + r.hw0, jit(r.y0), CX + r.hw1, jit(r.y1), CX - r.hw1, jit(r.y1)), 2.8, .86);
+    drawNum(r.num, CX, cy + 44, 46);
+    drawFootGlyph(CX, cy + 64, "single");
+    perfectMark(CX, py, 20);
+  }
+});
+
+function perfectMark(x, y, s) {
+  el("path", {
+    d: `M ${x - s} ${y - s} L ${x + s} ${y + s} M ${x + s} ${y - s} L ${x - s} ${y + s}`,
+    stroke: "var(--yellow)", "stroke-width": 2.4, opacity: .26, "stroke-linecap": "round",
+    filter: "url(#fine)", fill: "none"
+  }, textLayer);
+}
+
+// 家
+strokePair(`M ${CX - HOME.rx} ${HOME.y} A ${HOME.rx} ${HOME.ry} 0 0 1 ${CX + HOME.rx} ${HOME.y}`, 2.8, .8);
+drawNum("家", CX - 152, HOME.y - 22, 30);
+el("path", {
+  d: `M ${CX - 128} ${HOME.y - 30} Q ${CX - 104} ${HOME.y - 40} ${CX - 78} ${HOME.y - 46}`,
+  stroke: "var(--chalk)", "stroke-width": 1.6, opacity: .22, fill: "none", filter: "url(#fine)"
+}, textLayer);
+
+function drawNum(t, x, y, size) {
+  const n = el("text", { x, y, class: "chalk num", filter: "url(#fine)" }, textLayer);
+  n.style.fontSize = size + "px";
+  n.textContent = t;
+  return n;
+}
+function drawFootGlyph(x, y, kind) {
+  const g = el("g", { opacity: .30, filter: "url(#fine)" }, textLayer);
+  const dots = kind === "double" ? [-7, 7] : [0];
+  dots.forEach(dx => el("circle", { cx: x + dx, cy: y, r: 2.6, fill: "var(--chalk)" }, g));
+}
+
+// 粉笔碎屑
+const dustG = el("g", { fill: "var(--chalk)" }, courtLayer);
+for (let i = 0; i < 46; i++) {
+  el("circle", {
+    cx: rand(360, 1240), cy: rand(320, 880), r: rand(1, 2.6), opacity: rand(.10, .30)
+  }, dustG);
+}
+
+// 底部小箭头
+strokePair(`M ${CX - 300} 884 C ${CX - 306} 872 ${CX - 304} 864 ${CX - 298} 856`, 1.8, .22);
+strokePair(`M ${CX - 306} 862 L ${CX - 298} 855 L ${CX - 290} 863`, 1.8, .22);
+
+/* ============================================================
+   粉笔小人
+   ============================================================ */
+const PLAYER = {
+  hip: 50, thigh: 24, shin: 26,
+  shoulder: 90, upper: 20, fore: 18,
+  head: 114, headR: 25,
+  armX: 20
+};
+
+const playerLayer = $("playerLayer");
+const playerG = el("g", { id: "player", filter: "url(#soft)" }, playerLayer);
+const shadowEl = el("ellipse", { cx: 0, cy: 0, rx: 46, ry: 12, fill: "url(#footShadow)" }, playerLayer);
+const rig = el("g", { id: "rig" }, playerG);
+
+const chalkStroke = { stroke: "var(--chalk)", "stroke-linecap": "round", "stroke-linejoin": "round", fill: "none" };
+
+// 四肢：root(挂点+髋/肩旋转) → upper(大臂/大腿) → lower(小臂/小腿)
+function limb(parent, x, y, seg1, seg2, w1, w2, tip, opacity) {
+  const g = el("g", { transform: `translate(${x} ${y})`, opacity }, parent);
+  const upper = el("g", {}, g);
+  el("line", { x1: 0, y1: 0, x2: 0, y2: seg1, stroke: "var(--chalk)", "stroke-linecap": "round", "stroke-width": w1 }, upper);
+  const lower = el("g", { transform: `translate(0 ${seg1})` }, upper);
+  el("line", { x1: 0, y1: 0, x2: 0, y2: seg2, stroke: "var(--chalk)", "stroke-linecap": "round", "stroke-width": w2 }, lower);
+  if (tip === "foot") el("ellipse", { cx: 0, cy: seg2, rx: 7.4, ry: 3.7, fill: "var(--chalk)" }, lower);
+  if (tip === "hand") el("circle", { cx: 0, cy: seg2, r: 3.5, fill: "var(--chalk)" }, lower);
+  return { g, upper, lower };
+}
+
+// 后腿
+const legB = limb(rig, -6, -PLAYER.hip, PLAYER.thigh, PLAYER.shin, 7.5, 7, "foot", .78);
+// 前腿：也画在裤子后面，否则大腿白线会横穿短裤
+const legF = limb(rig, 6, -PLAYER.hip, PLAYER.thigh, PLAYER.shin, 8, 7.5, "foot", 1);
+// 后臂
+const armB = limb(rig, -PLAYER.armX, -PLAYER.shoulder, PLAYER.upper, PLAYER.fore, 7, 6.5, "hand", .82);
+
+// 躯干
+const torsoG = el("g", {}, rig);
+el("path", {
+  d: `M -19 ${-PLAYER.shoulder} Q 0 ${-PLAYER.shoulder - 4} 19 ${-PLAYER.shoulder}
+      L 18 ${-PLAYER.hip} Q 0 ${-PLAYER.hip + 4} -18 ${-PLAYER.hip} Z`,
+  fill: "#d3dfe0", "fill-opacity": .96, stroke: "var(--chalk)", "stroke-width": 3.4, "stroke-linejoin": "round"
+}, torsoG);
+// 短裤
+el("path", {
+  d: `M -19 ${-PLAYER.hip} L -18 ${-PLAYER.hip + 17}
+      Q -9 ${-PLAYER.hip + 15} 0 ${-PLAYER.hip + 11}
+      Q 9 ${-PLAYER.hip + 15} 18 ${-PLAYER.hip + 17}
+      L 19 ${-PLAYER.hip} Z`,
+  fill: "#5f7d9e", "fill-opacity": .92, stroke: "var(--chalk)", "stroke-width": 3, "stroke-linejoin": "round"
+}, torsoG);
+// 红领巾
+el("path", {
+  d: `M -14 ${-PLAYER.shoulder + 3} L 14 ${-PLAYER.shoulder + 3} L 4 ${-PLAYER.shoulder + 15} L 0 ${-PLAYER.shoulder + 9} L -4 ${-PLAYER.shoulder + 15} Z`,
+  fill: "var(--red)", "fill-opacity": .95, stroke: "#f0dfd6", "stroke-width": 1.6, "stroke-linejoin": "round"
+}, torsoG);
+
+// 头
+const headG = el("g", {}, rig);
+el("circle", { cx: 0, cy: -PLAYER.head, r: PLAYER.headR, fill: "#edc8a1", "fill-opacity": .98, stroke: "var(--chalk)", "stroke-width": 3.4 }, headG);
+// 头发
+el("path", {
+  d: `M -25 ${-PLAYER.head - 6} Q -27 ${-PLAYER.head - 32} 0 ${-PLAYER.head - 31}
+      Q 27 ${-PLAYER.head - 32} 25 ${-PLAYER.head - 6}
+      Q 17 ${-PLAYER.head - 19} 8 ${-PLAYER.head - 14}
+      Q -3 ${-PLAYER.head - 8} -11 ${-PLAYER.head - 18}
+      Q -20 ${-PLAYER.head - 15} -25 ${-PLAYER.head - 6} Z`,
+  fill: "#3d4239", "fill-opacity": .95, stroke: "var(--chalk)", "stroke-width": 1.6, "stroke-linejoin": "round"
+}, headG);
+// 眼睛
+el("circle", { cx: -9, cy: -PLAYER.head - 1, r: 2.8, fill: "#33372f" }, headG);
+el("circle", { cx: 9, cy: -PLAYER.head - 1, r: 2.8, fill: "#33372f" }, headG);
+// 嘴
+el("path", { d: `M -6 ${-PLAYER.head + 10} Q 0 ${-PLAYER.head + 15} 6 ${-PLAYER.head + 10}`, stroke: "var(--chalk)", "stroke-linecap": "round", fill: "none", "stroke-width": 2.2, opacity: .9 }, headG);
+// 腮红
+el("circle", { cx: -16, cy: -PLAYER.head + 6, r: 4, fill: "#d3785f", opacity: .34 }, headG);
+el("circle", { cx: 16, cy: -PLAYER.head + 6, r: 4, fill: "#d3785f", opacity: .34 }, headG);
+
+// 前臂
+const armF = limb(rig, PLAYER.armX, -PLAYER.shoulder, PLAYER.upper, PLAYER.fore, 7.5, 7, "hand", 1);
+
+/* ============================================================
+   姿势
+   ============================================================ */
+const P = {
+  hipL: 3, kneeL: 0, hipR: -3, kneeR: 0,
+  armL: 14, elbowL: 8, armR: -14, elbowR: 8,
+  lean: 0, bodyY: 0, sx: 1, sy: 1, headTilt: 0,
+  armSpread: 0
+};
+const pose = { ...P };
+function tween(dt, rate = 14) {
+  const k = 1 - Math.exp(-rate * dt);
+  for (const key in pose) pose[key] = lerp(pose[key], P[key], k);
+}
+
+function targetPose(name, t = 0) {
+  switch (name) {
+    case "idle":
+      P.hipL = 2 + Math.sin(t * 2.2) * 1.5; P.hipR = -2 + Math.sin(t * 2.2) * 1.5;
+      P.kneeL = 0; P.kneeR = 0;
+      P.armL = 15 + Math.sin(t * 2.2 + 1) * 3; P.armR = -15 - Math.sin(t * 2.2 + 1) * 3;
+      P.elbowL = 6; P.elbowR = 6; P.lean = 0; P.bodyY = 0; P.sx = 1; P.sy = 1; P.headTilt = 0;
+      break;
+    case "charge": {
+      const c = clamp(t, 0, 1);
+      P.bodyY = 10 * c;
+      P.hipL = 16 * c; P.hipR = -16 * c;
+      P.kneeL = 18 * c; P.kneeR = -18 * c;
+      P.armL = 34 * c; P.armR = -34 * c;
+      P.elbowL = 10 + 24 * c; P.elbowR = 10 + 24 * c;
+      P.lean = 4 * c; P.sx = 1 + .06 * c; P.sy = 1 - .07 * c; P.headTilt = 3 * c;
+      break;
+    }
+    case "launch":
+      P.hipL = -12; P.hipR = 8; P.kneeL = 6; P.kneeR = -4;
+      P.armL = 150; P.armR = -150; P.elbowL = 10; P.elbowR = 10;
+      P.lean = -3; P.bodyY = -6; P.sx = .94; P.sy = 1.09; P.headTilt = -4;
+      break;
+    case "airSingle":
+      P.hipL = 4; P.kneeL = 2; P.hipR = -72; P.kneeR = 95;
+      P.armL = 122; P.armR = -72; P.elbowL = 20; P.elbowR = 26;
+      P.lean = 2; P.bodyY = 0; P.sx = 1; P.sy = 1.02; P.headTilt = -2;
+      break;
+    case "airDouble":
+      P.hipL = 18; P.kneeL = -10; P.hipR = -18; P.kneeR = 10;
+      P.armL = 104; P.armR = -104; P.elbowL = 16; P.elbowR = 16;
+      P.lean = 0; P.bodyY = -1; P.sx = 1; P.sy = 1.03; P.headTilt = 0;
+      break;
+    case "land":
+      P.hipL = 20; P.kneeL = 10; P.hipR = -20; P.kneeR = -10;
+      P.armL = 56; P.armR = -56; P.elbowL = 26; P.elbowR = 26;
+      P.lean = 2; P.bodyY = 12; P.sx = 1.12; P.sy = .86; P.headTilt = 3;
+      break;
+    case "wobble":
+      P.hipL = 10; P.hipR = -10; P.kneeL = 12; P.kneeR = -12;
+      P.armL = 52; P.armR = -52; P.elbowL = 34; P.elbowR = 34;
+      P.lean = 0; P.bodyY = 6; P.sx = 1.04; P.sy = .94; P.headTilt = 0;
+      break;
+    case "hurt":
+      P.hipL = 34; P.kneeL = -40; P.hipR = -14; P.kneeR = 20;
+      P.armL = 140; P.armR = -40; P.elbowL = 40; P.elbowR = 40;
+      P.lean = 8; P.bodyY = 6; P.sx = 1.06; P.sy = .9; P.headTilt = 10;
+      break;
+    case "cheer":
+      P.hipL = 0; P.hipR = 0; P.kneeL = 0; P.kneeR = 0;
+      P.armL = 158; P.armR = -158; P.elbowL = 14; P.elbowR = 14;
+      P.lean = 0; P.bodyY = -3 + Math.sin(t * 6) * 2; P.sx = 1; P.sy = 1; P.headTilt = 0;
+      break;
+  }
+}
+
+function applyRig() {
+  legB.g.setAttribute("transform", `translate(-6 ${-PLAYER.hip}) rotate(${pose.hipL})`);
+  legB.lower.setAttribute("transform", `translate(0 ${PLAYER.thigh}) rotate(${pose.kneeL})`);
+
+  legF.g.setAttribute("transform", `translate(6 ${-PLAYER.hip}) rotate(${pose.hipR})`);
+  legF.lower.setAttribute("transform", `translate(0 ${PLAYER.thigh}) rotate(${pose.kneeR})`);
+
+  armB.g.setAttribute("transform", `translate(${-PLAYER.armX} ${-PLAYER.shoulder}) rotate(${pose.armL})`);
+  armB.lower.setAttribute("transform", `translate(0 ${PLAYER.upper}) rotate(${pose.elbowL})`);
+
+  armF.g.setAttribute("transform", `translate(${PLAYER.armX} ${-PLAYER.shoulder}) rotate(${pose.armR})`);
+  armF.lower.setAttribute("transform", `translate(0 ${PLAYER.upper}) rotate(${pose.elbowR})`);
+
+  headG.setAttribute("transform", `rotate(${pose.headTilt} 0 ${-PLAYER.head})`);
+}
+
+/* ============================================================
+   状态
+   ============================================================ */
+const G = {
+  state: "title",         // title | ready | charging | air | landing | wobble | hurt | win | over
+  row: 0,                 // 当前所在格
+  x: CX, y: 0, s: 1,
+  charge: 0, chargeRate: 1 / 0.85,
+  jump: null,
+  lives: 3,
+  combo: 0, best: 0,
+  perfect: 0,
+  tucked: false,
+  t: 0,
+  stateT: 0,
+  hintShown: 0,
+  stats: { jumps: 0 }
+};
+
+function rowAnchor(i) {
+  const r = ROWS[i];
+  return { x: CX, y: cellY(r, 0.1), s: r.scale };
+}
+function homeAnchor() {
+  return { x: CX, y: HOME.y - 16, s: HOME_SCALE };
+}
+function targetRow() {
+  return G.row >= ROWS.length - 1 ? null : ROWS[G.row + 1];
+}
+
+/* ============================================================
+   落点标记
+   ============================================================ */
+const markLayer = $("markLayer");
+const markG = el("g", { opacity: 0 }, markLayer);
+const markRing = el("path", {
+  fill: "none", stroke: "var(--yellow)", "stroke-width": 2.6,
+  "stroke-linecap": "round", filter: "url(#fine)"
+}, markG);
+const markDot = el("ellipse", { rx: 10, ry: 4, fill: "var(--yellow)", opacity: .5 }, markG);
+const markArrow = el("path", { fill: "none", stroke: "var(--yellow)", "stroke-width": 2, "stroke-linecap": "round", filter: "url(#fine)" }, markG);
+
+function drawMark(x, y) {
+  const w = 74;
+  // 地面上的落点横线：读起来是"脚会落在这"
+  markRing.setAttribute("d", `M ${x - w} ${y + 2} Q ${x} ${y - 5} ${x + w} ${y + 2}`);
+  markDot.setAttribute("cx", x); markDot.setAttribute("cy", y);
+  markArrow.setAttribute("d", `M ${x} ${y - 30} L ${x} ${y - 10}`);
+}
+
+/* ============================================================
+   特效
+   ============================================================ */
+const fxLayer = $("fxLayer");
+function puff(x, y, n = 10, power = 1) {
+  for (let i = 0; i < n; i++) {
+    const c = el("circle", {
+      cx: x + rand(-12, 12), cy: y + rand(-4, 4), r: rand(1.5, 3.6),
+      fill: "var(--chalk)", opacity: rand(.35, .7)
+    }, fxLayer);
+    const a = rand(-Math.PI, 0);
+    const v = rand(.4, 1.2) * power;
+    Puffs.push({ el: c, vx: Math.cos(a) * v * 60, vy: Math.sin(a) * v * 60 + 20, life: 0, max: rand(.45, .9) });
+  }
+}
+const Puffs = [];
+function updatePuffs(dt) {
+  for (let i = Puffs.length - 1; i >= 0; i--) {
+    const p = Puffs[i];
+    p.life += dt;
+    const k = p.life / p.max;
+    if (k >= 1) { p.el.remove(); Puffs.splice(i, 1); continue; }
+    p.vy += 220 * dt;
+    p.vx *= (1 - 2.2 * dt);
+    const nx = +p.el.getAttribute("cx") + p.vx * dt;
+    const ny = +p.el.getAttribute("cy") + p.vy * dt;
+    p.el.setAttribute("cx", nx); p.el.setAttribute("cy", ny);
+    p.el.setAttribute("opacity", (1 - k) * .65);
+  }
+}
+
+/* ============================================================
+   音效
+   ============================================================ */
+const Snd = {
+  ctx: null, on: true,
+  init() {
+    if (this.ctx) return;
+    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+  },
+  tone(f, d = .12, type = "sine", g = .06, slideTo = null, delay = 0) {
+    if (!this.ctx || !this.on) return;
+    const t = this.ctx.currentTime + delay;
+    const o = this.ctx.createOscillator(), gn = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + d);
+    gn.gain.setValueAtTime(0.0001, t);
+    gn.gain.exponentialRampToValueAtTime(g, t + 0.012);
+    gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(gn).connect(this.ctx.destination);
+    o.start(t); o.stop(t + d + .02);
+  },
+  noise(d = .16, g = .05, f = 1400, delay = 0) {
+    if (!this.ctx || !this.on) return;
+    const t = this.ctx.currentTime + delay;
+    const len = Math.floor(this.ctx.sampleRate * d);
+    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = this.ctx.createBufferSource(); src.buffer = buf;
+    const bp = this.ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = f; bp.Q.value = .8;
+    const gn = this.ctx.createGain(); gn.gain.value = g;
+    src.connect(bp).connect(gn).connect(this.ctx.destination);
+    src.start(t);
+  },
+  charge() { this.tone(180, .1, "triangle", .022, 240); },
+  jump() { this.tone(300, .16, "sine", .05, 520); this.noise(.12, .03, 2200); },
+  good() { this.tone(520, .1, "sine", .07, 560); this.noise(.06, .03, 900); },
+  perfect(n) {
+    const scale = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
+    const semi = scale[Math.min(n, scale.length - 1)];
+    const f = 523.25 * Math.pow(2, semi / 12);
+    this.tone(f, .16, "sine", .07);
+    this.tone(f * 1.5, .12, "sine", .035, null, .05);
+  },
+  wobble() { this.noise(.18, .05, 600); this.tone(220, .12, "triangle", .04, 180); },
+  fall() { this.tone(200, .3, "sawtooth", .05, 70); this.noise(.3, .05, 400); },
+  win() {
+    [523, 659, 784, 1046].forEach((f, i) => this.tone(f, .22, "sine", .07, null, i * .12));
+  }
+};
+
+/* ============================================================
+   HUD
+   ============================================================ */
+const hudLayer = $("hudLayer");
+const hudStep = el("text", { x: 76, y: 96, class: "chalk", "font-size": 26, opacity: .62, filter: "url(#fine)", "letter-spacing": "3" }, hudLayer);
+const hudCombo = el("text", { x: 76, y: 128, class: "chalk", "font-size": 17, opacity: 0, filter: "url(#fine)", "letter-spacing": "3" }, hudLayer);
+const hudHint = el("text", { x: CX, y: 78, class: "chalk", "text-anchor": "middle", "font-size": 18, opacity: 0, filter: "url(#fine)", "letter-spacing": "4" }, hudLayer);
+const stonesG = el("g", { opacity: .8 }, hudLayer);
+const stoneEls = [];
+for (let i = 0; i < 3; i++) {
+  const g = el("g", {}, stonesG);
+  el("circle", { cx: 1440 + i * 42, cy: 88, r: 11, fill: "none", stroke: "var(--chalk)", "stroke-width": 2.4, filter: "url(#fine)" }, g);
+  el("circle", { cx: 1438 + i * 42, cy: 86, r: 2.2, fill: "var(--chalk)", opacity: .5 }, g);
+  stoneEls.push(g);
+}
+
+const rowLabel = r => r.kind === "double" ? r.nums.join("·") : r.num;
+function updateHUD() {
+  if (G.state === "title") { hudStep.textContent = ""; return; }
+  const tgt = targetRow();
+  hudStep.textContent = tgt ? `第 ${rowLabel(ROWS[G.row])} 格  →  ${rowLabel(tgt)}` : "回 家";
+  hudCombo.textContent = G.combo > 1 ? `连跳 × ${G.combo}` : "";
+  hudCombo.setAttribute("opacity", G.combo > 1 ? .72 : 0);
+}
+
+/* ============================================================
+   开始 / 结束
+   ============================================================ */
+const overlayLayer = $("overlayLayer");
+
+// 标题
+const startOverlay = el("g", { id: "startOverlay" }, overlayLayer);
+el("rect", { x: 0, y: 0, width: 1600, height: 900, fill: "#0f130c", opacity: .28 }, startOverlay);
+el("ellipse", { cx: 800, cy: 430, rx: 620, ry: 380, fill: "url(#titleScrim)" }, startOverlay);
+el("text", { x: CX, y: 330, class: "chalk t1", "text-anchor": "middle", filter: "url(#fine)" }, startOverlay).textContent = "跳 房 子";
+el("text", { x: CX, y: 376, class: "chalk t2", "text-anchor": "middle", filter: "url(#fine)" }, startOverlay).textContent = "HOPSCOTCH · 水泥地上的一个下午";
+el("text", { x: CX, y: 452, class: "chalk hint", "text-anchor": "middle", filter: "url(#fine)" }, startOverlay).textContent = "按住 空格 / 鼠标 —— 蓄力";
+el("text", { x: CX, y: 486, class: "chalk hint", "text-anchor": "middle", filter: "url(#fine)" }, startOverlay).textContent = "松手 —— 起跳，落进黄叉";
+el("text", { x: CX, y: 520, class: "chalk hint", "text-anchor": "middle", filter: "url(#fine)" }, startOverlay).textContent = "空中再点一下 —— 收腿，单脚落地";
+el("text", { x: CX, y: 600, class: "chalk", "text-anchor": "middle", "font-size": 15, opacity: .42, "letter-spacing": "6", filter: "url(#fine)" }, startOverlay).textContent = "按 任 意 键 开 始";
+el("path", {
+  d: `M ${CX - 300} 638 L ${CX + 300} 638`, stroke: "var(--chalk)", "stroke-width": 1.2, opacity: .16, filter: "url(#rough)"
+}, startOverlay);
+
+// 结束
+const endOverlay = el("g", { id: "endOverlay", opacity: 0, "pointer-events": "none" }, overlayLayer);
+const endBg = el("rect", { x: 0, y: 0, width: 1600, height: 900, fill: "#0f130c", opacity: .40 }, endOverlay);
+el("ellipse", { cx: 800, cy: 420, rx: 620, ry: 360, fill: "url(#titleScrim)" }, endOverlay);
+const endTitle = el("text", { x: CX, y: 372, class: "chalk", "text-anchor": "middle", "font-size": 82, "letter-spacing": "12", filter: "url(#fine)" }, endOverlay);
+const endSub = el("text", { x: CX, y: 428, class: "chalk", "text-anchor": "middle", "font-size": 21, opacity: .62, "letter-spacing": "6", filter: "url(#fine)" }, endOverlay);
+const endStats = el("text", { x: CX, y: 472, class: "chalk", "text-anchor": "middle", "font-size": 16, opacity: .45, "letter-spacing": "3", filter: "url(#fine)" }, endOverlay);
+const endRetry = el("text", { x: CX, y: 556, class: "chalk", "text-anchor": "middle", "font-size": 17, opacity: .62, "letter-spacing": "8", filter: "url(#fine)" }, endOverlay);
+
+/* ============================================================
+   流程
+   ============================================================ */
+function resetGame() {
+  Puffs.forEach(p => p.el.remove()); Puffs.length = 0;
+  G.state = "ready"; G.row = 0; G.lives = 3; G.combo = 0; G.perfect = 0;
+  G.charge = 0; G.tucked = false; G.jump = null; G.stats.jumps = 0;
+  const a = rowAnchor(0);
+  G.x = a.x; G.y = a.y; G.s = a.s;
+  G.t = 0; G.stateT = 0;
+  stoneEls.forEach(g => g.setAttribute("opacity", 1));
+  hudStep.setAttribute("opacity", .62);
+  endOverlay.setAttribute("opacity", 0);
+  endOverlay.setAttribute("pointer-events", "none");
+  markG.setAttribute("opacity", 0);
+  updateHUD();
+  showHint("按住蓄力 · 松手起跳 · 空中点一下收腿", 4.2);
+}
+
+function startGame() {
+  Snd.init();
+  startOverlay.classList.add("hide");
+  G.stateT = 0;
+  setTimeout(() => { startOverlay.style.display = "none"; }, 520);
+  resetGame();
+}
+
+let hintTimer = 0;
+function showHint(text, dur) {
+  hudHint.textContent = text;
+  hudHint.setAttribute("opacity", .5);
+  hintTimer = dur;
+}
+
+function press() {
+  if (G.state === "title") { startGame(); return; }
+  if (G.state === "over" || G.state === "win") { if (G.stateT > 0.7) startGame(); return; }
+  if (G.state === "ready") {
+    G.state = "charging"; G.charge = 0; G.stateT = 0;
+    Snd.charge();
+    return;
+  }
+  if (G.state === "air") { G.tucked = true; }
+}
+
+function release() {
+  if (G.state !== "charging") return;
+  const p = G.charge;
+  launch(p);
+}
+
+function launch(p) {
+  const tgtIdx = G.row + 1;
+  const isHome = tgtIdx >= ROWS.length;
+  const from = { x: G.x, y: G.y, s: G.s };
+  let to;
+  if (isHome) {
+    to = homeAnchor();
+  } else {
+    const r = ROWS[tgtIdx];
+    const pp = clamp(lerp(-0.28, 1.28, p), -0.28, 1.28);
+    const y = cellY(r, clamp(pp, 0, 1));
+    to = { x: CX, y, s: r.scale };
+    to.p = pp;
+  }
+  const dy = Math.abs(from.y - to.y);
+  G.state = "air"; G.stateT = 0; G.tucked = false;
+  G.jump = {
+    from, to, t: 0,
+    dur: 0.34 + dy * 0.00042,
+    arc: 52 + dy * 0.14,
+    p, isHome, tgtIdx
+  };
+  G.charge = 0;
+  markG.setAttribute("opacity", 0);
+  Snd.jump();
+  puff(G.x, G.y, 8, .7);
+}
+
+function land() {
+  const j = G.jump;
+  const isHome = j.isHome;
+  const r = isHome ? null : ROWS[j.tgtIdx];
+  const pp = isHome ? 0.5 : j.to.p;
+
+  // 判定
+  let grade = "good";
+  if (!isHome) {
+    if (pp < 0.02 || pp > 0.98) grade = "miss";
+    else if (pp < 0.16 || pp > 0.84) grade = "wobble";
+    else if (pp >= 0.40 && pp <= 0.60) grade = "perfect";
+    else grade = "good";
+  }
+
+  // 脚型
+  const needSingle = r && r.foot === "single";
+  const footOK = r ? (needSingle ? G.tucked : !G.tucked) : true;
+  G.lastGrade = grade + (footOK ? "" : "/foot");
+  G.lastTuck = G.tucked;
+
+  G.y = j.to.y; G.s = j.to.s; G.x = j.to.x;
+  puff(G.x, G.y, grade === "miss" ? 4 : 12, grade === "perfect" ? 1.3 : .9);
+
+  if (grade === "miss") {
+    loseLife("踩空了");
+    return;
+  }
+
+  const settle = () => {
+    if (!footOK) {
+      G.state = "wobble"; G.stateT = 0;
+      G.combo = 0; updateHUD();
+      Snd.wobble();
+      showHint(needSingle ? "单格要收腿——单脚落地" : "双格要双脚落地，别收腿", 2.4);
+      return;
+    }
+    if (grade === "wobble") {
+      G.state = "wobble"; G.stateT = 0;
+      G.combo = 0; updateHUD();
+      Snd.wobble();
+      showHint("踩到线了", 1.6);
+      return;
+    }
+    // 成功
+    G.row = j.tgtIdx;
+    G.combo++;
+    G.best = Math.max(G.best, G.combo);
+    if (grade === "perfect") {
+      G.perfect++;
+      Snd.perfect(G.combo - 1);
+      showHint("完美", 1.1);
+    } else {
+      Snd.good();
+    }
+    updateHUD();
+    if (isHome) { win(); return; }
+    G.state = "ready"; G.stateT = 0;
+  };
+
+  G.state = "landing"; G.stateT = 0;
+  G.pendingSettle = settle;
+  Snd.tone(300, .08, "sine", .04);
+}
+
+function loseLife(reason) {
+  G.lives--;
+  G.combo = 0;
+  updateHUD();
+  const idx = 3 - G.lives - 1;
+  if (stoneEls[idx]) {
+    stoneEls[idx].setAttribute("opacity", .12);
+  }
+  Snd.fall();
+  G.state = "hurt"; G.stateT = 0;
+  showHint(reason || "没站住", 2.0);
+  // 退回上一格（已经在家门口则原地）
+  const back = Math.max(0, G.row);
+  const a = rowAnchor(back);
+  G.x = a.x; G.y = a.y; G.s = a.s;
+  if (G.lives <= 0) {
+    setTimeout(() => gameOver(), 700);
+  }
+}
+
+function gameOver() {
+  G.state = "over"; G.stateT = 0;
+  hudHint.setAttribute("opacity", 0);
+  hudStep.setAttribute("opacity", 0);
+  endTitle.textContent = "石头用完了";
+  endTitle.setAttribute("fill", "#f0c9bf");
+  endSub.textContent = "妈妈在楼上喊你回家吃饭";
+  endStats.textContent = `跳到第 ${ROWS[G.row].num ? ROWS[G.row].num : "7·8"} 格 · 最好连跳 ×${G.best}`;
+  endRetry.textContent = "按 任 意 键 再 来 一 次";
+  fadeEnd();
+}
+
+function win() {
+  G.state = "win"; G.stateT = 0;
+  const a = homeAnchor();
+  G.x = a.x; G.y = a.y; G.s = a.s;
+  hudHint.setAttribute("opacity", 0);
+  hudStep.setAttribute("opacity", 0);
+  Snd.win();
+  endTitle.textContent = "到 家 了";
+  endTitle.setAttribute("fill", "var(--chalk)");
+  endSub.textContent = "回家吃饭";
+  endStats.textContent = `完美落地 ${G.perfect} 次 · 最好连跳 ×${G.best}`;
+  endRetry.textContent = "按 任 意 键 再 玩 一 次";
+  fadeEnd();
+}
+
+function fadeEnd() {
+  endOverlay.setAttribute("opacity", 1);
+  endOverlay.setAttribute("pointer-events", "auto");
+}
+
+/* ============================================================
+   主循环
+   ============================================================ */
+let last = performance.now();
+let freeze = false;
+
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  G.t += dt; G.stateT += dt;
+
+  if (hintTimer > 0) {
+    hintTimer -= dt;
+    if (hintTimer <= 0) hudHint.setAttribute("opacity", 0);
+  }
+
+  if (!freeze) updateState(dt);
+  applyRig();
+  applyTransform();
+  if (!freeze) updatePuffs(dt);
+  requestAnimationFrame(frame);
+}
+
+function updateState(dt) {
+  switch (G.state) {
+    case "ready":
+    case "title": {
+      targetPose("idle", G.t);
+      if (G.state === "ready") {
+        const a = rowAnchor(G.row);
+        G.x = lerp(G.x, a.x, 1 - Math.exp(-8 * dt));
+        G.y = lerp(G.y, a.y, 1 - Math.exp(-8 * dt));
+        G.s = lerp(G.s, a.s, 1 - Math.exp(-8 * dt));
+      }
+      break;
+    }
+    case "charging": {
+      G.charge = Math.min(1, G.charge + dt * G.chargeRate);
+      const c = G.charge;
+      targetPose("charge", 0.35 + c * 0.65);
+      // 落点标记
+      const tgt = targetRow();
+      if (tgt) {
+        const pp = clamp(lerp(-0.28, 1.28, c), -0.28, 1.28);
+        const y = cellY(tgt, clamp(pp, 0, 1));
+        drawMark(CX, y);
+        markG.setAttribute("opacity", .95);
+        markRing.setAttribute("stroke", pp >= 0.40 && pp <= 0.60 ? "#f4e3a8" : "var(--yellow)");
+        markRing.setAttribute("stroke-width", pp >= 0.40 && pp <= 0.60 ? 3.6 : 2.6);
+      } else {
+        drawMark(CX, HOME.y - 16);
+        markG.setAttribute("opacity", .95);
+      }
+      if (Math.random() < dt * 8) puff(G.x + rand(-14, 14), G.y, 1, .3);
+      break;
+    }
+    case "air": {
+      const j = G.jump;
+      j.t += dt;
+      const k = clamp(j.t / j.dur, 0, 1);
+      const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      G.x = lerp(j.from.x, j.to.x, e);
+      const gy = lerp(j.from.y, j.to.y, e);
+      G.groundY = gy;
+      G.y = gy - Math.sin(Math.PI * k) * j.arc;
+      G.s = lerp(j.from.s, j.to.s, e);
+      if (k < 0.24) targetPose("launch");
+      else if (G.tucked) targetPose("airSingle");
+      else targetPose("airDouble");
+      if (k >= 1) land();
+      break;
+    }
+    case "landing": {
+      targetPose("land");
+      if (G.stateT > 0.16) {
+        if (G.pendingSettle) { const s = G.pendingSettle; G.pendingSettle = null; s(); }
+      }
+      break;
+    }
+    case "wobble": {
+      targetPose("wobble");
+      P.lean = Math.sin(G.stateT * 26) * Math.exp(-G.stateT * 4.5) * 9;
+      if (G.stateT > 0.62) { G.state = "ready"; G.stateT = 0; }
+      break;
+    }
+    case "hurt": {
+      targetPose("hurt");
+      if (G.stateT > 0.7 && G.state !== "over") {
+        if (G.lives > 0) { G.state = "ready"; G.stateT = 0; }
+      }
+      break;
+    }
+    case "win":
+      targetPose("cheer", G.t);
+      if (G.stateT > 1.2 && Math.random() < dt * 6) {
+        puff(G.x + rand(-40, 40), G.y - rand(0, 90), 2, .5);
+      }
+      break;
+    case "over":
+      targetPose("hurt");
+      break;
+  }
+  tween(dt, G.state === "air" ? 18 : 12);
+}
+
+function applyTransform() {
+  const sx = pose.sx, sy = pose.sy;
+  playerG.setAttribute("transform",
+    `translate(${G.x} ${G.y + pose.bodyY}) scale(${G.s}) rotate(${pose.lean}) scale(${sx} ${sy})`);
+
+  const air = G.state === "air";
+  const groundY = air ? (G.groundY || G.y) : G.y;
+  const alt = Math.max(0, groundY - G.y);
+  const k = clamp(1 - alt / 320, .55, 1);
+  shadowEl.setAttribute("cx", G.x);
+  shadowEl.setAttribute("cy", groundY + 4);
+  shadowEl.setAttribute("rx", 44 * G.s * k);
+  shadowEl.setAttribute("ry", 11 * G.s * k);
+  shadowEl.setAttribute("opacity", .8 * k);
+}
+
+/* ============================================================
+   输入
+   ============================================================ */
+function onDown(e) {
+  if (e.repeat) return;
+  if (G.state !== "title" && G.state !== "over" && G.state !== "win") {
+    if (e.type === "keydown" && e.code !== "Space" && e.code !== "Enter") return;
+  }
+  e.preventDefault();
+  press();
+}
+function onUp(e) {
+  if (e.type === "keyup" && e.code !== "Space" && e.code !== "Enter") return;
+  e.preventDefault();
+  release();
+}
+window.addEventListener("keydown", onDown);
+window.addEventListener("keyup", onUp);
+window.addEventListener("pointerdown", onDown);
+window.addEventListener("pointerup", onUp);
+window.addEventListener("contextmenu", e => e.preventDefault());
+
+/* ============================================================
+   自适应
+   ============================================================ */
+function fit() {
+  const s = Math.min(window.innerWidth / W, window.innerHeight / H);
+  $("stage").style.transform = `scale(${s})`;
+}
+window.addEventListener("resize", fit);
+fit();
+
+/* 初始站位 */
+(() => {
+  const a = rowAnchor(0);
+  G.x = a.x; G.y = a.y; G.s = a.s;
+  applyRig(); applyTransform();
+  requestAnimationFrame(frame);
+})();
+
+/* 测试钩子 */
+window.__hop = {
+  G, press, release,
+  setCharge(v) { if (G.state === "charging") G.charge = v; },
+  state() { return { state: G.state, row: G.row, combo: G.combo, lives: G.lives, charge: +G.charge.toFixed(2) }; }
+};
+
+/* 截图调试：?d=charge&c=0.5 / ?d=air&c=0.5&k=0.45&tuck=1 / ?d=win */
+const q = new URLSearchParams(location.search);
+const snapPose = () => { for (const k in pose) pose[k] = P[k]; };
+
+if (q.get("solo") === "1") {
+  ["courtLayer", "markLayer", "fxLayer", "hudLayer", "overlayLayer"].forEach(id => {
+    const n = $(id); if (n) n.style.display = "none";
+  });
+}
+
+if (q.has("d")) {
+  startGame();
+  setTimeout(() => {
+    const d = q.get("d");
+    if (d === "charge") {
+      press(); G.chargeRate = 0; G.charge = parseFloat(q.get("c") || "0.5");
+      updateState(0.001); snapPose();
+    } else if (d === "air") {
+      G.charge = parseFloat(q.get("c") || "0.5");
+      launch(G.charge);
+      G.tucked = q.get("tuck") === "1";
+      if (G.jump) {
+        G.jump.t = G.jump.dur * parseFloat(q.get("k") || "0.45");
+        updateState(0.001); snapPose();
+      }
+    } else if (d === "test") {
+    const log = [];
+    const step = dt => { G.t += dt; G.stateT += dt; updateState(dt); };
+    const seq = [[0.5, true], [0.5, true], [0.5, false], [0.5, true], [0.5, false], [0.5, true], [0.5, true]];
+    for (const [c, tuck] of seq) {
+      let guard = 0;
+      while (G.state !== "ready" && guard++ < 400) step(0.016);
+      press(); G.charge = c; release(); if (tuck) G.tucked = true;
+      guard = 0;
+      while ((G.state === "air" || G.state === "landing") && guard++ < 400) step(0.016);
+      log.push(`${G.state}:r${G.row}c${G.combo}L${G.lives}:${G.lastGrade}${G.lastTuck ? "T" : "-"}`);
+    }
+    document.title = "TEST " + log.join(" | ");
+  } else if (d === "win") {
+      G.row = ROWS.length - 1;
+      win(); updateState(0.001); snapPose();
+    }
+    if (d !== "test") { applyRig(); applyTransform(); freeze = true; }
+  }, 220);
+}
+})();
+</script>
+</body>
+</html>

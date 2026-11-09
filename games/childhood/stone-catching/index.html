@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>竹筛接石 · 抓石子</title>
+<link rel="icon" href="data:,">
+<style>
+/* =============================================================
+   竹筛接石 · 单文件网页游戏
+   场景：傍晚巷口的青石板地，一只竹筛，五颗石子
+   ============================================================= */
+:root {
+  --ink: #1f2e27;
+  --ink-soft: #4d5e54;
+  --cream: #f1e7d1;
+  --cream-deep: #ddceb0;
+  --pine: #22372e;
+  --pine-deep: #14241d;
+  --bamboo: #d2a45e;
+  --bamboo-light: #f0cf90;
+  --copper: #b96b42;
+  --gold: #f0c469;
+  --danger: #b64e3b;
+  --jade: #7e9b88;
+  --stone-size: 48px;
+  --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { min-height: 100%; }
+body {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
+  color: var(--cream);
+  font-family: var(--font-ui);
+  background:
+    radial-gradient(900px 600px at 78% -10%, #344d3f 0%, transparent 58%),
+    radial-gradient(800px 600px at -10% 110%, #2b4034 0%, transparent 55%),
+    linear-gradient(160deg, #101c17 0%, #1a2a22 48%, #121f19 100%);
+  user-select: none;
+  -webkit-user-select: none;
+  overflow-x: hidden;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .16;
+  background-image: radial-gradient(circle at 20% 30%, #fff 0 1px, transparent 1.5px),
+                    radial-gradient(circle at 70% 60%, #fff 0 1px, transparent 1.5px);
+  background-size: 37px 43px, 61px 57px; mix-blend-mode: soft-light;
+}
+button { font: inherit; }
+.app {
+  width: min(100%, 780px);
+  min-height: calc(100dvh - 28px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+}
+/* ---------- 顶部 ---------- */
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.brand-seal {
+  width: 40px; height: 40px; flex: none; display: grid; place-items: center;
+  font-size: 21px; font-weight: 800;
+  color: #f4dfb3; border: 1.5px solid #a35c45; border-radius: 9px;
+  background: #8f4b39; box-shadow: inset 0 0 0 2px #622f24, 0 3px 0 #0a120e;
+  transform: rotate(-3deg);
+}
+.brand h1 { font-size: 27px; letter-spacing: 4px; font-weight: 800; color: #f1e5cc; }
+.mute-btn {
+  flex: none; min-width: 84px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border: 1px solid #5b7163; border-radius: 9px; background: #22362c99; color: #e9ddc4;
+  font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 0 #0b1510;
+}
+.mute-btn:active { transform: translateY(2px); box-shadow: none; }
+.mute-dot { width: 7px; height: 7px; border-radius: 50%; background: #9fbea7; box-shadow: 0 0 6px #8fb79c; }
+.mute-btn.muted .mute-dot { background: #8a7e65; box-shadow: none; }
+.mute-btn.muted { color: #a99e86; }
+
+/* ---------- 状态牌 ---------- */
+.hud {
+  position: relative; color: var(--ink); border-radius: 13px; padding: 12px 15px 10px;
+  background: linear-gradient(180deg, #f4ecd9 0%, #e5d8bc 100%);
+  border: 1px solid #baa575;
+  box-shadow: 0 5px 0 #0b150f, 0 10px 22px #00000045, inset 0 1px 0 #fffcef;
+}
+.hud::before {
+  content: ""; position: absolute; inset: 5px; border: 1px solid #96815a3d; border-radius: 9px; pointer-events: none;
+}
+.hud-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.level-title { font-size: 18px; font-weight: 800; color: #26382e; white-space: nowrap; }
+.level-title small { font-size: 11px; font-weight: 600; letter-spacing: .06em; color: #7b6a4b; margin-left: 5px; }
+.level-name { font-size: 12px; color: #846d49; font-weight: 700; letter-spacing: 1px; }
+.round-text { font-size: 12px; color: #6c795f; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hud-stats { display: flex; align-items: center; gap: 16px; margin-top: 7px; }
+.stat { display: flex; align-items: baseline; gap: 4px; font-size: 13px; font-weight: 700; color: #6a5a40; }
+.stat b { font-size: 20px; color: #8d5b27; font-variant-numeric: tabular-nums; line-height: 1; }
+.stat i { font-style: normal; font-size: 11px; color: #94805e; }
+.stat.picked b { color: #4d6c53; }
+.progress-dots { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.progress-dot { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid #9b8762; background: #d5c5a4; box-shadow: inset 0 1px 2px #ffffffa3; transition: background .2s, border-color .2s, transform .2s; }
+.progress-dot.on { background: #5e7b61; border-color: #435f49; transform: scale(1.08); }
+.air-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.air-track { position: relative; flex: 1; height: 8px; border-radius: 9px; background: #c2b08d; overflow: hidden; box-shadow: inset 0 1px 3px #6d5c3d66; }
+.air-fill { height: 100%; width: 100%; transform-origin: left; border-radius: inherit; background: linear-gradient(90deg, #7e9b7f, #a9bc8d); transition: background .25s; }
+.air-fill.warn { background: linear-gradient(90deg, #d6a447, #e7bc61); }
+.air-fill.danger { background: linear-gradient(90deg, #bd5d40, #d77a59); }
+.air-time { flex: none; width: 40px; text-align: right; font-size: 10px; font-weight: 800; color: #7e6a4b; font-variant-numeric: tabular-nums; }
+.status { min-height: 20px; margin-top: 6px; text-align: center; color: #6a5f46; font-size: 12.5px; font-weight: 700; letter-spacing: .02em; }
+.status.good { color: #4b6f55; }
+.status.bad { color: #a54834; }
+
+/* ---------- 场地 ---------- */
+.stage {
+  position: relative; flex: 1; min-height: 360px; height: clamp(370px, 52vh, 540px);
+  margin-top: 11px; overflow: hidden; border-radius: 20px;
+  border: 1px solid #9aab92; cursor: none; touch-action: none; isolation: isolate;
+  background:
+    radial-gradient(ellipse at 15% 10%, #e5edce42, transparent 42%),
+    radial-gradient(ellipse at 82% 92%, #18271f70, transparent 58%),
+    repeating-linear-gradient(0deg, transparent 0 calc(25% - 1px), #1c2b2440 calc(25% - 1px) 25%),
+    repeating-linear-gradient(90deg, transparent 0 calc(33.333% - 1px), #1c2b243d calc(33.333% - 1px) 33.333%),
+    linear-gradient(152deg, #7d8b7c 0%, #637166 46%, #4f5d54 100%);
+  box-shadow: inset 0 0 0 5px #16241d59, inset 0 0 80px #00000059, 0 12px 30px #00000045;
+}
+.stage::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1; opacity: .55;
+  background:
+    radial-gradient(ellipse 46px 16px at 14% 88%, #51604775, transparent 70%),
+    radial-gradient(ellipse 60px 18px at 78% 12%, #c6d1b22b, transparent 70%),
+    radial-gradient(circle at 64% 58%, #f4e8c21a 0 2px, transparent 2.5px),
+    radial-gradient(circle at 34% 72%, #f4e8c21a 0 1.5px, transparent 2px);
+  background-size: auto, auto, 73px 67px, 51px 59px;
+}
+.stage::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: inherit;
+  box-shadow: inset 0 0 70px 8px #0b17116b;
+}
+.stage.shake { animation: stageShake .34s ease; }
+@keyframes stageShake { 20% { transform: translateX(-6px) rotate(-.25deg); } 45% { transform: translateX(5px); } 70% { transform: translateX(-3px); } }
+
+/* ---------- 开场 ---------- */
+.intro {
+  position: absolute; inset: 0; z-index: 26; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  padding: 22px 22px 110px;
+  background: radial-gradient(ellipse at 50% 52%, #13251c4d, #0d1813a6 75%);
+}
+.intro[hidden] { display: none; }
+.intro-eyebrow { font-size: 10px; letter-spacing: 4px; color: #cbb98e; font-weight: 700; }
+.intro h2 { margin-top: 8px; font-size: clamp(31px, 5.4vw, 44px); letter-spacing: 7px; color: #f2e3c3; text-shadow: 0 3px 12px #00000070; }
+.intro p { margin-top: 10px; max-width: 360px; color: #d3c9ae; font-size: 13px; line-height: 1.9; }
+.intro-steps { display: flex; gap: 7px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
+.intro-steps span {
+  padding: 5px 9px; border: 1px solid #a8946b88; border-radius: 6px; color: #d8c8a4;
+  font-size: 11px; letter-spacing: .06em; background: #1a2b2270;
+}
+
+/* ---------- 石子 ---------- */
+.stone-layer { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+.stone {
+  position: absolute; width: var(--stone-size); height: var(--stone-size);
+  pointer-events: none; will-change: transform; filter: drop-shadow(0 6px 5px #06100a66);
+  transition: opacity .18s ease;
+}
+.stone-core {
+  position: absolute; inset: 0; border-radius: 47% 53% 51% 49% / 53% 46% 54% 47%;
+  background:
+    radial-gradient(circle at 31% 24%, #fff6df59 0 5%, transparent 27%),
+    radial-gradient(4px 3px at 67% 63%, #33291b80 0 28%, transparent 33%),
+    radial-gradient(3px 2px at 39% 73%, #fff6df26 0 30%, transparent 34%),
+    linear-gradient(145deg, var(--c1) 0%, var(--c2) 54%, var(--c3) 100%);
+  box-shadow: inset -3px -5px 8px #17120b59, inset 2px 2px 4px #fff6df2b, 0 1px 1px #ffffff1a;
+}
+.stone:nth-child(2n) .stone-core { border-radius: 53% 47% 45% 55% / 48% 55% 45% 52%; }
+.stone:nth-child(3n) .stone-core { border-radius: 45% 55% 54% 46% / 56% 45% 55% 44%; }
+.stone::after {
+  content: ""; position: absolute; inset: 48% 6% 3% 6%; border-radius: 50%;
+  background: radial-gradient(ellipse, #0a151070, transparent 70%); z-index: -1; filter: blur(2px);
+}
+.stone.ready { cursor: default; }
+.stone.air { z-index: 15; filter: drop-shadow(0 0 13px #f0c469aa) drop-shadow(0 12px 8px #06100a59); }
+.stone.air .stone-core { box-shadow: inset -3px -5px 8px #17120b59, inset 3px 3px 5px #fff6df42, 0 0 0 2px #f0c469, 0 0 22px #f0c469a8; }
+.stone.picked { pointer-events: none; }
+.stone.spent { opacity: .35; filter: grayscale(.6) drop-shadow(0 3px 3px #06100a40); }
+.stone.caught { z-index: 34; }
+.toss-mark {
+  display: none; position: absolute; inset: -10px; border-radius: 50%;
+  border: 1.5px solid #f2c76d; box-shadow: 0 0 15px #f2c76d80;
+  animation: tossMark 1.35s ease-in-out infinite;
+}
+.toss-mark::before { content: ""; position: absolute; left: 50%; top: -4px; width: 5px; height: 5px; border-radius: 50%; background: #f5d485; transform: translateX(-50%); box-shadow: 0 0 6px #f2c76d; }
+.toss-mark::after { content: "抛"; position: absolute; right: -14px; top: -15px; width: 19px; height: 19px; display: grid; place-items: center; border-radius: 2px; background: #a84f39; color: #f8dfb5; font-size: 10px; font-weight: 800; box-shadow: 0 2px 4px #0006; transform: rotate(7deg); }
+.stone.is-toss .toss-mark { display: block; }
+.stone.air .toss-mark { display: none; }
+@keyframes tossMark { 50% { box-shadow: 0 0 24px #f2c76db8; transform: scale(1.04); } }
+@keyframes stoneDrop { 0% { opacity: 0; transform: translateY(-14px) scale(.85); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+.stone.drop-in .stone-core { animation: stoneDrop .26s cubic-bezier(.2,.8,.35,1.15) both; }
+
+/* ---------- 落点 ---------- */
+.landing {
+  position: absolute; width: 74px; height: 74px; z-index: 3; pointer-events: none;
+  transform: translate(-50%, -50%); opacity: 0; transition: opacity .22s ease;
+  display: grid; place-items: center;
+}
+.landing.show { opacity: 1; }
+.landing-shadow { position: absolute; inset: 15px; border-radius: 50%; background: radial-gradient(ellipse, #0c171065, transparent 70%); }
+.landing-ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px dashed #e8c5787d; animation: ringSpin 9s linear infinite; }
+.landing-label { font-size: 13px; color: #e9cb87; text-shadow: 0 1px 3px #0008; opacity: .74; }
+.landing.ready .landing-ring { border: 2px solid #f2ca6f; box-shadow: 0 0 18px #f0be5366, inset 0 0 13px #f0be5340; animation: ringSpin 5s linear infinite, landingGlow .7s ease-in-out infinite alternate; }
+.landing.ready .landing-label { color: #ffe3a0; opacity: 1; }
+.landing.ready .landing-shadow { background: radial-gradient(ellipse, #e8b64c45, transparent 70%); }
+@keyframes ringSpin { to { transform: rotate(360deg); } }
+@keyframes landingGlow { to { transform: scale(1.1); } }
+.count-ring {
+  position: absolute; width: 82px; height: 82px; z-index: 5; pointer-events: none;
+  transform: translate(-50%, -50%); opacity: 0; transition: opacity .15s;
+  border-radius: 50%;
+  background: conic-gradient(#f5d17d calc(var(--p, 1) * 1turn), #ffffff20 0);
+  -webkit-mask: radial-gradient(circle, transparent 0 37px, #000 38px);
+  mask: radial-gradient(circle, transparent 0 37px, #000 38px);
+}
+.count-ring.show { opacity: .95; }
+
+/* ---------- 竹筛 ---------- */
+.basket {
+  position: absolute; left: 0; top: 0; z-index: 22; width: clamp(138px, 21vw, 164px); aspect-ratio: 168 / 130;
+  pointer-events: none; will-change: transform; filter: drop-shadow(0 14px 10px #06100a73);
+}
+.basket-inner { position: relative; width: 100%; height: 100%; transform-origin: 50% 44%; transition: filter .2s ease; }
+.basket-inner svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.basket.full .basket-inner { filter: drop-shadow(0 0 13px #f2c76c66); }
+.basket.catch .basket-inner { animation: basketCatch .34s cubic-bezier(.2,.8,.3,1.2); }
+.basket.spill .basket-inner { animation: basketSpill .5s ease; }
+@keyframes basketCatch { 0%, 100% { scale: 1; } 45% { scale: 1.055; translate: 0 6px; } }
+@keyframes basketSpill { 25% { rotate: -12deg; translate: -5px 3px; } 55% { rotate: 8deg; } 100% { rotate: 0deg; } }
+.basket-stones { position: absolute; left: 50%; top: 41%; width: 1px; height: 1px; z-index: 2; }
+.carried-stone {
+  position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 48% 52% 45% 55%;
+  background: radial-gradient(circle at 30% 25%, #f7ead0 0 8%, #a39580 45%, #655c4e 100%);
+  box-shadow: 0 2px 3px #1b140c66, inset 0 1px 1px #fff6df66;
+  animation: carriedIn .22s ease both;
+}
+.carried-stone:nth-child(2n) { background: radial-gradient(circle at 30% 25%, #eee4ce 0 8%, #b5aa94 45%, #77705f 100%); }
+@keyframes carriedIn { from { opacity: 0; scale: .3; } to { opacity: 1; scale: 1; } }
+
+/* ---------- 提示 ---------- */
+.toast {
+  position: absolute; left: 50%; bottom: 82px; z-index: 25; transform: translateX(-50%);
+  padding: 6px 12px; border-radius: 6px; background: #18271fd6; border: 1px solid #8fa18a4d;
+  color: #e9d9b4; font-size: 12px; font-weight: 700; letter-spacing: .03em; white-space: nowrap;
+  pointer-events: none; opacity: 0; transition: opacity .2s, transform .2s;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+.puff {
+  position: absolute; z-index: 20; width: 6px; height: 6px; border-radius: 50%;
+  background: #f3e1b4; pointer-events: none; box-shadow: 0 0 4px #f3e1b455;
+}
+
+/* ---------- 结果横幅 ---------- */
+.banner {
+  position: absolute; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+  padding: 22px; background: #0b1711a8; backdrop-filter: blur(2px); animation: fadeIn .22s ease;
+}
+.banner[hidden] { display: none; }
+.banner-card {
+  width: min(100%, 340px); padding: 22px 24px 20px; text-align: center; color: var(--ink);
+  background: linear-gradient(170deg, #f6eedb, #e3d4b5); border: 1px solid #b09a70; border-radius: 12px;
+  box-shadow: 0 18px 40px #00000073, inset 0 0 0 5px #d4c39e, inset 0 0 0 6px #8f7a5338;
+  position: relative;
+}
+.banner-card::before {
+  content: "石"; position: absolute; right: 14px; top: 11px; width: 23px; height: 23px;
+  display: grid; place-items: center; font-size: 12px; font-weight: 800;
+  color: #f2ddb3; background: #a44e3a; border-radius: 4px; transform: rotate(6deg);
+}
+.banner-kicker { font-size: 10px; font-weight: 800; letter-spacing: .22em; color: #8a744e; }
+.banner h2 { margin-top: 7px; font-size: 27px; letter-spacing: 3px; color: #26392e; }
+.banner.fail h2 { color: #953f2d; }
+.banner-stars { height: 24px; margin-top: 3px; letter-spacing: 7px; color: #b37b2b; font-size: 20px; }
+.banner-stars:empty { display: none; }
+.banner-desc { margin-top: 7px; font-size: 12.5px; line-height: 1.8; color: #6d5c43; }
+.banner-actions { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
+.banner-actions .btn { min-width: 132px; }
+@keyframes fadeIn { from { opacity: 0; } }
+
+/* ---------- 按钮 ---------- */
+.controls { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 8px; margin-top: 11px; }
+.btn {
+  appearance: none; border-radius: 10px; min-height: 48px; padding: 10px 12px;
+  font-weight: 800; letter-spacing: .05em; cursor: pointer; transition: transform .1s, filter .15s, opacity .15s;
+  touch-action: manipulation;
+}
+.btn:active:not(:disabled) { transform: translateY(2px); }
+.btn:disabled { opacity: .36; cursor: default; }
+.btn-primary {
+  border: 1px solid #ddaa5a; color: #30210d;
+  background: linear-gradient(180deg, #efc979, #c99546);
+  box-shadow: 0 3px 0 #7f5720, inset 0 1px 0 #ffe8b6;
+}
+.btn-primary:not(:disabled) { animation: launchReady 1.8s ease-in-out infinite; }
+.btn-primary:active:not(:disabled) { box-shadow: 0 1px 0 #7f5720; }
+.btn-secondary {
+  border: 1px solid #667b6d; color: #e9dcc2;
+  background: linear-gradient(180deg, #31473a, #25372d);
+  box-shadow: 0 3px 0 #0d1712, inset 0 1px 0 #7f938455;
+}
+.btn-secondary:active:not(:disabled) { box-shadow: 0 1px 0 #0d1712; }
+@keyframes launchReady { 50% { filter: brightness(1.08); } }
+
+/* ---------- 规则 ---------- */
+.rules { margin-top: 10px; border-top: 1px solid #4e6557; color: #b9c6b6; font-size: 12px; }
+.rules summary { min-height: 38px; display: flex; align-items: center; gap: 7px; cursor: pointer; color: #c6d0bd; font-weight: 700; letter-spacing: .06em; }
+.rules summary::before { content: "+"; width: 16px; height: 16px; display: grid; place-items: center; border: 1px solid #718375; border-radius: 4px; font-size: 12px; }
+.rules[open] summary::before { content: "−"; }
+.rules-body { padding: 2px 2px 9px; line-height: 1.85; color: #a9b8a7; }
+.rules-body b { color: #d9c89f; }
+.rules-body span { color: #d8b976; }
+.rules-body p + p { margin-top: 4px; }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 560px) {
+  :root { --stone-size: 43px; }
+  body { padding: 9px 9px calc(9px + env(safe-area-inset-bottom)); }
+  .app { min-height: calc(100dvh - 18px); }
+  .brand h1 { font-size: 23px; letter-spacing: 3px; }
+  .brand-seal { width: 35px; height: 35px; font-size: 18px; }
+  .mute-btn { min-width: 72px; min-height: 38px; font-size: 11px; }
+  .hud { padding: 10px 12px 9px; }
+  .level-title { font-size: 16px; }
+  .level-name { font-size: 11px; }
+  .hud-stats { gap: 11px; }
+  .stat { font-size: 12px; }
+  .stat b { font-size: 18px; }
+  .stage { height: clamp(350px, 51vh, 480px); min-height: 350px; }
+  .basket { width: clamp(132px, 38vw, 156px); }
+  .controls { grid-template-columns: 1.4fr 1fr 1fr; gap: 6px; }
+  .btn { font-size: 12px; padding: 8px 6px; min-height: 48px; }
+  .banner-card { padding: 20px 18px 18px; }
+  .banner h2 { font-size: 24px; }
+  .intro { padding-bottom: 94px; }
+  .intro h2 { letter-spacing: 5px; }
+}
+@media (max-width: 380px) {
+  .level-title small { display: none; }
+  .level-name { display: none; }
+  .hud-stats { gap: 8px; }
+  .stat b { font-size: 17px; }
+  .progress-dots { gap: 4px; }
+  .progress-dot { width: 9px; height: 9px; }
+}
+@media (max-height: 680px) {
+  .stage { height: 330px; min-height: 300px; }
+  .rules { display: none; }
+  .intro p { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toss-mark, .landing-ring, .btn-primary:not(:disabled), .basket.catch .basket-inner, .basket.spill .basket-inner { animation: none; }
+  * { transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-seal">石</span>
+      <h1>抓石子</h1>
+    </div>
+    <button class="mute-btn" id="muteBtn" type="button" aria-label="关闭音效">
+      <span class="mute-dot"></span>音效 <b id="muteState">开</b>
+    </button>
+  </header>
+
+  <section class="hud" aria-label="游戏状态">
+    <div class="hud-head">
+      <div>
+        <span class="level-title">第 <span id="levelNum">1</span> 关<small>/ 共 4 关</small></span>
+        <span class="level-name" id="levelName">一颗一颗捡</span>
+      </div>
+      <span class="round-text" id="roundText">等待撒石子</span>
+    </div>
+    <div class="hud-stats">
+      <span class="stat">本轮要捡 <b id="targetNum">–</b><i>颗</i></span>
+      <span class="stat picked">已捡 <b id="pickedNum">0</b><i>/ <span id="targetTotal">0</span></i></span>
+      <div class="progress-dots" id="progressDots" aria-label="本关已捡进度"></div>
+    </div>
+    <div class="air-row">
+      <div class="air-track"><div class="air-fill" id="airFill"></div></div>
+      <span class="air-time" id="airTime">—</span>
+    </div>
+    <p class="status" id="status" aria-live="polite">撒一把石子，开始今天的院子游戏</p>
+  </section>
+
+  <section class="stage" id="stage" aria-label="竹筛接石游戏区">
+    <div class="intro" id="intro">
+      <span class="intro-eyebrow">SUMMER YARD · 1986</span>
+      <h2>竹筛接石</h2>
+      <p>青石板上撒一把石子。竹筛扫过，石子入筛；抛子落下，再把竹筛送到它下方。</p>
+      <div class="intro-steps"><span>颠起抛子</span><span>拖筛扫石</span><span>移筛接住</span></div>
+    </div>
+
+    <div class="landing" id="landing">
+      <span class="landing-shadow"></span>
+      <span class="landing-ring"></span>
+      <span class="landing-label">接</span>
+    </div>
+    <div class="count-ring" id="countRing"></div>
+    <div class="stone-layer" id="stoneLayer"></div>
+
+    <div class="basket" id="basket" aria-hidden="true">
+      <div class="basket-inner" id="basketInner">
+        <svg viewBox="0 0 168 130">
+          <defs>
+            <linearGradient id="bambooBody" x1="0" y1="0" x2="0.7" y2="1">
+              <stop stop-color="#e3be7b"/><stop offset=".48" stop-color="#c69755"/><stop offset="1" stop-color="#a4743b"/>
+            </linearGradient>
+            <linearGradient id="bambooRim" x1="0" y1="0" x2="0" y2="1">
+              <stop stop-color="#f4d99f"/><stop offset=".5" stop-color="#d3a45f"/><stop offset="1" stop-color="#91612f"/>
+            </linearGradient>
+            <radialGradient id="inside" cx=".5" cy=".35" r=".8">
+              <stop stop-color="#4d3722"/><stop offset=".68" stop-color="#6f4d2b"/><stop offset="1" stop-color="#3d2a18"/>
+            </radialGradient>
+            <pattern id="weave" width="11" height="11" patternUnits="userSpaceOnUse" patternTransform="rotate(12)">
+              <path d="M0 3.5H11M0 8H11" stroke="#704820" stroke-width="1.5" opacity=".48"/>
+              <path d="M2.5 0V11M7.5 0V11" stroke="#f5d79a" stroke-width=".9" opacity=".3"/>
+            </pattern>
+          </defs>
+          <ellipse cx="84" cy="110" rx="60" ry="9" fill="#07110b" opacity=".45"/>
+          <path d="M13 57 C19 86 42 101 84 101 C126 101 149 86 155 57 Z" fill="url(#bambooBody)" stroke="#6e4a24" stroke-width="2"/>
+          <path d="M13 57 C19 86 42 101 84 101 C126 101 149 86 155 57 Z" fill="url(#weave)" opacity=".9"/>
+          <path d="M21 71 C32 91 52 97 84 97 C116 97 136 91 147 71" fill="none" stroke="#f7dfa8" stroke-width="2" opacity=".22"/>
+          <path d="M26 85 C42 96 60 99 84 99 C108 99 126 96 142 85" fill="none" stroke="#744b22" stroke-width="2.5" opacity=".5"/>
+          <path d="M14 52 C2 50 1 66 15 67" fill="none" stroke="#d1a15d" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M154 52 C166 50 167 66 153 67" fill="none" stroke="#bd8b4b" stroke-width="4.5" stroke-linecap="round"/>
+          <ellipse cx="84" cy="57" rx="68" ry="26" fill="url(#bambooRim)" stroke="#6d4723" stroke-width="2"/>
+          <ellipse cx="84" cy="58" rx="58" ry="18.5" fill="url(#inside)" stroke="#e9c47e" stroke-width="2.6"/>
+          <ellipse cx="84" cy="56" rx="56" ry="16.5" fill="none" stroke="#3c2917" stroke-width="1.2" opacity=".7"/>
+          <path d="M28 53 C42 38 64 32 84 32 C106 32 130 40 142 54" fill="none" stroke="#fae5b4" stroke-width="2.6" stroke-linecap="round" opacity=".52"/>
+          <path d="M36 65 C49 76 66 81 84 81 C102 81 121 75 134 63" fill="none" stroke="#5e3d1d" stroke-width="1.3" opacity=".55"/>
+          <path d="M146 53 C157 51 161 61 153 65" fill="none" stroke="#a34f3c" stroke-width="3" stroke-linecap="round"/>
+          <path d="M153 64 C159 70 156 76 150 77" fill="none" stroke="#a34f3c" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="153" cy="65" r="3" fill="#c2674f"/>
+          <path d="M22 57 C20 48 25 43 32 44" fill="none" stroke="#f8dfa6" stroke-width="2" opacity=".4" stroke-linecap="round"/>
+        </svg>
+        <div class="basket-stones" id="basketStones"></div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="banner" id="banner" hidden>
+      <div class="banner-card">
+        <div class="banner-kicker" id="bannerKicker">第 1 关</div>
+        <h2 id="bannerTitle">过关</h2>
+        <div class="banner-stars" id="bannerStars"></div>
+        <p class="banner-desc" id="bannerDesc"></p>
+        <div class="banner-actions"><button class="btn btn-primary" id="bannerBtn" type="button">进入下一关</button></div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="controls" aria-label="游戏操作">
+    <button class="btn btn-primary" id="actionBtn" type="button" title="就位后按鼠标右键也可颠起">撒石子</button>
+    <button class="btn btn-secondary" id="retryBtn" type="button" disabled>重试本关</button>
+    <button class="btn btn-secondary" id="restartBtn" type="button" disabled>重新开始</button>
+  </nav>
+
+  <details class="rules">
+    <summary>怎么玩</summary>
+    <div class="rules-body">
+      <p><b>1. 颠起：</b>铜环标记的是抛子。移动竹筛到顺手的位置，点「颠起」把抛子送到空中。鼠标游玩时也可直接按右键颠起。</p>
+      <p><b>2. 扫石：</b>拖动竹筛经过地上的石子，筛口碰到就会自动收进来。本轮只收目标数量，收够即停。</p>
+      <p><b>3. 接住：</b>收够后，落点会亮起。把竹筛移到落点下方，抛子落下会自动入筛。</p>
+      <p>时间到还没收够，或收够了却没把竹筛放到位，都算失败。可重试本关；本关剩余进度以四颗小石点表示。</p>
+    </div>
+  </details>
+</main>
+<script>
+"use strict";
+
+/* =============================================================
+   关卡数据
+   ============================================================= */
+const LEVELS = [
+  { name: "一颗一颗捡", air: 3200, rounds: [1, 1, 1, 1] },
+  { name: "两颗两颗捡", air: 3000, rounds: [2, 2] },
+  { name: "先三后一", air: 2800, rounds: [3, 1] },
+  { name: "一把全抓", air: 2600, rounds: [4] }
+];
+const STONE_PALETTE = [
+  ["#c4baa6", "#928575", "#655b4d"],
+  ["#b8b09d", "#877c6b", "#5e564a"],
+  ["#c7b39c", "#957f67", "#6a5948"],
+  ["#adb2a4", "#7f8676", "#565e51"],
+  ["#c9c2b2", "#978f7c", "#6d6656"]
+];
+
+/* =============================================================
+   全局状态
+   ============================================================= */
+const game = {
+  level: 1,
+  phase: "idle",              // idle / ready / flying / catching / resolving / levelComplete / gameOver / allComplete
+  roundIndex: 0,
+  targetThisRound: 0,
+  pickedThisRound: 0,
+  totalPickedThisLevel: 0,
+  stones: [],
+  groundStones: [],
+  tossStoneId: null,
+  timerStart: 0,
+  timeLimit: 0,
+  remainingMs: 0,
+  rafId: null,
+  runToken: 0,
+  roundToken: 0,
+  flight: null,
+  carried: [],
+  muted: false,
+  marginSum: 0,
+  marginCount: 0,
+  roundGradeRatio: 0,
+  starsByLevel: [],
+  basket: { x: 0, y: 0, tx: 0, ty: 0, prevX: 0, prevY: 0, tilt: 0, activePointer: null },
+  timers: new Set(),
+  pausedAt: 0,
+  layout: { w: 0, h: 0 }
+};
+
+/* =============================================================
+   DOM
+   ============================================================= */
+const $ = id => document.getElementById(id);
+const stage = $("stage"), stoneLayer = $("stoneLayer");
+const basketEl = $("basket"), basketInner = $("basketInner"), basketStones = $("basketStones");
+const landingEl = $("landing"), countRing = $("countRing");
+const intro = $("intro"), statusEl = $("status"), toast = $("toast");
+const airFill = $("airFill"), airTime = $("airTime");
+const levelNum = $("levelNum"), levelName = $("levelName"), roundText = $("roundText");
+const targetNum = $("targetNum"), pickedNum = $("pickedNum"), targetTotal = $("targetTotal");
+const progressDots = $("progressDots");
+const actionBtn = $("actionBtn"), retryBtn = $("retryBtn"), restartBtn = $("restartBtn"), muteBtn = $("muteBtn"), muteState = $("muteState");
+const banner = $("banner"), bannerKicker = $("bannerKicker"), bannerTitle = $("bannerTitle"),
+      bannerStars = $("bannerStars"), bannerDesc = $("bannerDesc"), bannerBtn = $("bannerBtn");
+
+/* =============================================================
+   小工具
+   ============================================================= */
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+const rand = (min, max) => min + Math.random() * (max - min);
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const isCurrent = (run, round) => game.runToken === run && game.roundToken === round;
+const stageW = () => stage.clientWidth;
+const stageH = () => stage.clientHeight;
+function stoneSize() {
+  return parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--stone-size")) || 48;
+}
+function centerOf(st) { return { x: st.x, y: st.y }; }
+function activeStones() { return game.stones.filter(s => !s.picked); }
+function activeIds() { return activeStones().map(s => s.id); }
+function setStatus(text, tone = "") {
+  statusEl.textContent = text;
+  statusEl.className = "status" + (tone ? " " + tone : "");
+}
+function later(ms, fn) {
+  const run = game.runToken, round = game.roundToken;
+  const id = setTimeout(() => {
+    game.timers.delete(id);
+    if (!isCurrent(run, round)) return;
+    fn();
+  }, ms);
+  game.timers.add(id);
+  return id;
+}
+function clearLater() {
+  game.timers.forEach(id => clearTimeout(id));
+  game.timers.clear();
+}
+let toastTimer = 0;
+function showToast(text, ms = 1100) {
+  toast.textContent = text;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), ms);
+}
+
+/* =============================================================
+   音效：Web Audio 合成，无外部资源
+   ============================================================= */
+let audioCtx = null;
+function ensureAudio() {
+  if (game.muted) return null;
+  try {
+    if (!audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  } catch (_) { return null; }
+}
+function tone(freq, end, duration, type = "sine", volume = 0.13, delay = 0) {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const t = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t);
+  if (end) osc.frequency.exponentialRampToValueAtTime(Math.max(30, end), t + duration);
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(volume, t + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + duration + 0.03);
+  osc.onended = () => { try { osc.disconnect(); gain.disconnect(); } catch (_) {} };
+}
+const sfx = {
+  launch() {
+    tone(190, 105, 0.09, "triangle", 0.12);
+    tone(480, 760, 0.16, "sine", 0.08, 0.015);
+  },
+  collect() {
+    tone(840, 1090, 0.055, "triangle", 0.12);
+    tone(390, 330, 0.07, "sine", 0.06, 0.012);
+  },
+  catch() {
+    tone(1175, null, 0.23, "sine", 0.16);
+    tone(1568, null, 0.27, "sine", 0.09, 0.055);
+    tone(392, null, 0.16, "triangle", 0.06, 0.02);
+  },
+  fail() { tone(180, 72, 0.32, "sawtooth", 0.12); },
+  win() {
+    [523, 659, 784, 1047].forEach((f, i) => tone(f, null, 0.18, "triangle", 0.12, i * 0.105));
+  }
+};
+try { game.muted = localStorage.getItem("bamboo-stone-muted") === "1"; } catch (_) {}
+ensureMutedUI();
+
+function ensureMutedUI() {
+  muteBtn.classList.toggle("muted", game.muted);
+  muteState.textContent = game.muted ? "关" : "开";
+  muteBtn.setAttribute("aria-label", game.muted ? "开启音效" : "关闭音效");
+}
+muteBtn.addEventListener("click", () => {
+  game.muted = !game.muted;
+  ensureMutedUI();
+  try { localStorage.setItem("bamboo-stone-muted", game.muted ? "1" : "0"); } catch (_) {}
+  if (!game.muted) tone(760, 980, 0.06, "triangle", 0.09);
+});
+
+/* =============================================================
+   撒布与石子渲染
+   ============================================================= */
+function checkOverlap(cx, cy, points, gap) {
+  return points.some(p => Math.hypot(cx - p.x, cy - p.y) < p.size + gap);
+}
+function spotBounds() {
+  const s = stoneSize();
+  return {
+    s,
+    minX: s / 2 + 26,
+    maxX: stageW() - s / 2 - 26,
+    minY: s / 2 + 38,
+    maxY: stageH() - s / 2 - 116
+  };
+}
+function findSpot(placed) {
+  const b = spotBounds();
+  for (let i = 0; i < 500; i++) {
+    const x = rand(b.minX, b.maxX);
+    const y = rand(b.minY, b.maxY);
+    if (!checkOverlap(x, y, placed, 9)) return { x, y };
+  }
+  // 网格兜底，保证小屏也能放下五颗
+  const spots = [];
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 3; col++) {
+      spots.push({
+        x: b.minX + (b.maxX - b.minX) * col / 2,
+        y: b.minY + (b.maxY - b.minY) * row / 3
+      });
+    }
+  }
+  spots.sort(() => Math.random() - 0.5);
+  for (const p of spots) {
+    if (!checkOverlap(p.x, p.y, placed, 2)) return p;
+  }
+  return spots[0];
+}
+function placeStone(st) {
+  const s = stoneSize();
+  // 位移与旋转必须写在同一个 transform 里，分开使用 rotate 属性会导致渲染框漂移
+  st.el.style.transform = `translate3d(${st.x - s / 2}px, ${st.y - s / 2}px, 0) rotate(${st.spin || 0}deg)`;
+}
+function mountStone(pos, id) {
+  const el = document.createElement("div");
+  el.className = "stone drop-in";
+  el.innerHTML = '<span class="stone-core"></span><span class="toss-mark"></span>';
+  const color = STONE_PALETTE[id];
+  el.style.setProperty("--c1", color[0]);
+  el.style.setProperty("--c2", color[1]);
+  el.style.setProperty("--c3", color[2]);
+  const st = { id, el, x: pos.x, y: pos.y, state: "ground", picked: false, spin: 0 };
+  stoneLayer.appendChild(el);
+  placeStone(st);
+  setTimeout(() => el.classList.remove("drop-in"), 320);
+  return st;
+}
+function clearStones() {
+  game.stones = [];
+  game.groundStones = [];
+  game.tossStoneId = null;
+  stoneLayer.innerHTML = "";
+  basketStones.innerHTML = "";
+}
+function scatterStones() {
+  clearStones();
+  const placed = [];
+  for (let i = 0; i < 5; i++) {
+    const p = findSpot(placed);
+    const st = mountStone(p, i);
+    game.stones.push(st);
+    placed.push({ ...p, size: stoneSize() + 10 });
+  }
+  landingEl.classList.remove("show", "ready");
+  countRing.classList.remove("show");
+}
+function markTossStone() {
+  game.stones.forEach(st => {
+    st.el.classList.toggle("is-toss", st.id === game.tossStoneId && st.state === "ground" && !st.picked);
+  });
+}
+function spawnPuffs(x, y, count = 6) {
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement("i");
+    d.className = "puff";
+    d.style.left = x + "px";
+    d.style.top = y + "px";
+    stage.appendChild(d);
+    const angle = rand(0, Math.PI * 2), distance = rand(12, 34);
+    const anim = d.animate(
+      [
+        { transform: "translate(-50%, -50%) scale(1)", opacity: 0.9 },
+        { transform: `translate(calc(-50% + ${Math.cos(angle) * distance}px), calc(-50% + ${Math.sin(angle) * distance}px)) scale(.25)`, opacity: 0 }
+      ],
+      { duration: rand(260, 420), easing: "ease-out" }
+    );
+    anim.onfinish = () => d.remove();
+  }
+}
+
+/* =============================================================
+   HUD / 按钮
+   ============================================================= */
+function renderProgressDots() {
+  let html = "";
+  for (let i = 0; i < 4; i++) {
+    html += `<span class="progress-dot${i < game.totalPickedThisLevel ? " on" : ""}"></span>`;
+  }
+  progressDots.innerHTML = html;
+}
+function resetAirUI() {
+  airFill.style.transform = "scaleX(1)";
+  airFill.classList.remove("warn", "danger");
+  airTime.textContent = (game.timeLimit / 1000).toFixed(1) + "s";
+}
+function updateHUD() {
+  const cfg = LEVELS[game.level - 1];
+  levelNum.textContent = game.level;
+  levelName.textContent = cfg.name;
+  const playing = ["ready", "flying", "catching", "resolving"].includes(game.phase);
+  roundText.textContent = playing
+    ? `第 ${game.roundIndex + 1} / ${cfg.rounds.length} 轮`
+    : game.phase === "idle" ? "等待撒石子"
+    : game.phase === "gameOver" ? "本轮结束"
+    : game.phase === "levelComplete" ? "本关完成" : game.phase === "allComplete" ? "全部完成" : "";
+  targetNum.textContent = playing && game.targetThisRound ? game.targetThisRound : "–";
+  pickedNum.textContent = game.pickedThisRound;
+  targetTotal.textContent = game.targetThisRound || 0;
+  renderProgressDots();
+  const idle = game.phase === "idle";
+  const ready = game.phase === "ready";
+  actionBtn.disabled = !(idle || ready);
+  actionBtn.textContent = idle ? "撒石子" : ready ? "颠 起" : "颠 起";
+  retryBtn.disabled = game.phase !== "gameOver";
+  restartBtn.disabled = idle;
+  basketEl.classList.toggle("full", game.phase === "catching");
+  document.body.dataset.phase = game.phase;
+}
+function updateCarriedVisual() {
+  const positions = [[-27, -6], [-9, -12], [10, -7], [-3, 3]];
+  basketStones.innerHTML = game.carried.map((_, i) => {
+    const p = positions[i] || [0, 0];
+    return `<span class="carried-stone" style="left:${p[0]}px;top:${p[1]}px"></span>`;
+  }).join("");
+}
+function showBanner(opts) {
+  banner.hidden = false;
+  banner.classList.toggle("fail", !!opts.fail);
+  bannerKicker.textContent = opts.kicker || "";
+  bannerTitle.textContent = opts.title;
+  bannerStars.textContent = opts.stars || "";
+  bannerDesc.innerHTML = opts.desc || "";
+  bannerBtn.textContent = opts.button;
+  bannerBtn.disabled = false;
+  bannerBtn.onclick = () => { ensureAudio(); tone(650, 880, 0.06, "triangle", 0.08); opts.action(); };
+}
+function hideBanner() { banner.hidden = true; }
+
+/* =============================================================
+   开始 / 关卡 / 轮次
+   ============================================================= */
+function startGame() {
+  game.level = 1;
+  game.starsByLevel = [];
+  startLevel();
+}
+function startLevel() {
+  game.runToken++;
+  game.roundToken++;
+  clearLater();
+  hideBanner();
+  intro.hidden = true;
+  game.roundIndex = 0;
+  game.pickedThisRound = 0;
+  game.totalPickedThisLevel = 0;
+  game.marginSum = 0;
+  game.marginCount = 0;
+  game.roundGradeRatio = 0;
+  game.carried = [];
+  game.flight = null;
+  game.phase = "ready";
+  game.tossStoneId = null;
+  basketEl.classList.remove("catch", "spill", "full");
+  basketStones.innerHTML = "";
+  scatterStones();
+  const W = stageW(), H = stageH();
+  game.basket.x = game.basket.prevX = game.basket.tx = clamp(W * 0.5, 44, W - 44);
+  game.basket.y = game.basket.prevY = game.basket.ty = clamp(H * 0.74, 60, H - 46);
+  game.basket.tilt = 0;
+  game.layout = { w: W, h: H };
+  updateBasketVisual();
+  beginRound();
+  startLoop();
+}
+function beginRound() {
+  game.roundToken++;
+  game.phase = "ready";
+  game.pickedThisRound = 0;
+  game.carried = [];
+  game.flight = null;
+  game.timerStart = 0;
+  game.remainingMs = game.timeLimit;
+  game.timeLimit = LEVELS[game.level - 1].air;
+  updateCarriedVisual();
+
+  const active = activeStones();
+  game.tossStoneId = active.length ? active[Math.floor(Math.random() * active.length)].id : null;
+  game.targetThisRound = Math.max(1, Math.min(
+    LEVELS[game.level - 1].rounds[game.roundIndex],
+    active.length - 1
+  ));
+
+  game.stones.forEach(st => {
+    st.el.classList.remove("is-toss", "spent", "air", "caught", "picked");
+    if (!st.picked) {
+      st.state = "ground";
+      st.el.style.display = "";
+      st.el.style.opacity = "";
+      st.spin = 0;
+    }
+  });
+  markTossStone();
+  basketEl.classList.remove("catch", "spill", "full");
+  landingEl.classList.remove("show", "ready");
+  countRing.classList.remove("show");
+  resetAirUI();
+  updateHUD();
+  updateCarriedVisual();
+  setStatus("铜环石子是抛子，点「颠起」或按鼠标右键");
+}
+function activeSpotForToss() {
+  const taken = game.stones
+    .filter(s => !s.picked && s.id !== game.tossStoneId)
+    .map(s => ({ x: s.x, y: s.y, size: stoneSize() + 10 }));
+  return findSpot(taken);
+}
+
+/* =============================================================
+   抛起与飞行
+   ============================================================= */
+function launchToss() {
+  if (game.phase !== "ready" || game.tossStoneId === null) return;
+  const st = game.stones[game.tossStoneId];
+  if (!st) return;
+  ensureAudio();
+  st.state = "air";
+  st.el.classList.add("air");
+  st.el.classList.remove("is-toss");
+  const W = stageW(), H = stageH();
+  const start = centerOf(st);
+  const landY = clamp(H * 0.66 + rand(-H * 0.04, H * 0.04), H * 0.52, H - 90);
+  let landX = start.x + rand(-W * 0.23, W * 0.23);
+  landX = clamp(landX, W * 0.25, W * 0.75);
+  if (Math.abs(landX - start.x) < 58) {
+    landX = start.x < W / 2 ? Math.min(W * 0.78, start.x + 92) : Math.max(W * 0.22, start.x - 92);
+  }
+  const avgY = (start.y + landY) / 2;
+  const lift = clamp(avgY - 58, 110, H * 0.46);
+  game.flight = { sx: start.x, sy: start.y, landX, landY, lift };
+  game.phase = "flying";
+  game.timerStart = performance.now();
+  game.remainingMs = game.timeLimit;
+  game.pickedThisRound = 0;
+  game.carried = [];
+  updateCarriedVisual();
+  game.groundStones = activeIds().filter(id => id !== game.tossStoneId);
+
+  landingEl.style.left = landX + "px";
+  landingEl.style.top = landY + "px";
+  landingEl.classList.add("show");
+  landingEl.classList.remove("ready");
+  countRing.classList.add("show");
+  countRing.style.setProperty("--p", "1");
+  resetAirUI();
+  sfx.launch();
+  updateHUD();
+  setStatus("扫过地上的石子，把它们收进竹筛");
+  showToast("竹筛碰到石子就会收进来");
+}
+function collectStone(st) {
+  if (st.picked) return;
+  st.picked = true;
+  st.state = "picked";
+  st.el.classList.add("picked");
+  game.groundStones = game.groundStones.filter(id => id !== st.id);
+  game.pickedThisRound++;
+  game.totalPickedThisLevel++;
+  game.carried.push(st.id);
+  sfx.collect();
+  spawnPuffs(st.x, st.y, 5);
+  const fromTransform = st.el.style.transform;
+  const s = stoneSize();
+  const to = `translate3d(${game.basket.x - s * 0.18}px, ${game.basket.y - s * 0.22}px, 0) scale(.28)`;
+  const anim = st.el.animate(
+    [
+      { transform: fromTransform, opacity: 1 },
+      { transform: to, opacity: 0 }
+    ],
+    { duration: 200, easing: "ease-in", fill: "forwards" }
+  );
+  anim.onfinish = () => { st.el.style.display = "none"; };
+  updateCarriedVisual();
+  updateHUD();
+  if (game.pickedThisRound >= game.targetThisRound && game.phase === "flying") enterCatching();
+}
+function enterCatching() {
+  game.phase = "catching";
+  // 星级看“收够石子的速度”，而不是看接住时几乎归零的飞行剩余时间
+  game.roundGradeRatio = clamp(1 - (performance.now() - game.timerStart) / game.timeLimit, 0, 1);
+  basketEl.classList.add("full");
+  landingEl.classList.add("ready");
+  game.stones.forEach(st => {
+    if (!st.picked && st.id !== game.tossStoneId) st.el.classList.add("spent");
+  });
+  setStatus("收够了！把竹筛移到金色落点下方", "good");
+  showToast("收够了，去接抛子");
+  tone(740, 980, 0.11, "triangle", 0.1);
+  updateHUD();
+}
+function resolveSuccess() {
+  if (game.phase !== "flying" && game.phase !== "catching") return;
+  const elapsed = performance.now() - game.timerStart;
+  const remainRatio = clamp(1 - elapsed / game.timeLimit, 0, 1);
+  game.phase = "resolving";
+  countRing.classList.remove("show");
+  landingEl.classList.remove("show", "ready");
+  const st = game.stones[game.tossStoneId];
+  if (st) {
+    st.state = "caught";
+    st.el.classList.remove("air", "spent");
+    st.el.classList.add("caught");
+    const s = stoneSize();
+    st.el.style.transform = `translate3d(${game.basket.x - s / 2}px, ${game.basket.y - s / 2}px, 0) scale(.86)`;
+    st.el.style.opacity = "0";
+    st.el.style.display = "none";
+  }
+  basketEl.classList.add("catch");
+  basketEl.classList.remove("full");
+  spawnPuffs(game.basket.x, game.basket.y + 8, 9);
+  sfx.catch();
+  setStatus("接住了！", "good");
+  airFill.style.transform = `scaleX(${remainRatio})`;
+  airTime.textContent = Math.max(0, game.timeLimit - elapsed) / 1000 > 0
+    ? (Math.max(0, game.timeLimit - elapsed) / 1000).toFixed(1) + "s" : "0.0s";
+  game.marginSum += game.roundGradeRatio || 0;
+  game.marginCount++;
+  updateHUD();
+
+  const run = game.runToken, round = game.roundToken;
+  later(720, () => {
+    if (!isCurrent(run, round)) return;
+    basketEl.classList.remove("catch", "full", "spill");
+    game.carried = [];
+    updateCarriedVisual();
+    const groundLeft = game.stones.filter(s => !s.picked && s.id !== game.tossStoneId).length;
+    if (groundLeft === 0) {
+      levelClear();
+      return;
+    }
+    // 抛子不属于已捡石子，重新落回场地供下一轮使用
+    if (st) {
+      st.el.style.display = "";
+      st.el.style.opacity = "";
+      st.el.classList.remove("caught", "air", "is-toss");
+      st.spin = 0;
+      st.el.style.transform = "";
+      st.x = game.basket.x;
+      st.y = game.basket.y - 20;
+      placeStone(st);
+      const spot = activeSpotForToss();
+      st.x = spot.x;
+      st.y = spot.y;
+      st.state = "ground";
+      placeStone(st);
+      st.el.classList.add("drop-in");
+      setTimeout(() => st.el.classList.remove("drop-in"), 300);
+    }
+    game.roundIndex++;
+    game.tossStoneId = null;
+    beginRound();
+  });
+}
+function resolveFail(reason) {
+  if (game.phase !== "flying" && game.phase !== "catching") return;
+  game.phase = "resolving";
+  countRing.classList.remove("show");
+  landingEl.classList.remove("show", "ready");
+  const st = game.stones[game.tossStoneId];
+  if (st) {
+    st.state = "ground";
+    st.el.classList.remove("air", "caught", "spent");
+    st.spin = 0;
+    st.x = game.flight.landX;
+    st.y = game.flight.landY;
+    placeStone(st);
+    st.el.animate(
+      [{ transform: st.el.style.transform }, { transform: st.el.style.transform + " translateY(-5px)" }, { transform: st.el.style.transform }],
+      { duration: 280, easing: "ease-out" }
+    );
+  }
+  airFill.style.transform = "scaleX(0)";
+  airFill.classList.add("danger");
+  airTime.textContent = "0.0s";
+  basketEl.classList.add("spill");
+  basketEl.classList.remove("full");
+  stage.classList.remove("shake");
+  void stage.offsetWidth;
+  stage.classList.add("shake");
+  sfx.fail();
+  setStatus(reason === "catch" ? "抛子落地了，竹筛没到位" : "时间到了，石子还没收够", "bad");
+  const msg = reason === "catch"
+    ? "收够石子后，要把竹筛拖到金色落点下方。"
+    : `还差 ${Math.max(0, game.targetThisRound - game.pickedThisRound)} 颗，时间就到了。`;
+  showToast(reason === "catch" ? "要站在落点下接住" : "再快一点扫石子", 1300);
+  updateHUD();
+
+  const run = game.runToken, round = game.roundToken;
+  later(600, () => {
+    if (!isCurrent(run, round)) return;
+    game.phase = "gameOver";
+    stopLoop();
+    showBanner({
+      kicker: `第 ${game.level} 关 · 第 ${game.roundIndex + 1} 轮`,
+      title: "这轮没接住",
+      desc: msg,
+      button: "重试本关",
+      fail: true,
+      action: retryLevel
+    });
+    updateHUD();
+  });
+}
+function levelClear() {
+  game.phase = game.level >= LEVELS.length ? "allComplete" : "levelComplete";
+  stopLoop();
+  sfx.win();
+  const stars = game.marginCount ? (game.marginSum / game.marginCount >= 0.31 ? 3 : game.marginSum / game.marginCount >= 0.16 ? 2 : 1) : 1;
+  game.starsByLevel[game.level - 1] = stars;
+  const starText = "★".repeat(stars) + "☆".repeat(3 - stars);
+  updateHUD();
+  if (game.phase === "allComplete") {
+    const total = game.starsByLevel.reduce((sum, n) => sum + (n || 0), 0);
+    setStatus("全部通关！", "good");
+    showBanner({
+      kicker: "四关完成",
+      title: "院子里的抓石子王",
+      stars: `★ ${total} / 12`,
+      desc: `抛、扫、接，整整四关都稳稳完成。<br>本次共获得 ${total} 颗星。`,
+      button: "再玩一次",
+      action: startGame
+    });
+  } else {
+    setStatus(`第 ${game.level} 关通过！`, "good");
+    showBanner({
+      kicker: `第 ${game.level} 关 · ${LEVELS[game.level - 1].name}`,
+      title: "过关",
+      stars: starText,
+      desc: `篮子收得又稳又快。<br>下一关：${LEVELS[game.level].name}，空中时间 ${(LEVELS[game.level].air / 1000).toFixed(1)} 秒。`,
+      button: "进入下一关",
+      action: () => { game.level++; startLevel(); }
+    });
+  }
+}
+function retryLevel() {
+  ensureAudio();
+  startLevel();
+}
+function restartGame() {
+  ensureAudio();
+  startGame();
+}
+
+/* =============================================================
+   竹筛跟随与飞行主循环
+   ============================================================= */
+function updateBasketVisual() {
+  const w = basketEl.offsetWidth || 160;
+  const h = basketEl.offsetHeight || 124;
+  const b = game.basket;
+  basketEl.style.transform = `translate3d(${b.x - w / 2}px, ${b.y - h * 0.44}px, 0)`;
+  basketInner.style.transform = `rotate(${b.tilt}deg)`;
+}
+function pointSegmentDistance(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay;
+  const len2 = dx * dx + dy * dy;
+  if (len2 === 0) return Math.hypot(px - ax, py - ay);
+  let t = ((px - ax) * dx + (py - ay) * dy) / len2;
+  t = clamp(t, 0, 1);
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+function scanStonePickups() {
+  if (game.phase !== "flying") return;
+  const b = game.basket;
+  const reach = Math.max(42, basketEl.offsetWidth * 0.34 + stoneSize() * 0.12);
+  for (const id of game.groundStones) {
+    if (game.pickedThisRound >= game.targetThisRound) break;
+    if (id === game.tossStoneId) continue;
+    const st = game.stones[id];
+    if (!st || st.picked) continue;
+    // 用手掌移动的线段做扫掠判定，快速划过也能收进石子
+    const d = pointSegmentDistance(st.x, st.y, b.prevX, b.prevY, b.x, b.y);
+    if (d <= reach) collectStone(st);
+  }
+}
+function updateFlight(now) {
+  if (!game.flight) return;
+  const st = game.stones[game.tossStoneId];
+  if (!st) return;
+  const elapsed = now - game.timerStart;
+  const u = clamp(elapsed / game.timeLimit, 0, 1);
+  const f = game.flight;
+  const x = f.sx + (f.landX - f.sx) * u;
+  const y = f.sy + (f.landY - f.sy) * u - 4 * f.lift * u * (1 - u);
+  st.x = x;
+  st.y = y;
+  st.spin = u * 300;
+  placeStone(st);
+
+  const remain = Math.max(0, game.timeLimit - elapsed);
+  game.remainingMs = remain;
+  airFill.style.transform = `scaleX(${1 - u})`;
+  airFill.classList.toggle("warn", u > 0.62 && u <= 0.84);
+  airFill.classList.toggle("danger", u > 0.84);
+  const timeLabel = (remain / 1000).toFixed(1) + "s";
+  if (airTime.textContent !== timeLabel) airTime.textContent = timeLabel;
+  countRing.style.left = x + "px";
+  countRing.style.top = y + "px";
+  countRing.style.setProperty("--p", String(1 - u));
+
+  scanStonePickups();
+  if (game.phase === "catching") {
+    const catchRadius = basketEl.offsetWidth * 0.37 + stoneSize() * 0.25;
+    if (u >= 0.44 && dist({ x, y }, game.basket) <= catchRadius) {
+      resolveSuccess();
+      return;
+    }
+  }
+  if (u >= 1) {
+    resolveFail(game.pickedThisRound >= game.targetThisRound ? "catch" : "short");
+  }
+}
+function loop(now) {
+  if (game.phase === "idle") {
+    game.rafId = null;
+    return;
+  }
+  const b = game.basket;
+  b.prevX = b.x;
+  b.prevY = b.y;
+  b.x += (b.tx - b.x) * 0.55;
+  b.y += (b.ty - b.y) * 0.55;
+  const dx = b.x - b.prevX;
+  const targetTilt = clamp(dx * 17, -16, 16);
+  b.tilt += (targetTilt - b.tilt) * 0.22;
+  updateBasketVisual();
+  if (game.phase === "flying" || game.phase === "catching") updateFlight(now);
+  game.rafId = requestAnimationFrame(loop);
+}
+function startLoop() {
+  if (game.rafId !== null) return;
+  game.rafId = requestAnimationFrame(loop);
+}
+function stopLoop() {
+  if (game.rafId !== null) {
+    cancelAnimationFrame(game.rafId);
+    game.rafId = null;
+  }
+}
+
+/* =============================================================
+   指针 / 触摸 / 键盘
+   ============================================================= */
+function pointerToStage(ev) {
+  const rect = stage.getBoundingClientRect();
+  const touchOffset = ev.pointerType === "touch" ? 54 : 0;
+  return {
+    x: clamp(ev.clientX - rect.left, 34, rect.width - 34),
+    y: clamp(ev.clientY - rect.top - touchOffset, 54, rect.height - 46)
+  };
+}
+stage.addEventListener("pointermove", ev => {
+  if (!banner.hidden || game.phase === "idle") return;
+  if (ev.pointerType === "touch" && game.basket.activePointer !== ev.pointerId) return;
+  const p = pointerToStage(ev);
+  game.basket.tx = p.x;
+  game.basket.ty = p.y;
+});
+stage.addEventListener("pointerdown", ev => {
+  if (ev.button !== 0) return; // 右键只用于颠起，不接管竹筛拖动
+  if (!banner.hidden || game.phase === "idle") return;
+  if (game.basket.activePointer !== null) return;
+  ev.preventDefault();
+  ensureAudio();
+  game.basket.activePointer = ev.pointerId;
+  try { stage.setPointerCapture(ev.pointerId); } catch (_) {}
+  const p = pointerToStage(ev);
+  game.basket.tx = p.x;
+  game.basket.ty = p.y;
+});
+function endBasketDrag(ev) {
+  if (game.basket.activePointer !== ev.pointerId) return;
+  game.basket.activePointer = null;
+  try { stage.releasePointerCapture(ev.pointerId); } catch (_) {}
+}
+stage.addEventListener("pointerup", endBasketDrag);
+stage.addEventListener("pointercancel", endBasketDrag);
+stage.addEventListener("contextmenu", ev => {
+  ev.preventDefault();
+  // 鼠标右键快捷颠起：不用把手从石子上移到底部按钮
+  if (game.phase === "ready") {
+    ensureAudio();
+    launchToss();
+  }
+});
+stage.addEventListener("dblclick", ev => ev.preventDefault());
+
+actionBtn.addEventListener("click", () => {
+  ensureAudio();
+  if (game.phase === "idle") startGame();
+  else if (game.phase === "ready") launchToss();
+});
+retryBtn.addEventListener("click", retryLevel);
+restartBtn.addEventListener("click", restartGame);
+document.addEventListener("keydown", ev => {
+  if (ev.code === "Space" && game.phase === "ready" && ev.target.tagName !== "BUTTON") {
+    ev.preventDefault();
+    ensureAudio();
+    launchToss();
+  }
+});
+
+/* 切后台暂停抛子计时，回来继续，不凭空判负 */
+document.addEventListener("visibilitychange", () => {
+  const inFlight = game.phase === "flying" || game.phase === "catching";
+  if (document.hidden && inFlight) {
+    game.pausedAt = performance.now();
+  } else if (!document.hidden && game.pausedAt && inFlight) {
+    game.timerStart += performance.now() - game.pausedAt;
+    game.pausedAt = 0;
+  }
+});
+
+/* =============================================================
+   窗口大小变化：按比例重排，保证所有元素留在地面内
+   ============================================================= */
+let resizeRaf = null;
+function handleResize() {
+  if (resizeRaf) cancelAnimationFrame(resizeRaf);
+  resizeRaf = requestAnimationFrame(() => {
+    const W = stageW(), H = stageH();
+    if (!W || !H) return;
+    const old = game.layout;
+    const rx = old.w ? W / old.w : 1;
+    const ry = old.h ? H / old.h : 1;
+    const s = stoneSize();
+    for (const st of game.stones) {
+      if (st.picked) continue;
+      st.x = clamp(st.x * rx, s / 2 + 10, W - s / 2 - 10);
+      st.y = clamp(st.y * ry, s / 2 + 10, H - s / 2 - 10);
+      placeStone(st);
+    }
+    game.basket.x = clamp(game.basket.x * rx, 34, W - 34);
+    game.basket.y = clamp(game.basket.y * ry, 54, H - 46);
+    game.basket.tx = clamp(game.basket.tx * rx, 34, W - 34);
+    game.basket.ty = clamp(game.basket.ty * ry, 54, H - 46);
+    if (game.flight) {
+      game.flight.sx *= rx;
+      game.flight.sy *= ry;
+      game.flight.landX = clamp(game.flight.landX * rx, W * 0.22, W * 0.78);
+      game.flight.landY = clamp(game.flight.landY * ry, 60, H - 80);
+      game.flight.lift = clamp(game.flight.lift * ry, 80, H * 0.5);
+      if (landingEl.classList.contains("show")) {
+        landingEl.style.left = game.flight.landX + "px";
+        landingEl.style.top = game.flight.landY + "px";
+      }
+    }
+    game.layout = { w: W, h: H };
+    updateBasketVisual();
+  });
+}
+window.addEventListener("resize", handleResize);
+window.addEventListener("orientationchange", handleResize);
+
+/* =============================================================
+   初始化
+   ============================================================= */
+function initIdle() {
+  const W = stageW(), H = stageH();
+  game.layout = { w: W, h: H };
+  game.basket.x = game.basket.prevX = game.basket.tx = W * 0.5;
+  game.basket.y = game.basket.prevY = game.basket.ty = H * 0.73;
+  updateBasketVisual();
+}
+game.timeLimit = LEVELS[0].air;
+game.remainingMs = game.timeLimit;
+updateHUD();
+resetAirUI();
+requestAnimationFrame(initIdle);
+</script>
+</body>
+</html>

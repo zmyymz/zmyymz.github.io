@@ -1,0 +1,2753 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#f1e2c4">
+<title>扒尿炕·沙堆插棍</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f1e2c4'/%3E%3Cpath d='M8 50 Q32 24 56 50 Z' fill='%23d9ae6d'/%3E%3Crect x='30' y='12' width='4' height='28' rx='2' fill='%237a5230'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --paper: #fff7e6;
+    --paper-2: #f7e8cb;
+    --ink: #4a3520;
+    --ink-soft: #7c6144;
+    --line: #d8bd93;
+    --brown: #7a5230;
+    --brown-dark: #5b3a20;
+    --sand-bg: #ead8b6;
+    --p1: #e0483e;
+    --p2: #2f74d0;
+    --p3: #2f9e57;
+    --p4: #e8872b;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ink);
+    background: radial-gradient(circle at 50% 0%, #fbf1dd 0%, #ecd9b8 55%, #dcc39d 100%);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  button {
+    font-family: inherit;
+    color: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+  }
+
+  #app {
+    height: 100vh;
+    height: 100dvh;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 10px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  /* ---------------- HUD ---------------- */
+  #hud {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 14px;
+    background: linear-gradient(180deg, rgba(255, 249, 235, 0.97), rgba(247, 232, 203, 0.93));
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 3px 0 rgba(122, 82, 48, 0.13), 0 8px 18px rgba(122, 82, 48, 0.08);
+  }
+
+  .turn-pill {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 170px;
+    padding: 7px 13px;
+    border-radius: 13px;
+    background: #fffdf7;
+    border: 2px solid var(--line);
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .turn-pill .dot {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--p1);
+    box-shadow: 0 0 0 3px rgba(224, 72, 62, 0.18);
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+
+  .turn-pill.ai .dot {
+    animation: aiPulse 1s ease-in-out infinite;
+  }
+
+  @keyframes aiPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.7); opacity: 0.55; }
+  }
+
+  .turn-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1.15;
+    min-width: 0;
+  }
+
+  .turn-copy strong {
+    font-size: 15px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.2s;
+  }
+
+  .turn-copy small {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status-block {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .status-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .status-head strong {
+    font-size: 13px;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tilt-chip {
+    margin-left: auto;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    background: #fffaf0;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+
+  .tilt-chip.danger {
+    color: #b3342c;
+    border-color: #e4a299;
+    background: #fff0ec;
+  }
+
+  .bar {
+    height: 10px;
+    border-radius: 999px;
+    background: #e4d2b3;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(90, 60, 30, 0.22);
+  }
+
+  .bar > i {
+    display: block;
+    height: 100%;
+    width: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #4ca85c, #86c94a);
+    transition: width 0.15s linear, background 0.25s;
+  }
+
+  .bar > i.low {
+    animation: lowPulse 0.8s ease-in-out infinite;
+  }
+
+  @keyframes lowPulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.35); }
+  }
+
+  .timer-block {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 112px;
+  }
+
+  .timer-num {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 1px;
+    min-width: 38px;
+    font-size: 21px;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--brown-dark);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timer-num small {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .timer-bar {
+    flex: 1 1 auto;
+    height: 7px;
+    border-radius: 999px;
+    background: #e4d2b3;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(90, 60, 30, 0.22);
+  }
+
+  .timer-bar i {
+    display: block;
+    height: 100%;
+    width: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #f0a63a, #e2703a);
+    transition: width 0.15s linear, background 0.2s;
+  }
+
+  /* ---------------- Stage ---------------- */
+  #stage {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 3px 0 rgba(122, 82, 48, 0.16), 0 14px 30px rgba(90, 60, 30, 0.16);
+    background: #e9d6b3;
+  }
+
+  #game {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    cursor: crosshair;
+  }
+
+  /* ---------------- Overlays ---------------- */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    background: rgba(63, 43, 22, 0.38);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    overflow: auto;
+  }
+
+  .overlay.hidden { display: none; }
+
+  .panel {
+    width: min(460px, 100%);
+    max-height: 100%;
+    overflow: auto;
+    padding: 20px 22px 20px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, var(--paper), var(--paper-2));
+    border: 2px solid #c9a978;
+    box-shadow: 0 8px 0 rgba(102, 68, 36, 0.22), 0 22px 44px rgba(60, 40, 20, 0.3);
+    animation: panelIn 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  }
+
+  @keyframes panelIn {
+    from { transform: translateY(14px) scale(0.96); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .sign-title {
+    text-align: center;
+    margin: 0 0 4px;
+    font-size: clamp(22px, 5.4vw, 30px);
+    letter-spacing: 1px;
+    color: var(--brown-dark);
+    text-shadow: 0 2px 0 #fff6e2, 0 3px 0 rgba(122, 82, 48, 0.22);
+  }
+
+  .subtitle {
+    text-align: center;
+    margin: 0 0 14px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .menu-rules {
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px dashed #c9a978;
+    border-radius: 13px;
+    padding: 10px 13px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #6b5238;
+  }
+
+  .menu-rules p { margin: 0; }
+  .menu-rules b { color: var(--brown-dark); }
+
+  .field-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--ink-soft);
+    margin: 12px 0 7px;
+  }
+
+  .pick-row {
+    display: flex;
+    gap: 9px;
+  }
+
+  .pick {
+    flex: 1;
+    min-height: 48px;
+    border-radius: 13px;
+    border: 2px solid #cfae7c;
+    background: #fffaf0;
+    font-size: 16px;
+    font-weight: 800;
+    color: #7a5b3a;
+    transition: transform 0.12s, background 0.15s, color 0.15s, box-shadow 0.15s;
+    box-shadow: 0 2px 0 rgba(122, 82, 48, 0.18);
+  }
+
+  .pick:active { transform: translateY(2px); box-shadow: none; }
+
+  .pick.active {
+    background: linear-gradient(180deg, #8a5f36, #6d4826);
+    border-color: #5b3a20;
+    color: #fff8e8;
+    box-shadow: 0 2px 0 #4a2f19, inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  }
+
+  .player-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 9px;
+    min-height: 28px;
+  }
+
+  .preview-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #ddc7a2;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--ink-soft);
+    transition: opacity 0.15s, transform 0.15s;
+  }
+
+  .preview-chip i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .preview-chip.off {
+    opacity: 0.28;
+    transform: scale(0.94);
+  }
+
+  .switch {
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 6px 13px;
+    border-radius: 13px;
+    border: 2px solid #cfae7c;
+    background: #fffaf0;
+    font-size: 14px;
+    font-weight: 800;
+    color: #7a5b3a;
+    box-shadow: 0 2px 0 rgba(122, 82, 48, 0.18);
+  }
+
+  .switch .track {
+    flex: none;
+    width: 46px;
+    height: 26px;
+    border-radius: 999px;
+    background: #cbb695;
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .switch .knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(60, 40, 20, 0.35);
+    transition: transform 0.2s;
+  }
+
+  .switch.on .track { background: #6aa84f; }
+  .switch.on .knob { transform: translateX(20px); }
+
+  .switch .hint {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 600;
+    color: #9b8262;
+  }
+
+  .primary-btn {
+    width: 100%;
+    min-height: 56px;
+    margin-top: 16px;
+    border-radius: 15px;
+    background: linear-gradient(180deg, #e7a53f, #d07c25);
+    border: 2px solid #a95f16;
+    color: #fffaf0;
+    font-size: 19px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    box-shadow: 0 4px 0 #9a5712, 0 8px 16px rgba(160, 95, 25, 0.3);
+    transition: transform 0.1s, box-shadow 0.1s, filter 0.15s;
+  }
+
+  .primary-btn:hover { filter: brightness(1.04); }
+  .primary-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #9a5712; }
+
+  .result-panel { text-align: center; }
+
+  .result-title {
+    font-size: clamp(21px, 5vw, 27px);
+    font-weight: 900;
+    color: var(--brown-dark);
+    margin: 2px 0 6px;
+  }
+
+  .result-line {
+    font-size: 16px;
+    line-height: 1.75;
+    margin: 0 0 6px;
+    color: #6b5238;
+  }
+
+  .name-tag {
+    display: inline-block;
+    padding: 1px 8px;
+    margin: 0 2px;
+    border-radius: 999px;
+    color: #fff;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .winner-box {
+    margin: 13px 0 4px;
+    padding: 12px;
+    border-radius: 14px;
+    background: #fffdf6;
+    border: 1px solid #e2cda9;
+  }
+
+  .winner-box .small {
+    font-size: 12px;
+    color: #9b8262;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+  }
+
+  .winner-list {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 9px;
+    margin-top: 15px;
+  }
+
+  .result-actions button {
+    flex: 1;
+    min-height: 50px;
+    border-radius: 13px;
+    font-size: 15px;
+    font-weight: 900;
+    border: 2px solid #c09a68;
+    background: #fffaf0;
+    color: #6d4c2c;
+    box-shadow: 0 3px 0 rgba(122, 82, 48, 0.2);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+
+  .result-actions button.primary {
+    background: linear-gradient(180deg, #8a5f36, #6d4826);
+    border-color: #5b3a20;
+    color: #fff8e8;
+    box-shadow: 0 3px 0 #4a2f19;
+  }
+
+  .result-actions button:active { transform: translateY(3px); box-shadow: none; }
+
+  /* ---------------- Rules side panel ---------------- */
+  #rulesPanel {
+    position: absolute;
+    z-index: 30;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    max-width: 420px;
+    max-height: 72%;
+    overflow: auto;
+    padding: 14px 16px;
+    border-radius: 15px;
+    background: rgba(255, 249, 235, 0.97);
+    border: 2px solid #c9a978;
+    box-shadow: 0 10px 26px rgba(60, 40, 20, 0.26);
+    animation: panelIn 0.22s ease-out;
+  }
+
+  #rulesPanel.hidden { display: none; }
+
+  #rulesPanel h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: var(--brown-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #rulesPanel h3 button {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: #f1e2c4;
+    font-size: 16px;
+    font-weight: 900;
+    color: #7a5b3a;
+  }
+
+  #rulesPanel ol {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 13px;
+    line-height: 1.75;
+    color: #6b5238;
+  }
+
+  #rulesPanel li { margin-bottom: 5px; }
+  #rulesPanel b { color: var(--brown-dark); }
+
+  /* ---------------- Toast ---------------- */
+  #toast {
+    position: absolute;
+    z-index: 12;
+    left: 50%;
+    top: 14px;
+    transform: translate(-50%, -12px);
+    max-width: calc(100% - 28px);
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: rgba(58, 38, 18, 0.9);
+    color: #fff7e6;
+    font-size: 13.5px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s, transform 0.18s;
+  }
+
+  #toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  /* ---------------- Footer ---------------- */
+  #controls {
+    flex: none;
+    display: flex;
+    justify-content: center;
+    gap: 9px;
+  }
+
+  .ghost-btn {
+    min-height: 46px;
+    padding: 0 20px;
+    border-radius: 13px;
+    background: rgba(255, 249, 235, 0.92);
+    border: 2px solid #cfae7c;
+    font-size: 14px;
+    font-weight: 800;
+    color: #6d4c2c;
+    box-shadow: 0 3px 0 rgba(122, 82, 48, 0.16);
+    transition: transform 0.1s, box-shadow 0.1s, background 0.15s;
+  }
+
+  .ghost-btn:hover { background: #fffdf7; }
+  .ghost-btn:active { transform: translateY(3px); box-shadow: none; }
+
+  /* ---------------- Small screens ---------------- */
+  @media (max-width: 680px) {
+    #app { padding: 7px 8px 8px; gap: 7px; }
+    #hud {
+      padding: 8px 10px;
+      gap: 7px 10px;
+      border-radius: 13px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas: "turn timer" "status status";
+      align-items: center;
+    }
+    .turn-pill { grid-area: turn; min-width: 0; padding: 6px 10px; gap: 8px; justify-self: start; max-width: 100%; }
+    .turn-copy strong { font-size: 14px; }
+    .turn-copy small { font-size: 10.5px; }
+    .status-block { grid-area: status; }
+    .status-head { gap: 6px; margin-bottom: 3px; font-size: 11px; }
+    .status-head strong { font-size: 12px; }
+    .tilt-chip { font-size: 10.5px; padding: 2px 8px; }
+    .timer-block { grid-area: timer; min-width: 0; gap: 7px; }
+    .timer-num { font-size: 18px; min-width: 30px; }
+    .timer-bar { flex: none; width: 42px; }
+    .ghost-btn { flex: 1; padding: 0 8px; font-size: 13px; }
+    .panel { padding: 16px 15px 17px; }
+    #rulesPanel { left: 8px; right: 8px; bottom: 8px; }
+    .overlay { padding: 8px; }
+  }
+
+  @media (max-height: 620px) {
+    .menu-rules { display: none; }
+    .sign-title { font-size: 22px; }
+    .subtitle { margin-bottom: 8px; }
+    #hud { padding: 6px 9px; }
+    .primary-btn { margin-top: 12px; min-height: 50px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hud" aria-live="polite" hidden>
+    <div class="turn-pill" id="turnPill">
+      <span class="dot" id="turnDot"></span>
+      <span class="turn-copy">
+        <strong id="turnText">等待开始</strong>
+        <small id="turnSub">你 vs AI</small>
+      </span>
+    </div>
+    <div class="status-block">
+      <div class="status-head">
+        <span>木棍稳定度</span>
+        <strong id="supportText">100%</strong>
+        <span class="tilt-chip" id="tiltText">笔直</span>
+      </div>
+      <div class="bar"><i id="supportBar"></i></div>
+    </div>
+    <div class="timer-block" id="timerWrap" hidden>
+      <div class="timer-num"><span id="timerText">15</span><small>s</small></div>
+      <div class="timer-bar"><i id="timerBar"></i></div>
+    </div>
+  </header>
+
+  <main id="stage">
+    <canvas id="game"></canvas>
+    <div id="toast"></div>
+
+    <aside id="rulesPanel" class="hidden">
+      <h3>怎么玩 <button id="rulesClose" type="button" aria-label="关闭规则">×</button></h3>
+      <ol>
+        <li>你和 AI 轮流从沙堆上扒沙，目标是把倒木棍留给对方。</li>
+        <li><b>轮到你时按住拖动</b>划出轨迹，松手后轨迹里的沙子会被扒走；AI 会自己找相对安全的位置落爪。</li>
+        <li>一次最多扒一小撮（约初始沙量的 10%），超过上限只结算轨迹最前面的一部分。</li>
+        <li>木棍哪边沙子少就会往哪边歪，越靠近根部风险越大。</li>
+        <li>倾斜超过 40°，或者沙堆支撑低于 22%，木棍就会倒。</li>
+        <li><b>谁弄倒木棍谁输</b>，其余玩家获胜；输家喜提“小尿炕精”称号。</li>
+      </ol>
+    </aside>
+
+    <div id="menuOverlay" class="overlay">
+      <section class="panel" role="dialog" aria-label="开始界面">
+        <h1 class="sign-title">扒尿炕·沙堆插棍</h1>
+        <p class="subtitle">你 vs AI · 轮流扒沙，谁把木棍放倒谁就输。</p>
+        <div class="menu-rules">
+          <p><b>玩法：</b>你先手，按住沙堆拖动，松手扒沙；随后 AI 轮流落爪。木棍歪到 40° 或沙堆支撑低于 22% 就会倒，谁弄倒谁输。</p>
+        </div>
+        <div class="field-label"><span>AI 对手数量</span><span id="pickHint">你先手</span></div>
+        <div class="pick-row" id="pickRow">
+          <button class="pick active" type="button" data-count="2">1 个 AI</button>
+          <button class="pick" type="button" data-count="3">2 个 AI</button>
+          <button class="pick" type="button" data-count="4">3 个 AI</button>
+        </div>
+        <div class="player-preview" id="playerPreview"></div>
+        <div class="field-label"><span>你的回合倒计时</span><span>超时自动手滑</span></div>
+        <button class="switch on" id="timerToggle" type="button" aria-pressed="true">
+          <span class="track"><span class="knob"></span></span>
+          <span id="timerToggleLabel">开启 · 15 秒</span>
+          <span class="hint" id="timerToggleHint">仅你的回合计时</span>
+        </button>
+        <button class="primary-btn" id="startBtn" type="button">开 始 游 戏</button>
+      </section>
+    </div>
+
+    <div id="resultOverlay" class="overlay hidden">
+      <section class="panel result-panel" role="dialog" aria-label="游戏结果">
+        <div class="result-title" id="resultTitle">哎呀，木棍倒啦！</div>
+        <p class="result-line" id="resultLoserLine"></p>
+        <div class="winner-box">
+          <div class="small">本 局 获 胜 者</div>
+          <div class="winner-list" id="winnerList"></div>
+        </div>
+        <div class="result-actions">
+          <button class="primary" id="againBtn" type="button">再来一局</button>
+          <button id="backMenuBtn" type="button">返回开始界面</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="controls">
+    <button class="ghost-btn" id="restartBtn" type="button" hidden>重新开始</button>
+    <button class="ghost-btn" id="muteBtn" type="button">音效：开</button>
+    <button class="ghost-btn" id="rulesBtn" type="button">规则</button>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ============================================================
+  // 1. 参数配置：所有可调数值集中在这里
+  // ============================================================
+  const config = {
+    gridCols: 46,             // 沙堆网格列数
+    gridRows: 26,             // 沙堆网格行数
+    maxPileRows: 22,          // 沙堆中心最高行数
+    pileWidthRatio: 0.78,     // 沙堆底宽占画布宽度的比例
+    minPlayerCount: 2,
+    maxPlayerCount: 4,
+    turnSeconds: 15,          // 每回合倒计时
+    settleMs: 700,            // 松手后的稳定判定时长
+    roundEndMs: 1000,         // “安全”展示时长
+    fallMs: 680,              // 木棍倒下动画时长
+    fallAngle: 40,            // 倾斜超过该角度判倒（度）
+    maxTilt: 46,              // 倾斜计算的最大角度（度）
+    maxAngleFactor: 32,       // 不平衡度换算成角度的系数
+    lowSupportBoost: 14,      // 支撑越少，额外倾斜越多（度）
+    jitterDeg: 2,             // 每回合计入的随机微扰（度）
+    supportFallRatio: 0.22,   // 总支撑低于初始值的比例判倒
+    scoopLimitRatio: 0.10,    // 单次最多移除初始沙粒的比例
+    autoScoopRatio: 0.34,     // 超时自动扒沙占单次上限的比例
+    brushMinRadius: 17,       // 扒沙笔刷最小半径（CSS 像素）
+    brushCellFactor: 2.15,    // 笔刷半径随沙粒尺寸放大
+    maxSettleParticles: 110,  // 单次最多生成的落沙粒子
+    stableAngleEase: 0.12,    // 角度平滑逼近系数（每 60fps 帧）
+    aiMinDelayMs: 750,        // AI 思考最短时长
+    aiMaxDelayMs: 1200,       // AI 思考最长时长
+    aiScoopMinRatio: 0.55,    // AI 单次扒沙量下限（相对上限）
+    aiScoopMaxRatio: 0.95     // AI 单次扒沙量上限（相对上限）
+  };
+
+  const PLAYER_COLORS = ["#e0483e", "#2f74d0", "#2f9e57", "#e8872b"];
+  const AI_NAMES = ["AI 小蓝", "AI 小绿", "AI 小橙"];
+  const SAND_PALETTE = ["#dfb878", "#d6ad6b", "#cda365", "#e6c287", "#c89b5c", "#eacb94"];
+  const SAND_DARK = "rgba(104, 72, 40, 0.22)";
+  const TWO_PI = Math.PI * 2;
+
+  // ============================================================
+  // 2. DOM 引用
+  // ============================================================
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const stage = document.getElementById("stage");
+  const hudEl = document.getElementById("hud");
+  const turnPill = document.getElementById("turnPill");
+  const turnDot = document.getElementById("turnDot");
+  const turnText = document.getElementById("turnText");
+  const turnSub = document.getElementById("turnSub");
+  const timerWrap = document.getElementById("timerWrap");
+  const timerText = document.getElementById("timerText");
+  const timerBar = document.getElementById("timerBar");
+  const supportBar = document.getElementById("supportBar");
+  const supportText = document.getElementById("supportText");
+  const tiltText = document.getElementById("tiltText");
+  const toastEl = document.getElementById("toast");
+  const menuOverlay = document.getElementById("menuOverlay");
+  const resultOverlay = document.getElementById("resultOverlay");
+  const resultTitle = document.getElementById("resultTitle");
+  const resultLoserLine = document.getElementById("resultLoserLine");
+  const winnerList = document.getElementById("winnerList");
+  const rulesPanel = document.getElementById("rulesPanel");
+  const pickRow = document.getElementById("pickRow");
+  const playerPreview = document.getElementById("playerPreview");
+  const timerToggle = document.getElementById("timerToggle");
+  const timerToggleLabel = document.getElementById("timerToggleLabel");
+  const muteBtn = document.getElementById("muteBtn");
+  const restartBtn = document.getElementById("restartBtn");
+
+  // ============================================================
+  // 3. 游戏状态
+  // ============================================================
+  const game = {
+    phase: "menu",            // menu | playing | dragging | resolving | roundEnd | result
+    players: [],
+    playerCount: 2,
+    currentPlayerIndex: 0,
+    timerEnabled: true,
+    muted: false,
+    sandGrid: [],             // sandGrid[row][col] = { present, shade }
+    initialCellCount: 0,
+    remainingCells: 0,
+    initialSupport: 1,
+    leftSupport: 0,
+    rightSupport: 0,
+    totalSupport: 0,
+    angle: 0,                 // 正值向右倒，负值向左倒
+    targetAngle: 0,
+    leanDir: 1,
+    fallSide: 1,
+    timerRemaining: config.turnSeconds,
+    phaseStart: 0,
+    settleStart: 0,
+    roundEndStart: 0,
+    falling: false,
+    fallStart: 0,
+    fallFromAngle: 0,
+    fallDone: false,
+    result: null,
+    track: [],
+    dragging: false,
+    lastPointer: null,
+    hoverPoint: null,
+    removedThisScoop: 0,
+    maxScoop: 70,
+    particles: [],
+    toastUntil: 0,
+        lastFrame: 0,
+    uiAccumulator: 0,
+    wobbleSeed: Math.random() * 10,
+    autoScooping: false,
+    aiThinking: false,
+    aiActAt: 0,
+    aiPreview: null,
+    message: "按住沙堆拖动，松手就能扒沙",
+    layout: null,
+    groundSpecks: [],
+    paused: false
+  };
+
+  // ============================================================
+  // 4. 基础工具
+  // ============================================================
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function randRange(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function makePlayers(count) {
+    const list = [];
+    for (let i = 0; i < count; i += 1) {
+      const isAI = i > 0;
+      list.push({
+        id: i + 1,
+        name: isAI ? AI_NAMES[i - 1] : "你",
+        color: PLAYER_COLORS[i],
+        isAI: isAI,
+        wins: 0
+      });
+    }
+    return list;
+  }
+
+  function currentPlayer() {
+    return game.players[game.currentPlayerIndex] || game.players[0];
+  }
+
+  function isAITurn() {
+    const player = currentPlayer();
+    return !!(player && player.isAI && game.phase !== "menu" && game.phase !== "result");
+  }
+
+  function showToast(text, duration) {
+    toastEl.textContent = text;
+    toastEl.classList.add("show");
+    game.toastUntil = performance.now() + (duration || 1700);
+  }
+
+  function hideToast() {
+    toastEl.classList.remove("show");
+    game.toastUntil = 0;
+  }
+
+  // ============================================================
+  // 5. 音效：全部用 Web Audio API 合成，无外部文件
+  // ============================================================
+  const audioEngine = {
+    ctx: null,
+    noise: null,
+
+    unlock() {
+      if (!this.ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        try {
+          this.ctx = new AC();
+        } catch (error) {
+          this.ctx = null;
+          return null;
+        }
+      }
+      if (this.ctx.state === "suspended") {
+        this.ctx.resume().catch(function () {});
+      }
+      return this.ctx;
+    },
+
+    getNoise(ctx) {
+      if (this.noise && this.noise.sampleRate === ctx.sampleRate) return this.noise;
+      const length = Math.floor(ctx.sampleRate * 0.5);
+      const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < length; i += 1) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      this.noise = buffer;
+      return buffer;
+    },
+
+    tone(freq, endFreq, duration, type, volume, delay) {
+      const ctx = this.unlock();
+      if (!ctx) return;
+      const start = ctx.currentTime + (delay || 0);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type || "sine";
+      osc.frequency.setValueAtTime(freq, start);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), start + duration);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(volume, start + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + duration + 0.03);
+    },
+
+    noiseBurst(volume, duration, filterFreq, delay) {
+      const ctx = this.unlock();
+      if (!ctx) return;
+      const start = ctx.currentTime + (delay || 0);
+      const source = ctx.createBufferSource();
+      source.buffer = this.getNoise(ctx);
+      const filter = ctx.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.frequency.setValueAtTime(filterFreq || 1100, start);
+      filter.Q.value = 0.9;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(volume, start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      source.start(start);
+      source.stop(start + duration + 0.02);
+    }
+  };
+
+  function playSound(name) {
+    if (game.muted) return;
+    switch (name) {
+      case "sand":
+        audioEngine.noiseBurst(0.22, 0.2, 1350, 0);
+        audioEngine.noiseBurst(0.12, 0.12, 700, 0.04);
+        break;
+      case "wobble":
+        audioEngine.tone(140, 82, 0.34, "sine", 0.16, 0);
+        break;
+      case "safe":
+        audioEngine.tone(760, 760, 0.14, "triangle", 0.12, 0);
+        audioEngine.tone(1140, 1140, 0.22, "triangle", 0.1, 0.11);
+        break;
+      case "fall":
+        audioEngine.tone(110, 38, 0.5, "sine", 0.3, 0);
+        audioEngine.noiseBurst(0.26, 0.35, 420, 0.02);
+        break;
+      case "click":
+        audioEngine.tone(680, 480, 0.06, "square", 0.06, 0);
+        break;
+      case "timeout":
+        audioEngine.tone(520, 260, 0.28, "sawtooth", 0.1, 0);
+        break;
+      default:
+        break;
+    }
+  }
+
+  // ============================================================
+  // 6. 画布尺寸与布局（适配 devicePixelRatio）
+  // ============================================================
+  function resizeCanvas() {
+    const cssWidth = canvas.clientWidth;
+    const cssHeight = canvas.clientHeight;
+    if (cssWidth < 40 || cssHeight < 40) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    canvas.width = Math.round(cssWidth * dpr);
+    canvas.height = Math.round(cssHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const cols = config.gridCols;
+    const rows = config.gridRows;
+    const widthRatio = cssWidth < 640 ? 0.9 : config.pileWidthRatio;
+    const cell = Math.max(1.5, Math.min(
+      (cssWidth * widthRatio) / cols,
+      (cssHeight * 0.62) / rows
+    ));
+    const pileWidth = cell * cols;
+    const groundY = Math.round(cssHeight * 0.855);
+    const originX = (cssWidth - pileWidth) / 2;
+    const originY = groundY - cell * rows;
+    const pivotX = originX + pileWidth / 2;
+    const pivotY = groundY - cell * 0.7;
+
+    game.layout = {
+      width: cssWidth,
+      height: cssHeight,
+      dpr: dpr,
+      cell: cell,
+      cols: cols,
+      rows: rows,
+      pileWidth: pileWidth,
+      originX: originX,
+      originY: originY,
+      groundY: groundY,
+      pivotX: pivotX,
+      pivotY: pivotY,
+      stickLength: cell * config.maxPileRows * 1.36,
+      brushRadius: Math.max(config.brushMinRadius, cell * config.brushCellFactor),
+      topLimit: 8
+    };
+  }
+
+  // 生成固定的地面纹理点（归一化坐标，尺寸变化时自动复用）
+  function buildGroundSpecks() {
+    game.groundSpecks = [];
+    for (let i = 0; i < 170; i += 1) {
+      game.groundSpecks.push({
+        x: Math.random(),
+        y: Math.random(),
+        r: randRange(0.7, 2.4),
+        a: randRange(0.05, 0.2),
+        dark: Math.random() < 0.6
+      });
+    }
+  }
+
+  // ============================================================
+  // 7. 沙堆生成
+  // ============================================================
+  function createSandPile() {
+    const cols = config.gridCols;
+    const rows = config.gridRows;
+    const center = (cols - 1) / 2;
+    const grid = [];
+    let cellCount = 0;
+    game.wobbleSeed = Math.random() * 10;
+
+    for (let row = 0; row < rows; row += 1) {
+      grid.push(new Array(cols).fill(null));
+    }
+
+    for (let col = 0; col < cols; col += 1) {
+      const t = Math.abs(col - center) / (cols / 2);
+      let height = config.maxPileRows * (1 - Math.pow(t, 1.32) * 0.94);
+      height += randRange(-0.6, 0.6);
+      // 左右边缘稍微做一点自然起伏
+      height += Math.sin(col * 0.9 + game.wobbleSeed) * 0.35;
+      height = clamp(Math.round(height), 1, rows - 1);
+
+      for (let i = 0; i < height; i += 1) {
+        const row = rows - 1 - i;
+        const shade = Math.floor(Math.random() * SAND_PALETTE.length);
+        grid[row][col] = {
+          present: true,
+          shade: shade,
+          grain: Math.random()
+        };
+        cellCount += 1;
+      }
+    }
+
+    // 顶部中心略微压平，让木棍插得更自然
+    for (let col = 0; col < cols; col += 1) {
+      const t = Math.abs(col - center);
+      if (t <= 2) {
+        for (let row = 0; row < rows; row += 1) {
+          if (grid[row][col]) {
+            grid[row][col].grain = Math.random() * 0.5;
+            break;
+          }
+        }
+      }
+    }
+
+    game.sandGrid = grid;
+    game.initialCellCount = cellCount;
+    game.maxScoop = Math.max(12, Math.round(cellCount * config.scoopLimitRatio));
+    game.removedThisScoop = 0;
+    game.totalSupport = 0;
+    game.leftSupport = 0;
+    game.rightSupport = 0;
+    recalculateSupport();
+    game.initialSupport = Math.max(1, game.totalSupport);
+    game.angle = 0;
+    game.targetAngle = 0;
+    game.leanDir = 1;
+    game.falling = false;
+    game.fallDone = false;
+    game.particles.length = 0;
+    game.track.length = 0;
+    game.dragging = false;
+    game.aiThinking = false;
+    game.aiActAt = 0;
+    game.aiPreview = null;
+  }
+
+  // ============================================================
+  // 8. 支撑计算
+  //    靠近木棍的沙粒权重更高：掏根部更危险
+  // ============================================================
+  function recalculateSupport() {
+    const cols = config.gridCols;
+    const rows = config.gridRows;
+    const center = (cols - 1) / 2;
+    const half = cols / 2;
+    let leftWeight = 0;
+    let rightWeight = 0;
+    let total = 0;
+    let cellCount = 0;
+
+    for (let row = 0; row < rows; row += 1) {
+      const line = game.sandGrid[row];
+      if (!line) continue;
+      for (let col = 0; col < cols; col += 1) {
+        const cellData = line[col];
+        if (!cellData || !cellData.present) continue;
+        cellCount += 1;
+        const dx = col - center;
+        const proximity = Math.max(0, 1 - Math.abs(dx) / half);
+        const weight = 1 + 2.2 * proximity * proximity;
+        total += weight;
+        if (dx < -0.001) {
+          leftWeight += weight;
+        } else if (dx > 0.001) {
+          rightWeight += weight;
+        }
+      }
+    }
+
+    game.leftSupport = leftWeight;
+    game.rightSupport = rightWeight;
+    game.totalSupport = total;
+    game.remainingCells = cellCount;
+  }
+
+  // 稳定度按剩余沙粒比例计算，直观反映沙堆被掏空的程度
+  function sandSupportRatio() {
+    if (game.initialCellCount <= 0) return 0;
+    return clamp(game.remainingCells / game.initialCellCount, 0, 1);
+  }
+
+  // 根据当前支撑计算目标倾斜角（度）
+  function computeTargetAngle() {
+    const cols = config.gridCols;
+    const center = (cols - 1) / 2;
+    const half = cols / 2;
+    let leftMoment = 0;
+    let rightMoment = 0;
+
+    for (let row = 0; row < config.gridRows; row += 1) {
+      const line = game.sandGrid[row];
+      if (!line) continue;
+      for (let col = 0; col < cols; col += 1) {
+        const cellData = line[col];
+        if (!cellData || !cellData.present) continue;
+        const dx = col - center;
+        const proximity = Math.max(0, 1 - Math.abs(dx) / half);
+        const weight = 1 + 2.2 * proximity * proximity;
+        const arm = Math.abs(dx) / half + 0.18;
+        if (dx < 0) leftMoment += weight * arm;
+        else if (dx > 0) rightMoment += weight * arm;
+      }
+    }
+
+    const momentSum = leftMoment + rightMoment;
+    let imbalance = momentSum > 0.0001 ? (leftMoment - rightMoment) / momentSum : 0;
+    // 极端不平衡时略微放大，让“木棍倾倒”也能作为输法
+    imbalance = Math.sign(imbalance) * Math.pow(Math.abs(imbalance), 0.86);
+
+    const ratio = sandSupportRatio();
+    const lowBoost = (1 - ratio) * config.lowSupportBoost;
+    const biasDir = imbalance === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(imbalance);
+    const jitter = randRange(-config.jitterDeg, config.jitterDeg);
+    const target = imbalance * config.maxAngleFactor + lowBoost * biasDir + jitter;
+
+    game.leanDir = biasDir;
+    return clamp(target, -config.maxTilt, config.maxTilt);
+  }
+
+  // ============================================================
+  // 9. 绘制：场景与沙堆
+  // ============================================================
+  function isPresent(row, col) {
+    if (row < 0 || row >= config.gridRows || col < 0 || col >= config.gridCols) return false;
+    const line = game.sandGrid[row];
+    if (!line) return false;
+    const cellData = line[col];
+    return !!(cellData && cellData.present);
+  }
+
+  function drawCloud(x, y, size, alpha) {
+    ctx.save();
+    ctx.fillStyle = "rgba(255, 251, 238, " + alpha + ")";
+    ctx.beginPath();
+    ctx.ellipse(x, y, size * 1.7, size * 0.52, 0, 0, TWO_PI);
+    ctx.ellipse(x - size * 1.05, y + size * 0.12, size * 0.82, size * 0.4, 0, 0, TWO_PI);
+    ctx.ellipse(x + size * 1.18, y + size * 0.16, size * 0.95, size * 0.42, 0, 0, TWO_PI);
+    ctx.ellipse(x + size * 0.15, y - size * 0.3, size * 0.78, size * 0.48, 0, 0, TWO_PI);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBackground() {
+    const L = game.layout;
+    if (!L) return;
+    const w = L.width;
+    const h = L.height;
+
+    const sky = ctx.createLinearGradient(0, 0, 0, L.groundY);
+    sky.addColorStop(0, "#fbf2dd");
+    sky.addColorStop(0.6, "#f3e3c3");
+    sky.addColorStop(1, "#ecd8b4");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, w, L.groundY + 1);
+
+    const sunX = w * 0.82;
+    const sunY = h * 0.14;
+    const sunR = Math.max(16, Math.min(w, h) * 0.045);
+    const sunGlow = ctx.createRadialGradient(sunX, sunY, sunR * 0.4, sunX, sunY, Math.max(w, h) * 0.42);
+    sunGlow.addColorStop(0, "rgba(255, 238, 184, 0.78)");
+    sunGlow.addColorStop(0.35, "rgba(255, 238, 184, 0.28)");
+    sunGlow.addColorStop(1, "rgba(255, 238, 184, 0)");
+    ctx.fillStyle = sunGlow;
+    ctx.fillRect(0, 0, w, L.groundY + 1);
+
+    const sunFill = ctx.createRadialGradient(sunX, sunY, sunR * 0.15, sunX, sunY, sunR);
+    sunFill.addColorStop(0, "rgba(255, 240, 182, 0.95)");
+    sunFill.addColorStop(0.72, "rgba(255, 228, 152, 0.72)");
+    sunFill.addColorStop(1, "rgba(255, 222, 140, 0)");
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, sunR, 0, TWO_PI);
+    ctx.fillStyle = sunFill;
+    ctx.fill();
+
+    // 远处的两层小土坡
+    ctx.save();
+    ctx.fillStyle = "rgba(188, 158, 112, 0.26)";
+    ctx.beginPath();
+    ctx.ellipse(w * 0.2, L.groundY, w * 0.3, h * 0.075, 0, Math.PI, TWO_PI);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(w * 0.82, L.groundY, w * 0.34, h * 0.055, 0, Math.PI, TWO_PI);
+    ctx.fill();
+    ctx.fillStyle = "rgba(168, 137, 92, 0.22)";
+    ctx.beginPath();
+    ctx.ellipse(w * 0.52, L.groundY, w * 0.42, h * 0.045, 0, Math.PI, TWO_PI);
+    ctx.fill();
+    ctx.restore();
+
+    // 几朵慢慢飘着的云（位置固定，保持怀旧插画感）
+    const cloudScale = Math.min(w, h) * 0.06;
+    drawCloud(w * 0.16, h * 0.17, cloudScale, 0.78);
+    drawCloud(w * 0.5, h * 0.09, cloudScale * 0.82, 0.62);
+    drawCloud(w * 0.34, h * 0.3, cloudScale * 0.6, 0.45);
+
+    const soil = ctx.createLinearGradient(0, L.groundY, 0, h);
+    soil.addColorStop(0, "#d5b183");
+    soil.addColorStop(0.35, "#c9a273");
+    soil.addColorStop(1, "#b88d5f");
+    ctx.fillStyle = soil;
+    ctx.fillRect(0, L.groundY, w, h - L.groundY);
+
+    // 地面与天空交界的柔和边
+    const edge = ctx.createLinearGradient(0, L.groundY - 5, 0, L.groundY + 10);
+    edge.addColorStop(0, "rgba(160, 120, 74, 0)");
+    edge.addColorStop(0.5, "rgba(150, 110, 66, 0.22)");
+    edge.addColorStop(1, "rgba(150, 110, 66, 0)");
+    ctx.fillStyle = edge;
+    ctx.fillRect(0, L.groundY - 6, w, 17);
+
+    // 地面颗粒
+    for (let i = 0; i < game.groundSpecks.length; i += 1) {
+      const speck = game.groundSpecks[i];
+      const px = speck.x * w;
+      const py = L.groundY + speck.y * (h - L.groundY);
+      ctx.beginPath();
+      ctx.fillStyle = speck.dark
+        ? "rgba(112, 78, 45, " + speck.a + ")"
+        : "rgba(255, 240, 205, " + (speck.a + 0.05) + ")";
+      ctx.arc(px, py, speck.r, 0, TWO_PI);
+      ctx.fill();
+    }
+
+    // 地平线附近的几丛小草
+    ctx.lineCap = "round";
+    for (let i = 0; i < 7; i += 1) {
+      const bx = w * (0.045 + i * 0.145);
+      if (bx > w - 14) continue;
+      const sway = Math.sin(i * 2.3) * 3;
+      ctx.strokeStyle = "rgba(120, 138, 78, 0.5)";
+      ctx.lineWidth = 1.4;
+      for (let g = -1; g <= 1; g += 1) {
+        ctx.beginPath();
+        ctx.moveTo(bx + g * 2.2, L.groundY + 1);
+        ctx.quadraticCurveTo(bx + g * 3.4 + sway * 0.4, L.groundY - 6, bx + g * 4.6 + sway, L.groundY - 10 - Math.abs(g) * 2);
+        ctx.stroke();
+      }
+    }
+  }
+
+  function drawPileShadow() {
+    const L = game.layout;
+    if (!L) return;
+    const ratio = sandSupportRatio();
+    const width = L.pileWidth * (0.56 + ratio * 0.16);
+    const height = Math.max(10, L.cell * 2.1);
+    ctx.save();
+    // 只保留地面上的部分，避免阴影从沙粒缝隙中透出来
+    ctx.beginPath();
+    ctx.rect(0, L.groundY, L.width, L.height - L.groundY);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.ellipse(L.pivotX, L.groundY + L.cell * 0.45, width / 2, height, 0, 0, TWO_PI);
+    const grad = ctx.createRadialGradient(L.pivotX, L.groundY + L.cell * 0.4, 10, L.pivotX, L.groundY + L.cell * 0.4, width / 2);
+    grad.addColorStop(0, "rgba(92, 62, 32, 0.34)");
+    grad.addColorStop(0.72, "rgba(92, 62, 32, 0.18)");
+    grad.addColorStop(1, "rgba(92, 62, 32, 0)");
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSand() {
+    const L = game.layout;
+    if (!L) return;
+    const cell = L.cell;
+    const cols = config.gridCols;
+    const rows = config.gridRows;
+    const pad = Math.max(0.6, cell * 0.09);
+
+    // 凹坑阴影先画，形成被扒开的层次
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        const present = isPresent(row, col);
+        if (present) continue;
+        const near =
+          isPresent(row - 1, col) ||
+          isPresent(row + 1, col) ||
+          isPresent(row, col - 1) ||
+          isPresent(row, col + 1);
+        if (!near) continue;
+        const x = L.originX + col * cell;
+        const y = L.originY + row * cell;
+        ctx.fillStyle = "rgba(96, 65, 34, 0.16)";
+        ctx.fillRect(x, y, cell + 0.5, cell + 0.5);
+        if (isPresent(row - 1, col)) {
+          const shadeGrad = ctx.createLinearGradient(0, y, 0, y + cell * 0.85);
+          shadeGrad.addColorStop(0, "rgba(74, 48, 24, 0.34)");
+          shadeGrad.addColorStop(1, "rgba(74, 48, 24, 0)");
+          ctx.fillStyle = shadeGrad;
+          ctx.fillRect(x, y, cell + 0.5, cell * 0.85);
+        }
+      }
+    }
+
+    // 沙粒本体
+    for (let row = 0; row < rows; row += 1) {
+      const line = game.sandGrid[row];
+      if (!line) continue;
+      for (let col = 0; col < cols; col += 1) {
+        const cellData = line[col];
+        if (!cellData || !cellData.present) continue;
+        const x = L.originX + col * cell;
+        const y = L.originY + row * cell;
+        ctx.fillStyle = SAND_PALETTE[cellData.shade % SAND_PALETTE.length];
+        ctx.fillRect(x + pad * 0.5, y + pad * 0.5, cell - pad, cell - pad);
+
+        // 表面受光：顶部没有沙粒的格子更亮
+        if (!isPresent(row - 1, col)) {
+          ctx.fillStyle = "rgba(255, 244, 208, 0.34)";
+          ctx.fillRect(x + pad * 0.5, y + pad * 0.5, cell - pad, Math.max(1, cell * 0.24));
+        }
+        // 颗粒质感：每格一个高光/暗点
+        if (cell > 5) {
+          const gx = x + pad + cellData.grain * (cell - pad * 2);
+          const gy = y + pad + ((cellData.grain * 7.13) % 1) * (cell - pad * 2);
+          ctx.fillStyle = cellData.grain > 0.5
+            ? "rgba(255, 238, 198, 0.36)"
+            : "rgba(122, 86, 48, 0.24)";
+          ctx.fillRect(gx, gy, Math.max(1, cell * 0.14), Math.max(1, cell * 0.14));
+        }
+      }
+    }
+
+    // 沙堆最外层描边，让轮廓更清楚
+    ctx.strokeStyle = "rgba(150, 108, 62, 0.35)";
+    ctx.lineWidth = Math.max(1, cell * 0.1);
+    for (let col = 0; col < cols; col += 1) {
+      let topRow = -1;
+      for (let row = 0; row < rows; row += 1) {
+        if (isPresent(row, col)) { topRow = row; break; }
+      }
+      if (topRow < 0) continue;
+      const x = L.originX + col * cell;
+      const y = L.originY + topRow * cell;
+      ctx.beginPath();
+      ctx.moveTo(x, y + cell * 0.1);
+      ctx.lineTo(x + cell, y + cell * 0.1);
+      ctx.stroke();
+    }
+  }
+
+  // ============================================================
+  // 10. 绘制木棍
+  // ============================================================
+  function visualAngle() {
+    let deg = game.angle;
+    if (game.phase === "resolving" && !game.falling) {
+      const elapsed = performance.now() - game.settleStart;
+      const amp = Math.min(1.6, elapsed / 260);
+      deg += Math.sin(elapsed * 0.032 + game.wobbleSeed) * amp;
+    }
+    return deg;
+  }
+
+  function drawStickShadow(angleDeg) {
+    const L = game.layout;
+    if (!L) return;
+    const rad = angleDeg * Math.PI / 180;
+    const sin = Math.sin(rad);
+    const len = L.stickLength;
+    const spread = Math.abs(sin);
+    const shadowX = L.pivotX + sin * len * 0.32;
+    const shadowY = L.groundY + L.cell * 0.9;
+    const radiusX = Math.max(8, len * (0.09 + spread * 0.3));
+    const radiusY = Math.max(4, L.cell * (0.42 + spread * 0.24));
+    ctx.save();
+    // 只在地面区域投射影子，避免盖在沙堆上
+    ctx.beginPath();
+    ctx.rect(0, L.groundY + 1, L.width, L.height - L.groundY);
+    ctx.clip();
+    ctx.translate(shadowX, shadowY);
+    ctx.scale(1, radiusY / radiusX);
+    const shadowFill = ctx.createRadialGradient(0, 0, 0, 0, 0, radiusX);
+    shadowFill.addColorStop(0, "rgba(84, 55, 28, " + (0.3 - spread * 0.08) + ")");
+    shadowFill.addColorStop(0.55, "rgba(84, 55, 28, " + (0.17 - spread * 0.04) + ")");
+    shadowFill.addColorStop(1, "rgba(84, 55, 28, 0)");
+    ctx.fillStyle = shadowFill;
+    ctx.beginPath();
+    ctx.arc(0, 0, radiusX, 0, TWO_PI);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawStick() {
+    const L = game.layout;
+    if (!L) return;
+    const angleDeg = visualAngle();
+    const rad = angleDeg * Math.PI / 180;
+    const len = L.stickLength;
+    const baseWidth = Math.max(7, L.cell * 1.22);
+    const topWidth = baseWidth * 0.74;
+
+    ctx.save();
+    ctx.translate(L.pivotX, L.pivotY);
+    ctx.rotate(rad);
+
+    // 木棍主体：上细下粗的梯形
+    const wood = ctx.createLinearGradient(-baseWidth / 2, 0, baseWidth / 2, 0);
+    wood.addColorStop(0, "#5a3a20");
+    wood.addColorStop(0.35, "#8a6138");
+    wood.addColorStop(0.62, "#7a5230");
+    wood.addColorStop(1, "#4c3019");
+    ctx.fillStyle = wood;
+    ctx.beginPath();
+    ctx.moveTo(-baseWidth / 2, 0);
+    ctx.lineTo(-topWidth / 2, -len);
+    ctx.quadraticCurveTo(0, -len - topWidth * 0.9, topWidth / 2, -len);
+    ctx.lineTo(baseWidth / 2, 0);
+    ctx.quadraticCurveTo(0, baseWidth * 0.4, -baseWidth / 2, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // 木纹
+    ctx.strokeStyle = "rgba(62, 38, 18, 0.4)";
+    ctx.lineWidth = Math.max(0.8, baseWidth * 0.07);
+    ctx.lineCap = "round";
+    for (let i = -1; i <= 1; i += 1) {
+      ctx.beginPath();
+      ctx.moveTo(i * baseWidth * 0.22, -baseWidth * 0.55);
+      ctx.quadraticCurveTo(i * baseWidth * 0.32 + baseWidth * 0.1, -len * 0.5, i * topWidth * 0.22, -len + topWidth * 0.22);
+      ctx.stroke();
+    }
+
+    // 受光边
+    ctx.strokeStyle = "rgba(226, 188, 135, 0.45)";
+    ctx.lineWidth = Math.max(1, baseWidth * 0.1);
+    ctx.beginPath();
+    ctx.moveTo(-baseWidth * 0.3, -baseWidth * 0.4);
+    ctx.lineTo(-topWidth * 0.28, -len + topWidth * 0.35);
+    ctx.stroke();
+
+    // 木棍顶端圆头
+    ctx.beginPath();
+    ctx.ellipse(0, -len, topWidth * 0.5, topWidth * 0.55, 0, 0, TWO_PI);
+    ctx.fillStyle = "#a67a4a";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(74, 46, 23, 0.55)";
+    ctx.lineWidth = Math.max(0.8, topWidth * 0.12);
+    ctx.stroke();
+
+    // 年轮小点
+    ctx.beginPath();
+    ctx.arc(topWidth * 0.05, -len - topWidth * 0.06, Math.max(1, topWidth * 0.16), 0, TWO_PI);
+    ctx.fillStyle = "rgba(92, 58, 30, 0.55)";
+    ctx.fill();
+
+    ctx.restore();
+
+    // 根部沙土与阴影
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(L.pivotX, L.pivotY + L.cell * 0.35, baseWidth * 0.95, baseWidth * 0.4, 0, 0, TWO_PI);
+    ctx.fillStyle = "rgba(96, 64, 34, 0.25)";
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ============================================================
+  // 11. 绘制扒沙轨迹、笔刷与粒子
+  // ============================================================
+  function drawTrack() {
+    const L = game.layout;
+    if (!L || game.track.length === 0) return;
+    const player = currentPlayer();
+    const radius = L.brushRadius;
+    ctx.save();
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    for (let i = 0; i < game.track.length; i += 1) {
+      const point = game.track[i];
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, radius * 0.92, 0, TWO_PI);
+      ctx.fillStyle = hexToRgba(player.color, 0.17);
+      ctx.fill();
+      ctx.strokeStyle = hexToRgba(player.color, 0.34);
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+    }
+    // 轨迹连线，让路径更连贯
+    ctx.beginPath();
+    for (let i = 0; i < game.track.length; i += 1) {
+      const point = game.track[i];
+      if (i === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    }
+    ctx.strokeStyle = hexToRgba(player.color, 0.3);
+    ctx.lineWidth = radius * 1.1;
+    ctx.globalCompositeOperation = "source-over";
+    ctx.stroke();
+
+    // 起点标记
+    const start = game.track[0];
+    ctx.beginPath();
+    ctx.arc(start.x, start.y, Math.max(3, radius * 0.2), 0, TWO_PI);
+    ctx.fillStyle = hexToRgba(player.color, 0.75);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBrushPreview() {
+    const L = game.layout;
+    if (!L) return;
+    const point = game.hoverPoint;
+    if (!point) return;
+    if (game.phase !== "playing" && game.phase !== "dragging") return;
+    if (isAITurn()) return;
+    const player = currentPlayer();
+    const inside = pointInPile(point.x, point.y, L.brushRadius * 0.4);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, L.brushRadius, 0, TWO_PI);
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = inside ? hexToRgba(player.color, 0.55) : "rgba(120, 90, 60, 0.28)";
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, Math.max(2, L.brushRadius * 0.12), 0, TWO_PI);
+    ctx.fillStyle = inside ? hexToRgba(player.color, 0.6) : "rgba(120, 90, 60, 0.3)";
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // AI 思考时在目标位置显示一圈脉动提示
+  function drawAIPreview() {
+    if (!game.aiThinking || !game.aiPreview || game.phase !== "playing") return;
+    const L = game.layout;
+    if (!L) return;
+    const player = currentPlayer();
+    if (!player || !player.isAI) return;
+    const target = game.aiPreview;
+    const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 190);
+    const radius = L.brushRadius * (1 + pulse * 0.06);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, radius, 0, TWO_PI);
+    ctx.fillStyle = hexToRgba(player.color, 0.07 + pulse * 0.06);
+    ctx.fill();
+    ctx.setLineDash([7, 6]);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = hexToRgba(player.color, 0.45 + pulse * 0.25);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, Math.max(2, radius * 0.12), 0, TWO_PI);
+    ctx.fillStyle = hexToRgba(player.color, 0.65);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    for (let i = 0; i < game.particles.length; i += 1) {
+      const particle = game.particles[i];
+      const t = clamp(particle.life / particle.maxLife, 0, 1);
+      ctx.save();
+      ctx.globalAlpha = t;
+      if (particle.kind === "dust") {
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size * (1.6 - t * 0.6), 0, TWO_PI);
+        ctx.fillStyle = "rgba(150, 124, 92, " + (0.42 * t) + ")";
+        ctx.fill();
+      } else {
+        ctx.translate(particle.x, particle.y);
+        ctx.rotate(particle.rot);
+        ctx.fillStyle = particle.color;
+        ctx.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size);
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawVignette() {
+    const L = game.layout;
+    if (!L) return;
+    const grad = ctx.createRadialGradient(
+      L.width / 2, L.height * 0.55, Math.min(L.width, L.height) * 0.35,
+      L.width / 2, L.height * 0.55, Math.max(L.width, L.height) * 0.78
+    );
+    grad.addColorStop(0, "rgba(80, 55, 30, 0)");
+    grad.addColorStop(1, "rgba(80, 55, 30, 0.16)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, L.width, L.height);
+  }
+
+  // 用沙堆表面裁掉埋在沙子里的棍身，避免沙粒缝隙透出木棍
+  function clipAbovePile() {
+    const L = game.layout;
+    const cols = config.gridCols;
+    const rows = config.gridRows;
+    const cell = L.cell;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(L.width, 0);
+    ctx.lineTo(L.width, L.groundY);
+    for (let col = cols - 1; col >= 0; col -= 1) {
+      let topRow = -1;
+      for (let row = 0; row < rows; row += 1) {
+        if (isPresent(row, col)) { topRow = row; break; }
+      }
+      const x = L.originX + col * cell;
+      const y = topRow < 0 ? L.groundY : L.originY + topRow * cell;
+      ctx.lineTo(x + cell, y);
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(0, L.groundY);
+    ctx.closePath();
+    ctx.clip();
+  }
+
+  function drawScene() {
+    const L = game.layout;
+    if (!L) return;
+    ctx.clearRect(0, 0, L.width, L.height);
+    drawBackground();
+    drawPileShadow();
+    drawSand();
+    drawStickShadow(visualAngle());
+
+    const stickOnTop = game.falling || game.phase === "result";
+    if (stickOnTop) {
+      drawStick();
+    } else {
+      ctx.save();
+      clipAbovePile();
+      drawStick();
+      ctx.restore();
+    }
+
+    drawParticles();
+    drawTrack();
+    if (!stickOnTop) drawBrushPreview();
+    drawAIPreview();
+    drawVignette();
+  }
+
+  function hexToRgba(hex, alpha) {
+    const value = hex.replace("#", "");
+    const r = parseInt(value.substring(0, 2), 16);
+    const g = parseInt(value.substring(2, 4), 16);
+    const b = parseInt(value.substring(4, 6), 16);
+    return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
+  }
+
+  // ============================================================
+  // 12. 坐标换算与命中检测
+  // ============================================================
+  function pointerPosition(event) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: ((event.clientX - rect.left) / Math.max(1, rect.width)) * canvas.clientWidth,
+      y: ((event.clientY - rect.top) / Math.max(1, rect.height)) * canvas.clientHeight
+    };
+  }
+
+  function pointInPile(x, y, margin) {
+    const L = game.layout;
+    if (!L) return false;
+    const col = Math.floor((x - L.originX) / L.cell);
+    const row = Math.floor((y - L.originY) / L.cell);
+    if (row >= 0 && row < config.gridRows && col >= 0 && col < config.gridCols) {
+      if (isPresent(row, col)) return true;
+    }
+    const range = Math.max(1, Math.ceil((margin || 0) / L.cell));
+    for (let dr = -range; dr <= range; dr += 1) {
+      for (let dc = -range; dc <= range; dc += 1) {
+        if (isPresent(row + dr, col + dc)) return true;
+      }
+    }
+    return false;
+  }
+
+  function cellCenter(row, col) {
+    const L = game.layout;
+    return {
+      x: L.originX + (col + 0.5) * L.cell,
+      y: L.originY + (row + 0.5) * L.cell
+    };
+  }
+
+  function pickRandomSandCell() {
+    const candidates = [];
+    for (let row = 0; row < config.gridRows; row += 1) {
+      const line = game.sandGrid[row];
+      if (!line) continue;
+      for (let col = 0; col < config.gridCols; col += 1) {
+        const cellData = line[col];
+        if (cellData && cellData.present) candidates.push({ row: row, col: col });
+      }
+    }
+    if (candidates.length === 0) return null;
+    // 偏向沙堆上半部分，自动扒沙更接近“手滑”的观感
+    const biasCount = Math.max(1, Math.floor(candidates.length * 0.55));
+    const startIndex = Math.floor(Math.random() * biasCount);
+    return candidates[startIndex];
+  }
+
+  // ============================================================
+  // 13. 扒沙：收集轨迹覆盖的沙粒并限量移除
+  // ============================================================
+  function collectCellsAlongPath(track, radius) {
+    const L = game.layout;
+    if (!L || !track || track.length === 0) return [];
+    const picked = new Map();
+    const radiusSq = radius * radius;
+    const cell = L.cell;
+    const reach = Math.ceil(radius / cell) + 1;
+
+    for (let i = 0; i < track.length; i += 1) {
+      const point = track[i];
+      const baseCol = Math.floor((point.x - L.originX) / cell);
+      const baseRow = Math.floor((point.y - L.originY) / cell);
+      for (let dr = -reach; dr <= reach; dr += 1) {
+        for (let dc = -reach; dc <= reach; dc += 1) {
+          const row = baseRow + dr;
+          const col = baseCol + dc;
+          if (row < 0 || row >= config.gridRows || col < 0 || col >= config.gridCols) continue;
+          if (!isPresent(row, col)) continue;
+          const cx = L.originX + (col + 0.5) * cell;
+          const cy = L.originY + (row + 0.5) * cell;
+          const dx = cx - point.x;
+          const dy = cy - point.y;
+          const distSq = dx * dx + dy * dy;
+          if (distSq > radiusSq) continue;
+          const relX = cx - track[0].x;
+          const relY = cy - track[0].y;
+          const order = Math.sqrt(relX * relX + relY * relY) + i * 0.001;
+          const key = row * config.gridCols + col;
+          const existing = picked.get(key);
+          if (!existing || order < existing.order) {
+            picked.set(key, { row: row, col: col, order: order, distSq: distSq });
+          }
+        }
+      }
+    }
+
+    const list = Array.from(picked.values());
+    list.sort(function (a, b) {
+      if (a.order === b.order) return a.distSq - b.distSq;
+      return a.order - b.order;
+    });
+    return list;
+  }
+
+  function limitRemovedSand(list, limit) {
+    if (!list || list.length === 0) return [];
+    if (list.length <= limit) return list.slice();
+    return list.slice(0, Math.max(0, limit));
+  }
+
+  // 把选中的沙粒挖掉，并让上方沙粒塌落，返回实际移除数量
+  function removeSandAlongPath(cells) {
+    let count = 0;
+    for (let i = 0; i < cells.length; i += 1) {
+      const item = cells[i];
+      const line = game.sandGrid[item.row];
+      if (!line) continue;
+      const cellData = line[item.col];
+      if (cellData && cellData.present) {
+        cellData.present = false;
+        count += 1;
+      }
+    }
+    applySandGravity();
+    return count;
+  }
+
+  // 沙粒受重力塌落：挖掉内部沙粒后，上方的沙子会掉下来形成凹坑
+  function applySandGravity() {
+    const cols = config.gridCols;
+    const rows = config.gridRows;
+    for (let col = 0; col < cols; col += 1) {
+      const stack = [];
+      for (let row = 0; row < rows; row += 1) {
+        const cellData = game.sandGrid[row][col];
+        if (cellData && cellData.present) stack.push(cellData);
+        game.sandGrid[row][col] = null;
+      }
+      for (let i = 0; i < stack.length; i += 1) {
+        const row = rows - 1 - i;
+        game.sandGrid[row][col] = stack[i];
+      }
+    }
+  }
+
+  function spawnSandParticles(cells) {
+    const L = game.layout;
+    if (!L) return;
+    const maxCount = Math.min(cells.length, config.maxSettleParticles);
+    const step = Math.max(1, Math.floor(cells.length / maxCount));
+    for (let i = 0; i < cells.length; i += step) {
+      const item = cells[i];
+      const centerPoint = cellCenter(item.row, item.col);
+      game.particles.push({
+        x: centerPoint.x + randRange(-L.cell * 0.3, L.cell * 0.3),
+        y: centerPoint.y + randRange(-L.cell * 0.3, L.cell * 0.3),
+        vx: randRange(-90, 90),
+        vy: randRange(-180, -40),
+        size: Math.max(1.6, L.cell * randRange(0.16, 0.34)),
+        color: SAND_PALETTE[(item.row + item.col) % SAND_PALETTE.length],
+        rot: Math.random() * TWO_PI,
+        vrot: randRange(-6, 6),
+        life: randRange(0.55, 1.05),
+        maxLife: 1.05,
+        kind: "sand",
+        gravity: 880
+      });
+    }
+    if (game.particles.length > 320) {
+      game.particles.splice(0, game.particles.length - 320);
+    }
+  }
+
+  function spawnDust() {
+    const L = game.layout;
+    if (!L) return;
+    const side = Math.sign(game.angle) || game.leanDir || 1;
+    for (let i = 0; i < 26; i += 1) {
+      const px = L.pivotX + side * randRange(-L.pileWidth * 0.12, L.pileWidth * 0.34);
+      const py = L.groundY - randRange(0, L.cell * 3);
+      game.particles.push({
+        x: px,
+        y: py,
+        vx: randRange(-60, 90) + side * 40,
+        vy: randRange(-90, -10),
+        size: randRange(L.cell * 0.25, L.cell * 0.8),
+        color: "#c9ad84",
+        rot: 0,
+        vrot: 0,
+        life: randRange(0.6, 1.4),
+        maxLife: 1.4,
+        kind: "dust",
+        gravity: -20
+      });
+    }
+  }
+
+  function updateParticles(dt) {
+    const seconds = dt / 1000;
+    for (let i = game.particles.length - 1; i >= 0; i -= 1) {
+      const particle = game.particles[i];
+      particle.life -= seconds;
+      if (particle.life <= 0) {
+        game.particles.splice(i, 1);
+        continue;
+      }
+      particle.vy += particle.gravity * seconds;
+      particle.x += particle.vx * seconds;
+      particle.y += particle.vy * seconds;
+      particle.rot += particle.vrot * seconds;
+    }
+  }
+
+  function finishScoop(track, options) {
+    if (game.phase !== "dragging" && game.phase !== "playing") return false;
+    const opts = options || {};
+    const L = game.layout;
+    if (!L) return false;
+
+    const covered = collectCellsAlongPath(track, L.brushRadius);
+    const limit = opts.limit || game.maxScoop;
+    const chosen = limitRemovedSand(covered, limit);
+
+    game.track = [];
+    game.dragging = false;
+    game.removedThisScoop = 0;
+
+    if (chosen.length === 0) {
+      game.phase = "playing";
+      showToast("这一爪没扒到沙子，换个地方试试");
+      playSound("click");
+      return false;
+    }
+
+    game.removedThisScoop = removeSandAlongPath(chosen);
+    spawnSandParticles(chosen);
+    recalculateSupport();
+    game.targetAngle = computeTargetAngle();
+
+    game.phase = "resolving";
+    game.settleStart = performance.now();
+    game.falling = false;
+    game.fallDone = false;
+
+    if (covered.length > limit) {
+      if (!opts.ai) {
+        showToast("一次只能扒这么多，超出的沙子留在原地啦（上限 " + limit + " 粒）", 2000);
+      }
+    } else if (opts.auto) {
+      showToast("超时，手滑啦！自动扒了一小撮", 1800);
+    }
+
+    playSound("sand");
+    setTimeout(function () { playSound("wobble"); }, 140);
+    return true;
+  }
+
+  // ============================================================
+  // 14. 指针交互
+  // ============================================================
+  function addTrackPoint(point) {
+    const last = game.track[game.track.length - 1];
+    if (last) {
+      const dx = point.x - last.x;
+      const dy = point.y - last.y;
+      if (dx * dx + dy * dy < 9) return;
+    }
+    game.track.push(point);
+    if (game.track.length > 180) game.track.shift();
+  }
+
+  function pointerDown(event) {
+    if (game.phase !== "playing" || isAITurn()) return;
+    audioEngine.unlock();
+    event.preventDefault();
+    const point = pointerPosition(event);
+    game.hoverPoint = point;
+    game.lastPointer = point;
+
+    if (!pointInPile(point.x, point.y, game.layout.brushRadius * 0.45)) {
+      showToast("从沙堆上开始扒沙哦");
+      playSound("click");
+      return;
+    }
+
+    game.phase = "dragging";
+    game.dragging = true;
+    game.track = [point];
+    try {
+      canvas.setPointerCapture(event.pointerId);
+    } catch (error) {
+      // 某些浏览器在取消指针时不再持有捕获，忽略即可
+    }
+    playSound("click");
+  }
+
+  function pointerMove(event) {
+    const point = pointerPosition(event);
+    game.hoverPoint = point;
+    if (game.phase !== "dragging" || !game.dragging) return;
+    event.preventDefault();
+    game.lastPointer = point;
+    addTrackPoint(point);
+  }
+
+  function pointerUp(event) {
+    if (game.phase !== "dragging" || !game.dragging) return;
+    event.preventDefault();
+    const point = pointerPosition(event);
+    game.hoverPoint = point;
+    addTrackPoint(point);
+    game.lastPointer = point;
+    try {
+      canvas.releasePointerCapture(event.pointerId);
+    } catch (error) {
+      // 指针可能已经被系统释放
+    }
+    game.track = game.track.filter(function (item) {
+      return item.x >= 0 && item.y >= 0;
+    });
+    finishScoop(game.track, { auto: false });
+  }
+
+  function pointerCancel() {
+    if (game.phase !== "dragging") return;
+    game.phase = "playing";
+    game.dragging = false;
+    game.track = [];
+    showToast("这一爪取消啦，再来一次");
+  }
+
+  // ============================================================
+  // 15. 木棍物理与破碎判定
+  // ============================================================
+  function updateStickPhysics(dt) {
+    if (game.falling) return;
+    if (game.phase === "resolving" || game.phase === "roundEnd") {
+      const frames = dt / 16.667;
+      const ease = 1 - Math.pow(1 - config.stableAngleEase, frames);
+      game.angle = lerp(game.angle, game.targetAngle, clamp(ease, 0, 1));
+    }
+  }
+
+  function checkFall() {
+    const ratio = sandSupportRatio();
+    const tiltOver = Math.abs(game.angle) >= config.fallAngle;
+    const supportOver = ratio < config.supportFallRatio;
+    return tiltOver || supportOver;
+  }
+
+  function startFall() {
+    game.falling = true;
+    game.fallDone = false;
+    game.fallStart = performance.now();
+    game.fallFromAngle = game.angle;
+    game.fallSide = Math.abs(game.angle) > 0.4
+      ? Math.sign(game.angle)
+      : (game.leanDir || (Math.random() < 0.5 ? -1 : 1));
+    playSound("fall");
+    spawnDust();
+    updateHud(true);
+  }
+
+  function updateFalling(now) {
+    if (!game.falling) return;
+    const p = clamp((now - game.fallStart) / config.fallMs, 0, 1);
+    const target = game.fallSide * 84;
+    const eased = easeOutCubic(p);
+    const overshoot = Math.sin(p * Math.PI) * 0.06 * game.fallSide;
+    game.angle = lerp(game.fallFromAngle, target, eased) + overshoot;
+    if (p >= 1) {
+      game.falling = false;
+      game.fallDone = true;
+      game.angle = target;
+      endGame();
+    }
+  }
+
+  // ============================================================
+  // 16. HUD 同步
+  // ============================================================
+  function updateHud() {
+    const player = game.players[game.currentPlayerIndex];
+    const inGame = game.phase !== "menu" && !!player;
+    const aiTurn = inGame && player.isAI && game.phase !== "result";
+
+    if (!inGame) {
+      turnText.textContent = "等待开始";
+      turnText.style.color = "";
+      turnSub.textContent = "你 vs AI";
+      turnDot.style.background = "#b9a486";
+      turnDot.style.boxShadow = "0 0 0 3px rgba(122, 82, 48, 0.12)";
+      turnPill.classList.remove("ai");
+    } else if (game.phase === "result") {
+      turnText.textContent = "游戏结束";
+      turnText.style.color = player.color;
+      turnSub.textContent = game.result
+        ? game.result.loser.name + "输掉了本局"
+        : "木棍倒下了";
+      turnDot.style.background = player.color;
+      turnDot.style.boxShadow = "0 0 0 3px " + hexToRgba(player.color, 0.2);
+      turnPill.classList.remove("ai");
+    } else {
+      turnText.textContent = aiTurn ? player.name + "的回合" : "你的回合";
+      turnText.style.color = player.color;
+      turnDot.style.background = player.color;
+      turnDot.style.boxShadow = "0 0 0 3px " + hexToRgba(player.color, 0.2);
+      turnPill.classList.toggle("ai", aiTurn);
+
+      let sub = "";
+      if (aiTurn) {
+        if (game.phase === "resolving") sub = "AI 正在扒沙…";
+        else if (game.phase === "roundEnd") sub = "AI 安全过关，换人";
+        else sub = "正在寻找落爪点…";
+      } else if (game.phase === "dragging") {
+        sub = "松手结算这一爪";
+      } else if (game.phase === "resolving") {
+        sub = "沙子落下，木棍在晃…";
+      } else if (game.phase === "roundEnd") {
+        sub = "安全，准备换人";
+      } else {
+        sub = game.timerEnabled ? "按住沙堆拖动" : "不限时 · 按住沙堆拖动";
+      }
+      turnSub.textContent = sub;
+    }
+
+    const showTimer = inGame && game.timerEnabled && !!player && !player.isAI &&
+      game.phase !== "result";
+    timerWrap.hidden = !showTimer;
+    if (showTimer) {
+      const timerRatio = clamp(game.timerRemaining / Math.max(0.001, config.turnSeconds), 0, 1);
+      timerBar.style.width = (timerRatio * 100).toFixed(1) + "%";
+      timerBar.style.background = timerRatio < 0.3
+        ? "linear-gradient(90deg, #d94b3a, #ef8a4a)"
+        : "linear-gradient(90deg, #f0a63a, #e2703a)";
+      timerText.textContent = String(Math.ceil(game.timerRemaining));
+      timerText.style.color = timerRatio < 0.3 ? "#c2412d" : "";
+    }
+
+    const ratio = game.initialCellCount > 0 ? sandSupportRatio() : 1;
+    supportBar.style.width = (ratio * 100).toFixed(1) + "%";
+    supportBar.style.background = ratio > 0.55
+      ? "linear-gradient(90deg, #4ca85c, #86c94a)"
+      : ratio > 0.34
+        ? "linear-gradient(90deg, #d7a136, #e2c24d)"
+        : "linear-gradient(90deg, #cf4e37, #e2793f)";
+    supportBar.classList.toggle("low", ratio < 0.34);
+    supportText.textContent = Math.round(ratio * 100) + "%";
+
+    const absAngle = Math.abs(game.angle);
+    if (game.falling) {
+      tiltText.textContent = "倒下中";
+      tiltText.classList.add("danger");
+    } else if (absAngle < 1.5) {
+      tiltText.textContent = "笔直";
+      tiltText.classList.remove("danger");
+    } else {
+      const direction = game.angle > 0 ? "右倾 " : "左倾 ";
+      tiltText.textContent = direction + absAngle.toFixed(0) + "°";
+      tiltText.classList.toggle("danger", absAngle >= config.fallAngle * 0.62);
+    }
+  }
+
+  // ============================================================
+  // 17. 倒计时
+  // ============================================================
+  function startTimer() {
+    game.timerRemaining = config.turnSeconds;
+    game.uiAccumulator = 999;
+  }
+
+  function stopTimer() {
+    game.timerRemaining = 0;
+    game.uiAccumulator = 999;
+  }
+
+  function updateTimer(dt) {
+    if (!game.timerEnabled || game.paused) return;
+    if (!rulesPanel.classList.contains("hidden")) return;
+    if (game.phase !== "playing" && game.phase !== "dragging") return;
+    const player = currentPlayer();
+    if (!player || player.isAI) return;
+    game.timerRemaining -= dt / 1000;
+    if (game.timerRemaining <= 0) {
+      game.timerRemaining = 0;
+      handleTimeout();
+    }
+  }
+
+  function handleTimeout() {
+    if (game.phase !== "playing" && game.phase !== "dragging") return;
+    if (game.autoScooping) return;
+    game.autoScooping = true;
+
+    if (game.dragging) {
+      game.dragging = false;
+      game.track = [];
+    }
+    game.phase = "playing";
+    playSound("timeout");
+    showToast("时间到，手滑啦！", 1500);
+
+    const L = game.layout;
+    let centerPoint = null;
+    if (game.lastPointer && pointInPile(game.lastPointer.x, game.lastPointer.y, L.brushRadius * 0.5)) {
+      centerPoint = { x: game.lastPointer.x, y: game.lastPointer.y };
+    } else {
+      const cell = pickRandomSandCell();
+      if (cell) centerPoint = cellCenter(cell.row, cell.col);
+    }
+
+    if (!centerPoint) {
+      game.targetAngle = (game.leanDir || 1) * (config.fallAngle + 3);
+      game.phase = "resolving";
+      game.settleStart = performance.now();
+      game.autoScooping = false;
+      return;
+    }
+    const direction = Math.random() * TWO_PI;
+    const step = L.brushRadius * 0.42;
+    const track = [
+      { x: centerPoint.x - Math.cos(direction) * step, y: centerPoint.y - Math.sin(direction) * step },
+      { x: centerPoint.x, y: centerPoint.y },
+      { x: centerPoint.x + Math.cos(direction) * step, y: centerPoint.y + Math.sin(direction) * step }
+    ];
+    const autoLimit = Math.max(5, Math.round(game.maxScoop * config.autoScoopRatio));
+    finishScoop(track, { auto: true, limit: autoLimit });
+    game.autoScooping = false;
+  }
+
+  // ============================================================
+  // 18. 回合结算
+  // ============================================================
+  function resolveRound() {
+    if (game.phase !== "resolving" || game.falling) return;
+    playSound("wobble");
+
+    if (checkFall()) {
+      startFall();
+      return;
+    }
+
+    const ratio = sandSupportRatio();
+    game.phase = "roundEnd";
+    game.roundEndStart = performance.now();
+    playSound("safe");
+    if (ratio < 0.32) {
+      showToast("好险！沙堆已经摇摇欲坠", 1100);
+    } else {
+      showToast("安全！下一位准备", 900);
+    }
+    updateHud(true);
+  }
+
+  function nextPlayer() {
+    if (game.phase !== "roundEnd") return;
+    game.currentPlayerIndex = (game.currentPlayerIndex + 1) % game.players.length;
+    game.phase = "playing";
+    game.track = [];
+    game.dragging = false;
+    game.removedThisScoop = 0;
+
+    const player = currentPlayer();
+    if (player.isAI) {
+      game.timerRemaining = 0;
+      game.aiThinking = false;
+      game.aiPreview = null;
+      scheduleAITurn();
+      showToast(player.name + " 正在观察沙堆…", 1200);
+    } else {
+      startTimer();
+      showToast("轮到你了，按住沙堆拖动", 1300);
+    }
+    updateHud();
+  }
+
+  // ============================================================
+  // 18.5 AI 回合：选点、思考与落爪
+  // ============================================================
+  function scheduleAITurn() {
+    if (!isAITurn()) return;
+    game.aiThinking = true;
+    game.aiPreview = chooseAIScoopTarget();
+    game.aiActAt = performance.now() + randRange(config.aiMinDelayMs, config.aiMaxDelayMs);
+    updateHud();
+  }
+
+  // AI 优先扒支撑更多的一侧，尽量让木棍保持平衡
+  function chooseAIScoopTarget() {
+    const L = game.layout;
+    if (!L) return null;
+    const cols = config.gridCols;
+    const rows = config.gridRows;
+    const center = (cols - 1) / 2;
+    const preferredSide = game.leftSupport >= game.rightSupport ? -1 : 1;
+
+    function collectColumns(useSide) {
+      const list = [];
+      for (let col = 0; col < cols; col += 1) {
+        const dx = col - center;
+        if (Math.abs(dx) < cols * 0.12) continue;
+        if (useSide && Math.sign(dx) !== preferredSide) continue;
+        let topRow = -1;
+        let count = 0;
+        for (let row = 0; row < rows; row += 1) {
+          if (isPresent(row, col)) {
+            if (topRow < 0) topRow = row;
+            count += 1;
+          }
+        }
+        if (topRow < 0 || count < 2) continue;
+        const distance = Math.abs(dx) / (cols / 2);
+        const score = count * (0.6 + distance * 0.9) * randRange(0.75, 1.25);
+        list.push({ row: topRow, col: col, score: score });
+      }
+      return list;
+    }
+
+    let list = collectColumns(true);
+    if (list.length === 0) list = collectColumns(false);
+    if (list.length === 0) {
+      const cell = pickRandomSandCell();
+      if (!cell) return null;
+      const point = cellCenter(cell.row, cell.col);
+      return { x: point.x, y: point.y, col: cell.col };
+    }
+
+    list.sort(function (a, b) { return b.score - a.score; });
+    const poolSize = Math.min(4, list.length);
+    const chosen = list[Math.floor(Math.random() * poolSize)];
+    return {
+      x: L.originX + (chosen.col + 0.5) * L.cell,
+      y: L.originY + (chosen.row + 0.95) * L.cell,
+      col: chosen.col
+    };
+  }
+
+  function triggerForcedFall() {
+    game.aiThinking = false;
+    game.aiPreview = null;
+    game.targetAngle = (game.leanDir || 1) * (config.fallAngle + 4);
+    game.phase = "resolving";
+    game.settleStart = performance.now();
+    updateHud();
+  }
+
+  function performAITurn() {
+    if (game.phase !== "playing" || !game.aiThinking) return;
+    const player = currentPlayer();
+    if (!player || !player.isAI) return;
+
+    const target = game.aiPreview || chooseAIScoopTarget();
+    game.aiThinking = false;
+    game.aiPreview = null;
+    if (!target) {
+      triggerForcedFall();
+      return;
+    }
+
+    const L = game.layout;
+    const step = L.brushRadius * randRange(0.65, 0.95);
+    const track = [
+      { x: target.x - step, y: target.y - randRange(0, 3) },
+      { x: target.x, y: target.y },
+      { x: target.x + step, y: target.y + randRange(0, 3) }
+    ];
+    const limit = Math.max(6, Math.round(
+      game.maxScoop * randRange(config.aiScoopMinRatio, config.aiScoopMaxRatio)
+    ));
+    const removed = finishScoop(track, { limit: limit, ai: true });
+
+    if (!removed) {
+      const fallback = pickRandomSandCell();
+      if (fallback) {
+        const point = cellCenter(fallback.row, fallback.col);
+        if (!finishScoop([point], { limit: limit, ai: true })) {
+          triggerForcedFall();
+        }
+      } else {
+        triggerForcedFall();
+      }
+    }
+    updateHud();
+  }
+
+  function endGame() {
+    if (game.phase === "result") return;
+    game.phase = "result";
+    stopTimer();
+    game.track = [];
+    game.dragging = false;
+    game.aiThinking = false;
+    game.aiPreview = null;
+    const loserIndex = game.currentPlayerIndex;
+    const loser = game.players[loserIndex];
+    const winners = game.players.filter(function (item, index) {
+      return index !== loserIndex;
+    });
+    game.result = {
+      loserIndex: loserIndex,
+      loser: loser,
+      winners: winners
+    };
+
+    resultTitle.textContent = loserIndex === 0 ? "木棍倒啦，你输啦" : "你赢啦！";
+    resultLoserLine.innerHTML =
+      '<span class="name-tag" style="background:' + loser.color + '">' + loser.name + "</span>" +
+      "把木棍弄倒了，成为本局的" +
+      '<span class="name-tag" style="background:#7a5230">小尿炕精</span>' +
+      "！";
+
+    winnerList.innerHTML = "";
+    for (let i = 0; i < winners.length; i += 1) {
+      const tag = document.createElement("span");
+      tag.className = "name-tag";
+      tag.style.background = winners[i].color;
+      tag.textContent = winners[i].name;
+      winnerList.appendChild(tag);
+    }
+
+    hideToast();
+    updateHud(true);
+    resultOverlay.classList.remove("hidden");
+    rulesPanel.classList.add("hidden");
+  }
+
+  // ============================================================
+  // 19. 开始界面、重开与菜单
+  // ============================================================
+  function updatePlayerPreview() {
+    playerPreview.innerHTML = "";
+    for (let i = 0; i < game.playerCount; i += 1) {
+      const chip = document.createElement("span");
+      chip.className = "preview-chip";
+      const label = i === 0 ? "你" : AI_NAMES[i - 1];
+      chip.innerHTML = '<i style="background:' + PLAYER_COLORS[i] + '"></i>' + label;
+      playerPreview.appendChild(chip);
+    }
+  }
+
+  function updatePickButtons() {
+    const buttons = pickRow.querySelectorAll(".pick");
+    for (let i = 0; i < buttons.length; i += 1) {
+      const count = Number(buttons[i].getAttribute("data-count"));
+      buttons[i].classList.toggle("active", count === game.playerCount);
+    }
+  }
+
+  function updateTimerToggleUi() {
+    timerToggle.classList.toggle("on", game.timerEnabled);
+    timerToggle.setAttribute("aria-pressed", String(game.timerEnabled));
+    timerToggleLabel.textContent = game.timerEnabled ? "开启 · 15 秒" : "关闭倒计时";
+  }
+
+  function setPlayerCount(count) {
+    game.playerCount = clamp(count, config.minPlayerCount, config.maxPlayerCount);
+    game.players = makePlayers(game.playerCount);
+    game.currentPlayerIndex = 0;
+    updatePickButtons();
+    updatePlayerPreview();
+    updateHud();
+  }
+
+  function initMenu() {
+    game.phase = "menu";
+    hudEl.hidden = true;
+    restartBtn.hidden = true;
+    game.result = null;
+    game.falling = false;
+    game.fallDone = false;
+    game.dragging = false;
+    game.track = [];
+    game.paused = false;
+    stopTimer();
+    game.players = makePlayers(game.playerCount);
+    game.currentPlayerIndex = 0;
+    createSandPile();
+    game.phase = "menu";
+    game.timerRemaining = config.turnSeconds;
+
+    menuOverlay.classList.remove("hidden");
+    resultOverlay.classList.add("hidden");
+    rulesPanel.classList.add("hidden");
+    hideToast();
+    updatePickButtons();
+    updatePlayerPreview();
+    updateTimerToggleUi();
+    updateHud();
+  }
+
+  function startGame() {
+    audioEngine.unlock();
+    hudEl.hidden = false;
+    restartBtn.hidden = false;
+    game.players = makePlayers(game.playerCount);
+    game.currentPlayerIndex = 0;
+    game.result = null;
+    game.removedThisScoop = 0;
+    game.autoScooping = false;
+    game.paused = false;
+    createSandPile();
+    game.phase = "playing";
+    startTimer();
+
+    menuOverlay.classList.add("hidden");
+    resultOverlay.classList.add("hidden");
+    rulesPanel.classList.add("hidden");
+    hideToast();
+    updateHud();
+    playSound("click");
+    showToast("你的回合，按住沙堆拖动（单次最多约 " + game.maxScoop + " 粒）", 1800);
+  }
+
+  function restartGame() {
+    audioEngine.unlock();
+    if (game.phase === "menu") {
+      startGame();
+      return;
+    }
+    hudEl.hidden = false;
+    restartBtn.hidden = false;
+    game.players = makePlayers(game.playerCount);
+    game.currentPlayerIndex = 0;
+    game.result = null;
+    game.removedThisScoop = 0;
+    game.autoScooping = false;
+    game.paused = false;
+    createSandPile();
+    game.phase = "playing";
+    startTimer();
+
+    menuOverlay.classList.add("hidden");
+    resultOverlay.classList.add("hidden");
+    rulesPanel.classList.add("hidden");
+    hideToast();
+    updateHud();
+    playSound("click");
+    showToast("新的一局，你先手（单次最多约 " + game.maxScoop + " 粒）", 1600);
+  }
+
+  function backToMenu() {
+    initMenu();
+    playSound("click");
+  }
+
+  function toggleMute() {
+    game.muted = !game.muted;
+    muteBtn.textContent = "音效：" + (game.muted ? "关" : "开");
+    muteBtn.setAttribute("aria-pressed", String(game.muted));
+    if (!game.muted) {
+      audioEngine.unlock();
+      playSound("click");
+    }
+  }
+
+  function toggleRules() {
+    rulesPanel.classList.toggle("hidden");
+    playSound("click");
+  }
+
+  // ============================================================
+  // 20. 主循环
+  // ============================================================
+  function update(dt, now) {
+    updateParticles(dt);
+    updateStickPhysics(dt);
+    updateFalling(now);
+    updateTimer(dt);
+
+    if (game.phase === "playing" && game.aiThinking && !game.paused &&
+        rulesPanel.classList.contains("hidden") && now >= game.aiActAt) {
+      performAITurn();
+    }
+
+    if (game.phase === "resolving" && !game.falling && now - game.settleStart >= config.settleMs) {
+      resolveRound();
+    }
+    if (game.phase === "roundEnd" && now - game.roundEndStart >= config.roundEndMs) {
+      nextPlayer();
+    }
+    if (game.toastUntil && now >= game.toastUntil) {
+      hideToast();
+    }
+
+    game.uiAccumulator += dt;
+    if (game.uiAccumulator >= 90) {
+      game.uiAccumulator = 0;
+      updateHud(false);
+    }
+  }
+
+  function loop(now) {
+    const dt = game.lastFrame ? Math.min(64, now - game.lastFrame) : 16.7;
+    game.lastFrame = now;
+    update(dt, now);
+    drawScene();
+    requestAnimationFrame(loop);
+  }
+
+  // ============================================================
+  // 21. 事件绑定与启动
+  // ============================================================
+  function bindEvents() {
+    canvas.addEventListener("pointerdown", pointerDown, { passive: false });
+    canvas.addEventListener("pointermove", pointerMove, { passive: false });
+    canvas.addEventListener("pointerup", pointerUp, { passive: false });
+    canvas.addEventListener("pointercancel", pointerCancel);
+    canvas.addEventListener("pointerleave", function () {
+      if (game.phase !== "dragging") game.hoverPoint = null;
+    });
+    canvas.addEventListener("contextmenu", function (event) {
+      event.preventDefault();
+    });
+
+    pickRow.addEventListener("click", function (event) {
+      const target = event.target.closest(".pick");
+      if (!target) return;
+      const count = Number(target.getAttribute("data-count"));
+      if (!count) return;
+      setPlayerCount(count);
+      playSound("click");
+    });
+
+    timerToggle.addEventListener("click", function () {
+      game.timerEnabled = !game.timerEnabled;
+      updateTimerToggleUi();
+      updateHud(true);
+      playSound("click");
+    });
+
+    document.getElementById("startBtn").addEventListener("click", startGame);
+    document.getElementById("againBtn").addEventListener("click", restartGame);
+    document.getElementById("backMenuBtn").addEventListener("click", backToMenu);
+    document.getElementById("restartBtn").addEventListener("click", restartGame);
+    document.getElementById("muteBtn").addEventListener("click", toggleMute);
+    document.getElementById("rulesBtn").addEventListener("click", toggleRules);
+    document.getElementById("rulesClose").addEventListener("click", function () {
+      rulesPanel.classList.add("hidden");
+      playSound("click");
+    });
+
+    window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("orientationchange", function () {
+      setTimeout(resizeCanvas, 120);
+    });
+
+    document.addEventListener("visibilitychange", function () {
+      game.paused = document.hidden;
+      if (!document.hidden) game.lastFrame = 0;
+    });
+
+    if (typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver(function () {
+        resizeCanvas();
+      });
+      observer.observe(stage);
+    }
+  }
+
+  function boot() {
+    buildGroundSpecks();
+    resizeCanvas();
+    bindEvents();
+    initMenu();
+    requestAnimationFrame(loop);
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
