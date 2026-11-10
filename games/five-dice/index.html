@@ -618,6 +618,24 @@
   .relicCard.sold{opacity:.4;}
   .shopCtl{margin-top:18px;}
 
+  .shopOwned{margin-top:16px;width:100%;max-width:760px;text-align:left;}
+  .ownedHead{margin-bottom:7px;font-size:10px;letter-spacing:.12em;color:#6f5d48;}
+  .ownedRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .ownedCard{display:flex;align-items:center;justify-content:space-between;gap:6px;
+    background:#f7ead2;color:#171310;border:2px solid #171310;border-radius:0;
+    box-shadow:3px 3px 0 #171310;padding:7px 9px;text-align:left;cursor:pointer;
+    font-family:"PingFang SC",sans-serif;}
+  .ownedCard b{font-size:12px;font-weight:900;color:var(--accent);}
+  .ownedCard span{font-size:10px;color:#6f5d48;white-space:nowrap;}
+  .owned-empty{font-size:11px;color:#8a7458;}
+  .shopExpand{display:none;margin-top:14px;width:100%;max-width:760px;
+    background:#f7ead2;border:3px solid #171310;box-shadow:5px 5px 0 #171310;
+    padding:10px 14px;align-items:center;justify-content:space-between;gap:10px;text-align:left;}
+  .shopExpand b{display:block;font-size:13px;font-weight:900;color:var(--accent);}
+  .shopExpand small{display:block;margin-top:2px;font-size:10.5px;color:#6f5d48;}
+  .shopExpand .btn-side{padding:8px 12px;font-size:12px;box-shadow:3px 3px 0 #171310;white-space:nowrap;}
+  .shopExpand .btn-side:disabled{opacity:.35;}
+
   @media (max-width:899px){
     header{padding:6px 13px 5px;border-bottom-width:3px;}
     .lv b{font-size:15px;}
@@ -643,6 +661,11 @@
     .relicCard{border-width:2px;box-shadow:4px 4px 0 #171310;transform:rotate(-.5deg);}
     .relicCard:nth-child(2){transform:rotate(.5deg);}
     .overlay .btn-main,.overlay .btn-side{border-width:2px;}
+    .shopOwned{margin-top:12px;}
+    .ownedRow{grid-template-columns:1fr 1fr;gap:6px;}
+    .ownedCard{padding:6px 8px;}
+    .shopExpand{padding:8px 10px;margin-top:10px;}
+    .shopExpand small{font-size:10px;}
     #ovRules h2{font-size:22px;}
     #ovRules .rules{max-width:94vw;padding:14px 15px;max-height:58vh;}
     #ov .end-panel{padding:22px 18px;width:88vw;border-width:3px;box-shadow:6px 6px 0 #171310;}
@@ -764,6 +787,14 @@
       <h2>商 店</h2>
       <p id="shopSub">信用 0 · 选择千术</p>
       <div class="relicGrid" id="shopGrid"></div>
+      <div class="shopOwned">
+        <div class="ownedHead">我的千术 · 点击出售（返还 50%）</div>
+        <div class="ownedRow" id="ownedRow"></div>
+      </div>
+      <div class="shopExpand" id="shopExpandWrap">
+        <div><b>扩建柜台</b><small>第 6 个千术槽 · 本局限一次</small></div>
+        <button class="btn-side btn-fold" id="shopExpand">16 信用</button>
+      </div>
       <div class="shopCtl">
         <button class="btn-side btn-fold" id="shopReroll">换一批 · 2 信用</button>
         <button class="btn-main" id="shopNext">继续</button>
@@ -794,7 +825,7 @@
       <h3>得分</h3>
       <p style="margin:0 0 8px">得分 =（牌型基础分 + 骰子和 + 千术基础加成）×（1 + 千术倍率）。</p>
       <h3>千术与商店</h3>
-      <p style="margin:0 0 8px">最多 <b>5</b> 个千术槽。过关获得信用，可在商店买千术、换一批；千术跨桌保留，形成六点流、顺子流、锁骰流等打法。</p>
+      <p style="margin:0 0 8px">最多 <b>5</b> 个千术槽。过关获得信用，可在商店买千术、换一批；槽满后可在商店出售千术，返还 50% 信用。第 2–6 桌的商店还能花 <b>16 信用</b> 扩建到第 6 槽，本局限一次。千术跨桌保留，形成六点流、顺子流、锁骰流等打法。</p>
       <h3>牌型基础分</h3>
       <table>
         <tr><th>牌型</th><th>基础分</th></tr>
@@ -1721,7 +1752,7 @@ var COMBOS = {
   four:      {nm:'四条', base:150},
   yacht:     {nm:'快艇', base:300}
 };
-var MAX_SLOTS = 5, MAX_LIVES = 3, BASE_ROLLS = 3, MAX_LV = 7;
+var MAX_SLOTS = 6, SLOT_COST = 16, MAX_LIVES = 3, BASE_ROLLS = 3, MAX_LV = 7;
 var PALETTES = [
   {id:'jade',   nm:'墨绿', table:'#1f5a45', accent:'#1a4f3d', lock:'#e8b54a'},
   {id:'red',    nm:'朱红', table:'#b83427', accent:'#b12f24', lock:'#3fbf95'},
@@ -1975,7 +2006,11 @@ function openShop(){
   sfx('cardSlide1');
 }
 function renderShop(){
-  $('shopSub').textContent = '信用 ' + fmt(S.credit) + ' · 千术槽 ' + S.items.length + '/' + MAX_SLOTS;
+  var full = S.items.length >= S.slots;
+  var sub = '信用 ' + fmt(S.credit) + ' · 千术槽 ' + S.items.length + '/' + S.slots;
+  if(full) sub += ' · 槽已满，可在下方出售';
+  $('shopSub').textContent = sub;
+
   var grid = $('shopGrid');
   grid.innerHTML = '';
   if(!S.offers.length){
@@ -1985,7 +2020,7 @@ function renderShop(){
   }
   S.offers.forEach(function(id){
     var it = ITEM_MAP[id];
-    var ok = S.credit >= it.cost && S.items.length < MAX_SLOTS;
+    var ok = S.credit >= it.cost && S.items.length < S.slots;
     var b = document.createElement('button');
     b.className = 'relicCard' + (ok ? '' : ' sold');
     b.innerHTML = '<span class="rn">' + it.nm + '</span><span class="rd">' + it.ds + '</span>' +
@@ -1993,11 +2028,61 @@ function renderShop(){
     b.onclick = function(){ buyItem(id); };
     grid.appendChild(b);
   });
+
+  renderOwned();
+
+  var canExpand = S.slots < MAX_SLOTS && S.table >= 2 && S.table <= 6;
+  $('shopExpandWrap').style.display = canExpand ? 'flex' : 'none';
+  if(canExpand){
+    $('shopExpand').textContent = SLOT_COST + ' 信用';
+    $('shopExpand').disabled = S.credit < SLOT_COST;
+  }
   $('shopReroll').disabled = S.credit < 2;
+}
+
+function renderOwned(){
+  var row = $('ownedRow');
+  row.innerHTML = '';
+  if(!S.items.length){
+    row.innerHTML = '<span class="owned-empty">暂无千术</span>';
+    return;
+  }
+  S.items.forEach(function(id){
+    var it = ITEM_MAP[id];
+    var refund = Math.max(1, Math.floor(it.cost * .5));
+    var b = document.createElement('button');
+    b.className = 'ownedCard';
+    b.innerHTML = '<b>' + it.nm + '</b><span>出售 +' + refund + '</span>';
+    b.title = '出售 ' + it.nm + '，返还 ' + refund + ' 信用';
+    b.onclick = function(){ sellItem(id); };
+    row.appendChild(b);
+  });
+}
+
+function sellItem(id){
+  var idx = S.items.indexOf(id);
+  if(idx < 0) return;
+  var it = ITEM_MAP[id];
+  var refund = Math.max(1, Math.floor(it.cost * .5));
+  S.items.splice(idx, 1);
+  S.credit += refund;
+  sfx('chipsCollide1');
+  renderAll();
+  renderShop();
+}
+
+function expandSlots(){
+  if(S.slots >= MAX_SLOTS || S.credit < SLOT_COST) return;
+  if(S.table < 2 || S.table > 6) return;
+  S.credit -= SLOT_COST;
+  S.slots = MAX_SLOTS;
+  sfx('chipsCollide1');
+  renderAll();
+  renderShop();
 }
 function buyItem(id){
   var it = ITEM_MAP[id];
-  if(!it || S.items.length >= MAX_SLOTS || S.credit < it.cost) return;
+  if(!it || S.items.length >= S.slots || S.credit < it.cost) return;
   S.credit -= it.cost;
   S.items.push(id);
   S.offers = S.offers.filter(function(x){ return x !== id; });
@@ -2123,7 +2208,7 @@ function renderScore(){
 function renderItems(){
   var box = $('slots');
   box.innerHTML = '';
-  for(var i=0;i<MAX_SLOTS;i++){
+  for(var i=0;i<S.slots;i++){
     var el = document.createElement('div');
     var id = S.items[i];
     if(id){
@@ -2139,7 +2224,7 @@ function renderItems(){
     }
     box.appendChild(el);
   }
-  $('betHead').textContent = '千术 · ' + S.items.length + '/' + MAX_SLOTS;
+  $('betHead').textContent = '千术 · ' + S.items.length + '/' + S.slots;
   $('betTotal').textContent = '配额 ' + fmt(S.quota);
 }
 
@@ -2263,7 +2348,7 @@ function resetRun(){
   var starters = ['lead6','mirror','iron'];
   S = {
     table:1, lives:MAX_LIVES, credit:0,
-    items:[starters[Math.floor(Math.random()*starters.length)]],
+    items:[starters[Math.floor(Math.random()*starters.length)]], slots:5,
     quota:0, rule:'plain', dice:[0,0,0,0,0],
     locked:[false,false,false,false,false], throwsUsed:0,
     phase:'ready', gloveUsed:false, anim:false,
@@ -2282,6 +2367,7 @@ $('helpBtn').onclick = function(){ $('ovRules').classList.add('show'); };
 $('ovRulesBtn').onclick = function(){ $('ovRules').classList.remove('show'); };
 $('shopReroll').onclick = rerollShop;
 $('shopNext').onclick = nextTable;
+$('shopExpand').onclick = expandSlots;
 $('setBtn').onclick = function(){
   renderSwatches(document.body.dataset.palette || 'jade');
   $('ovSet').classList.add('show');
