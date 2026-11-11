@@ -1529,7 +1529,25 @@ requestAnimationFrame(frame);
 })();
 </script>
 <!-- game-analytics -->
-<script defer src="/js/analytics/config.js"></script>
-<script defer src="/js/analytics/tracker.js"></script>
+<script>
+(function () {
+  function startAnalytics() {
+    setTimeout(function () {
+      var config = document.createElement('script');
+      config.src = '/js/analytics/config.js';
+      config.async = true;
+      config.onload = function () {
+        var tracker = document.createElement('script');
+        tracker.src = '/js/analytics/tracker.js';
+        tracker.async = true;
+        document.head.appendChild(tracker);
+      };
+      document.head.appendChild(config);
+    }, 0);
+  }
+  if (document.readyState === 'complete') startAnalytics();
+  else window.addEventListener('load', startAnalytics, { once: true });
+}());
+</script>
 </body>
 </html>

@@ -175,7 +175,25 @@ window.addEventListener('storage',event=>{if(event.key===STORE){conflict=true;wa
 render();if(canSave)save();else warning('暂时无法读取旧存档，已开启临时页面且不会覆盖原数据。确认重新开始时，请点“开始新一局”。');
 </script>
 <!-- game-analytics -->
-<script defer src="/js/analytics/config.js"></script>
-<script defer src="/js/analytics/tracker.js"></script>
+<script>
+(function () {
+  function startAnalytics() {
+    setTimeout(function () {
+      var config = document.createElement('script');
+      config.src = '/js/analytics/config.js';
+      config.async = true;
+      config.onload = function () {
+        var tracker = document.createElement('script');
+        tracker.src = '/js/analytics/tracker.js';
+        tracker.async = true;
+        document.head.appendChild(tracker);
+      };
+      document.head.appendChild(config);
+    }, 0);
+  }
+  if (document.readyState === 'complete') startAnalytics();
+  else window.addEventListener('load', startAnalytics, { once: true });
+}());
+</script>
 </body>
 </html>
