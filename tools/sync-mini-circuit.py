@@ -3,6 +3,7 @@
 import argparse
 import shutil
 from pathlib import Path
+from analytics_hooks import install
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("source", type=Path, help="mini-circuit 项目目录（已 npm ci）")
@@ -30,3 +31,5 @@ game = (target / "game.mjs").read_text()
 game = game.replace("请通过本地启动器打开游戏，并确认 assets 与 node_modules 文件夹完整。", "游戏资源未能加载，请检查网络后刷新重试。")
 (target / "game.mjs").write_text(game)
 print(f"已同步 {len(files)} 个文件到 {target}，未提交或部署。")
+
+install(target if target.suffix == ".html" else target / "index.html")

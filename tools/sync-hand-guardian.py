@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 from pathlib import Path
+from analytics_hooks import install
 
 
 def main():
@@ -27,3 +28,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    install(Path(__file__).resolve().parents[1] / "games/hand-guardian/index.html")

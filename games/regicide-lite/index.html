@@ -174,5 +174,8 @@ $('damageForm').addEventListener('submit',recordDamage);$('editBoss').addEventLi
 window.addEventListener('storage',event=>{if(event.key===STORE){conflict=true;warning('另一窗口更新了这个简化版对局。请刷新载入最新进度后继续。');render();}});
 render();if(canSave)save();else warning('暂时无法读取旧存档，已开启临时页面且不会覆盖原数据。确认重新开始时，请点“开始新一局”。');
 </script>
+<!-- game-analytics -->
+<script defer src="/js/analytics/config.js"></script>
+<script defer src="/js/analytics/tracker.js"></script>
 </body>
 </html>

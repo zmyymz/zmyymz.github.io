@@ -2,6 +2,7 @@
 """Sync the four 拾光童趣 games; never commit or publish."""
 import argparse
 from pathlib import Path
+from analytics_hooks import install
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("source_root", type=Path, help="包含四个原项目的 2026-11-07 目录")
@@ -24,3 +25,6 @@ for target, data in pending:
     target.write_bytes(data)
     print(f"已同步：{target}")
 print("已同步 4 个游戏，未提交或部署。")
+
+for page, _ in pending:
+    install(page)

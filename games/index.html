@@ -424,6 +424,7 @@
           </article>
         </div>
         <p class="gallery-note">小小的游戏，慢慢增加。下次来，也许就有新发现。</p>
+        <details style="font-size:12px;color:#777;margin-top:16px;"><summary>统计设置</summary><p><span id="analytics-status" role="status">统计尚未启用</span> · <button type="button" id="analytics-toggle">排除本机访问</button></p><p>仅影响当前浏览器，以后访问不计入统计；清理浏览器数据后需重新设置。</p></details>
       </div>
     </article>
   </section>
@@ -739,5 +740,8 @@
 
 <!-- 页面点击小红心 -->
 <script defer type="text/javascript" src="/js/src/love.js"></script>
+<!-- game-analytics -->
+<script defer src="/js/analytics/config.js"></script>
+<script defer src="/js/analytics/tracker.js"></script>
 </body>
 </html>

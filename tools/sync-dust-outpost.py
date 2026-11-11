@@ -3,6 +3,7 @@
 import argparse
 import shutil
 from pathlib import Path
+from analytics_hooks import install
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("source", type=Path, help="沙漠前哨项目目录，需已安装 Phaser")
@@ -28,3 +29,5 @@ for name, output in files.items():
     else:
         shutil.copyfile(source / name, dest)
 print(f"已同步 {len(files)} 个文件到 {target}，未提交或部署。")
+
+install(target if target.suffix == ".html" else target / "index.html")

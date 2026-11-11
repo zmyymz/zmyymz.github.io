@@ -3,6 +3,7 @@
 import argparse
 import shutil
 from pathlib import Path
+from analytics_hooks import install
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("source", type=Path, help="叠码项目目录")
@@ -21,3 +22,5 @@ for name in files:
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source / name, dest)
 print(f"已同步 {len(files)} 个文件到 {target}，未提交或部署。")
+
+install(target if target.suffix == ".html" else target / "index.html")

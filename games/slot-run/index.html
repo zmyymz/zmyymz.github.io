@@ -671,4 +671,7 @@ class WorkshopGame extends CircuitGame{
 }
 
 try{window.game=new WorkshopGame();if(new URLSearchParams(location.search).has('diagnostics')){const {installDiagnostics}=await import('./diagnostics.mjs');installDiagnostics(window.game,{THREE,Car,CONFIG,MODES,LEVELS})}}catch(e){console.error(e);$('loadText').textContent='无法启动 WebGL：'+e.message}
-</script></body></html>
+</script><!-- game-analytics -->
+<script defer src="/js/analytics/config.js"></script>
+<script defer src="/js/analytics/tracker.js"></script>
+</body></html>
