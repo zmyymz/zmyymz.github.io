@@ -15,7 +15,7 @@ def main():
     data = source.read_bytes()
     html = data.decode("utf-8")
     if '<canvas id="game"' not in html or "hand-guardian-campaign-v2" not in html:
-        parser.error("源文件不是预期的手掌护田游戏，请检查路径。")
+        parser.error("源文件不是预期的别动我的农田游戏，请检查路径。")
     if target.read_bytes() == data:
         print("已是最新版本，无需同步。")
         return

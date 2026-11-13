@@ -120,7 +120,7 @@
   .toast{position:absolute;left:50%;top:16.5%;transform:translate(-50%,-50%) scale(.92);
     background:rgba(8,26,21,.95);border:1px solid var(--gold);color:var(--cream);
     padding:12px 18px;border-radius:13px;text-align:center;pointer-events:none;opacity:0;
-    transition:opacity .2s,transform .2s;z-index:40;min-width:140px;max-width:84%;}
+    transition:opacity .2s,transform .2s;z-index:70;min-width:140px;max-width:84%;}
   .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
   .toast .big{font-size:24px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;}
   .toast .big.neg{color:var(--red);}
@@ -394,8 +394,11 @@
   .shopCtl{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:10px;}
   .shopCtl .btn-main{flex:0 0 auto;min-width:140px;}
   #shopSub{max-width:520px;}
+  #shopTip{font-size:12px;font-weight:800;letter-spacing:.06em;text-align:center;margin-top:8px;}
   .relicCard .cost{display:block;margin-top:5px;font-size:10.5px;color:#ffd97a;font-weight:800;}
-  .relicCard.sold{opacity:.32;pointer-events:none;}
+  .relicCard .buyrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;}
+  .relicCard .buyTag{font-size:10px;font-weight:900;letter-spacing:.06em;padding:2px 7px;}
+  .relicCard.sold{opacity:.5;}
 
   @media (min-width:900px){
     .stats{gap:14px;}
@@ -608,14 +611,31 @@
     background:#f7ead2;border:4px solid #171310;box-shadow:10px 10px 0 #171310;
     padding:30px 32px;position:relative;z-index:1;}
   #shopSub{color:#5d4b37;}
+  body.in-shop .toast{top:9%;}
+  #shopTip{display:inline-flex;align-items:center;gap:7px;margin:4px 0 16px;padding:5px 13px;
+    background:#171310;color:#f7ead2;font-size:11.5px;font-weight:900;letter-spacing:.1em;
+    box-shadow:3px 3px 0 var(--accent);}
+  #shopTip .arr{display:inline-block;font-size:13px;color:var(--lock);animation:tipBob .8s ease-in-out infinite alternate;}
+  #shopTip.warn{background:var(--accent);box-shadow:3px 3px 0 #171310;}
+  #shopTip.warn .arr{color:#f7ead2;animation:none;}
+  @keyframes tipBob{from{transform:translateY(-2px)}to{transform:translateY(3px)}}
   .relicGrid{grid-template-columns:repeat(3,1fr);gap:14px;max-width:760px;}
   .relicCard{background:#f7ead2;color:#171310;border:3px solid #171310;border-radius:0;
-    box-shadow:5px 5px 0 #171310;transform:rotate(-1deg);}
+    box-shadow:5px 5px 0 #171310;transform:rotate(-1deg);cursor:pointer;
+    transition:transform .12s ease,box-shadow .12s ease;}
   .relicCard:nth-child(2){transform:rotate(1deg);}
   .relicCard .rn{color:var(--accent);font-weight:900;}
   .relicCard .rd{color:#5d4b37;}
-  .relicCard .cost{color:var(--accent);}
-  .relicCard.sold{opacity:.4;}
+  .relicCard .buyrow{border-top:1px dashed rgba(23,19,16,.3);padding-top:8px;}
+  .relicCard .cost{display:inline-block;margin-top:0;font-size:11px;color:#171310;letter-spacing:.02em;}
+  .relicCard .buyTag{background:var(--accent);color:#f7ead2;white-space:nowrap;}
+  .relicCard.sold{opacity:.58;}
+  .relicCard.sold .cost{color:#6f5d48;}
+  .relicCard.sold .buyTag{background:#8b7a63;color:#f7ead2;}
+  .relicCard:active{transform:translateY(2px) rotate(0) !important;box-shadow:2px 2px 0 #171310;}
+  @media (hover:hover){
+    .relicCard:not(.sold):hover{transform:translateY(-3px) rotate(0) !important;box-shadow:8px 8px 0 #171310;}
+  }
   .shopCtl{margin-top:18px;}
 
   .shopOwned{margin-top:16px;width:100%;max-width:760px;text-align:left;}
@@ -660,6 +680,7 @@
     .relicGrid{grid-template-columns:1fr;gap:10px;max-width:100%;}
     .relicCard{border-width:2px;box-shadow:4px 4px 0 #171310;transform:rotate(-.5deg);}
     .relicCard:nth-child(2){transform:rotate(.5deg);}
+    #shopTip{margin:0 0 12px;padding:4px 10px;font-size:11px;}
     .overlay .btn-main,.overlay .btn-side{border-width:2px;}
     .shopOwned{margin-top:12px;}
     .ownedRow{grid-template-columns:1fr 1fr;gap:6px;}
@@ -786,6 +807,7 @@
     <div class="shop-panel">
       <h2>商 店</h2>
       <p id="shopSub">信用 0 · 选择千术</p>
+      <p id="shopTip"><span class="arr">↓</span> 点击下方卡牌即可买入</p>
       <div class="relicGrid" id="shopGrid"></div>
       <div class="shopOwned">
         <div class="ownedHead">我的千术 · 点击出售（返还 50%）</div>
@@ -825,7 +847,7 @@
       <h3>得分</h3>
       <p style="margin:0 0 8px">得分 =（牌型基础分 + 骰子和 + 千术基础加成）×（1 + 千术倍率）。</p>
       <h3>千术与商店</h3>
-      <p style="margin:0 0 8px">最多 <b>5</b> 个千术槽。过关获得信用，可在商店买千术、换一批；槽满后可在商店出售千术，返还 50% 信用。第 2–6 桌的商店还能花 <b>16 信用</b> 扩建到第 6 槽，本局限一次。千术跨桌保留，形成六点流、顺子流、锁骰流等打法。</p>
+      <p style="margin:0 0 8px">最多 <b>5</b> 个千术槽。过关获得信用，可在商店点击卡牌买入千术、换一批；槽满后可在商店出售千术，返还 50% 信用。第 2–6 桌的商店还能花 <b>16 信用</b> 扩建到第 6 槽，本局限一次。千术跨桌保留，形成六点流、顺子流、锁骰流等打法。</p>
       <h3>牌型基础分</h3>
       <table>
         <tr><th>牌型</th><th>基础分</th></tr>
@@ -2003,6 +2025,7 @@ function openShop(){
   $('ovSet').classList.remove('show');
   renderShop();
   $('ovShop').classList.add('show');
+  document.body.classList.add('in-shop');
   sfx('cardSlide1');
 }
 function renderShop(){
@@ -2011,20 +2034,37 @@ function renderShop(){
   if(full) sub += ' · 槽已满，可在下方出售';
   $('shopSub').textContent = sub;
 
+  var tip = $('shopTip');
+  var nothingAffordable = S.offers.length > 0 && S.offers.every(function(id){
+    return S.credit < ITEM_MAP[id].cost;
+  });
+  if(full){
+    tip.className = 'warn';
+    tip.innerHTML = '<span class="arr">↓</span> 槽位已满 · 先在下方出售或扩建柜台';
+  } else if(!S.offers.length){
+    tip.className = 'warn';
+    tip.innerHTML = '<span class="arr">↓</span> 本批已售罄 · 可换一批或继续';
+  } else if(nothingAffordable){
+    tip.className = 'warn';
+    tip.innerHTML = '<span class="arr">↓</span> 信用不足 · 下一桌攒够再来买';
+  } else {
+    tip.className = '';
+    tip.innerHTML = '<span class="arr">↓</span> 点击下方卡牌即可买入';
+  }
+
   var grid = $('shopGrid');
   grid.innerHTML = '';
-  if(!S.offers.length){
-    var p = document.createElement('p');
-    p.textContent = '没有更多千术了';
-    grid.appendChild(p);
-  }
   S.offers.forEach(function(id){
     var it = ITEM_MAP[id];
-    var ok = S.credit >= it.cost && S.items.length < S.slots;
+    var afford = S.credit >= it.cost;
+    var ok = afford && !full;
+    var tag = full ? '槽位已满' : (afford ? '购买 →' : '信用不足');
     var b = document.createElement('button');
+    b.type = 'button';
     b.className = 'relicCard' + (ok ? '' : ' sold');
     b.innerHTML = '<span class="rn">' + it.nm + '</span><span class="rd">' + it.ds + '</span>' +
-      '<span class="cost">信用 ' + it.cost + '</span>';
+      '<span class="buyrow"><span class="cost">信用 ' + it.cost + '</span>' +
+      '<span class="buyTag">' + tag + '</span></span>';
     b.onclick = function(){ buyItem(id); };
     grid.appendChild(b);
   });
@@ -2082,11 +2122,14 @@ function expandSlots(){
 }
 function buyItem(id){
   var it = ITEM_MAP[id];
-  if(!it || S.items.length >= S.slots || S.credit < it.cost) return;
+  if(!it) return;
+  if(S.items.length >= S.slots){ toast('槽位已满', '先出售千术，或扩建柜台'); return; }
+  if(S.credit < it.cost){ toast('信用不足', '还差 ' + (it.cost - S.credit) + ' 信用'); return; }
   S.credit -= it.cost;
   S.items.push(id);
   S.offers = S.offers.filter(function(x){ return x !== id; });
   sfx('chipsCollide1');
+  toast(it.nm, '已购入 · 信用 −' + it.cost);
   renderAll();
   renderShop();
 }
@@ -2102,6 +2145,7 @@ function rerollShop(){
 function nextTable(){
   if(!$('ovShop').classList.contains('show')) return;
   $('ovShop').classList.remove('show');
+  document.body.classList.remove('in-shop');
   if(S.table >= MAX_LV){ victory(); return; }
   S.table++;
   startTable();
@@ -2355,6 +2399,7 @@ function resetRun(){
     offers:[], lastEval:null
   };
   $('ovShop').classList.remove('show');
+  document.body.classList.remove('in-shop');
   $('ovSet').classList.remove('show');
   $('ov').classList.remove('show');
   startTable();

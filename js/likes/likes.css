@@ -1,0 +1,9 @@
+.game-actions{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:auto;}
+.game-actions .game-play{margin-top:0;}
+.game-like{font:600 14px/1.4 system-ui,sans-serif;white-space:nowrap;border:1px solid #deded5;border-radius:20px;background:#fffdf7;color:#72796b;padding:8px 14px;cursor:pointer;min-width:66px;transition:background .15s,color .15s;}
+.game-like:hover:not(:disabled){border-color:#dca69d;background:#fff3ed;color:#aa564e;}
+.game-like[aria-pressed=true]{color:#b8574d;background:#fff0eb;border-color:#e8bcb2;}
+.game-like:disabled{cursor:default;opacity:.6;}
+.game-like:focus-visible{outline:2px solid #73896c;outline-offset:3px;}
+.likes-status{font:12px/1.8 system-ui,sans-serif;color:#888;margin:0 0 16px;}
+@media(prefers-reduced-motion:reduce){.game-like{transition:none;}}

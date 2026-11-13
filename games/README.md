@@ -37,9 +37,9 @@ python3 tools/sync-mini-circuit.py /Users/zhangmeiyue.zmy/Documents/workspace/mi
 
 《轨迹 / SLOT RUN》位于 `games/slot-run/`，复制自本地 slot-run 项目。保留 `index.html` 的 Three.js CDN 加载及内置备用版本，并随附可选的 `diagnostics.mjs`；正常游玩不启用诊断。游戏、工坊与存档逻辑未改动，迁移访问地址后不会自动带入旧地址存档。
 
-《手掌护田》位于 `games/hand-guardian/index.html`，为原单文件 Canvas/WebAudio 游戏的副本，未修改玩法。包含 6 个关卡，按住蓄力、松手张掌，支持高清渲染、移动端横屏适配和旋转触摸映射。
+《别动我的农田》位于 `games/hand-guardian/index.html`，为原单文件 Canvas/WebAudio 游戏的副本，未修改玩法。包含 6 个关卡，按住蓄力、松手张掌，支持高清渲染、移动端横屏适配和旋转触摸映射。
 
-### 从其他对话同步手掌护田
+### 从其他对话同步别动我的农田
 
 游戏源码继续在原项目维护，博客只保存发布副本。对话之间不会自动同步文件；在原项目完成修改、构建和测试后，从博客仓库运行：
 
