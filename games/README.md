@@ -108,3 +108,12 @@ GitHub Pages 不能运行后端服务。需要账号、联机服务或数据库�
 在博客仓库中预览并确认游玩链接、手机操作和资源加载正常，再提交并推送 `master`，等待 Pages 部署成功。
 
 当前仓库只有生成后的静态页面。如果未来恢复 Hexo 源项目，应把导航、社交链接和游戏页面同步到源项目，否则重新生成可能覆盖这些修改。
+
+
+## RUSTLINE
+
+`games/rustline/index.html` 为源项目构建的独立 HTML，保留原玩法与内嵌 Three.js，仅追加统计。建议电脑键鼠游玩。封面取自源项目 shots/p1-yard.png 并裁剪压缩。
+
+更新流程：先在 `/Users/zhangmeiyue.zmy/Documents/workspace/rustline` 运行 `npm run build`，再在博客运行 `python3 tools/sync-rustline.py /Users/zhangmeiyue.zmy/Documents/workspace/rustline`。不复制 node_modules、开发源码或历史截图，不自动提交部署。
+
+首次启用点赞需在 Supabase SQL Editor 执行 `supabase/add-rustline.sql`；未注册时按钮保持不可用。原有游戏不受影响。
