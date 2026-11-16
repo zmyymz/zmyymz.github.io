@@ -6,7 +6,7 @@
   var status = document.createElement('p');
   status.className = 'likes-status';
   status.setAttribute('role', 'status');
-  status.textContent = demo ? '点赞效果预览 · 仅保存在本机，不代表真实点赞数' : '点赞按浏览器记录，无需登录。';
+  status.textContent = demo ? '点赞效果预览 · 仅保存在本机，不代表真实点赞数' : '';
   var grid = document.querySelector('.game-grid');
   if (!grid) return;
   grid.before(status);

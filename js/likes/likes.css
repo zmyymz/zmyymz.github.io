@@ -6,4 +6,5 @@
 .game-like:disabled{cursor:default;opacity:.6;}
 .game-like:focus-visible{outline:2px solid #73896c;outline-offset:3px;}
 .likes-status{font:12px/1.8 system-ui,sans-serif;color:#888;margin:0 0 16px;}
+.likes-status:empty{display:none;}
 @media(prefers-reduced-motion:reduce){.game-like{transition:none;}}

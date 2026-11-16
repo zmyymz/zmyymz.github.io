@@ -48,7 +48,9 @@ export class Game {
   }
 
   startRound() {
-    this.discardPile.push(...this.hand, ...this.played);
+    // 打出的牌在 play() 里就已经进了弃牌堆/牌堆/手牌，这里只能收手牌，
+    // 再推一次 this.played 会让同一张牌在弃牌堆里出现两遍
+    this.discardPile.push(...this.hand);
     this.hand = [];
     this.played = [];
     this.selected.clear();
@@ -136,8 +138,9 @@ export class Game {
     for (const c of this.played) c.enterAt = now;
     this.hand = keep;
 
-    const returnCards = result.post.returnCards;
-    const markCards = result.post.markCards;
+    // 火车会把同一枚刻印重复结算，必须去重，否则同一张牌会被塞进手牌/牌堆两次
+    const returnCards = [...new Set(result.post.returnCards)];
+    const markCards = [...new Set(result.post.markCards)];
 
     for (const c of cards) {
       if (returnCards.includes(c) || markCards.includes(c)) continue;

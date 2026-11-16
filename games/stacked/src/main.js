@@ -37,7 +37,8 @@ function doPlay() {
   view.onPlayed(game);
   if (game.phase === 'won') {
     view.shakeT = 0.18;
-    view.burst(12, { x: 1462, y: 560 }, { x: 138, y: 800 });
+    const chips = Math.min(34, 10 + Math.round((game.payout || 0) / 5));
+    view.burst(chips, { x: 1462, y: 560 }, { x: 138, y: 800 }, { stagger: 0.05 });
   } else if (game.phase === 'lost') {
     view.burst(8, { x: 138, y: 700 }, { x: 1462, y: 800 });
   }

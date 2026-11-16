@@ -139,6 +139,7 @@ export class Renderer {
     this.chartOpen = false;
     this.chartTab = 0;
     this.hoverInfo = null;
+    this.lastChipSfx = -1;
   }
 
   dpr() {
@@ -237,17 +238,18 @@ export class Renderer {
   onPlayed(game) {
     const res = game.lastResult;
     if (!res) return;
-    this.burst(Math.min(14, 4 + Math.round(res.total / 40)), { x: W / 2, y: 300 }, { x: 138, y: 800 });
+    const count = Math.min(30, 7 + Math.round(res.total / 28));
+    this.burst(count, { x: W / 2, y: 300 }, { x: 138, y: 800 }, { stagger: count > 18 ? 0.052 : 0.046 });
     this.pushFloat(`+${fmt(res.total)}`, W / 2, 300, THEME.gold, 34);
   }
 
-  burst(count, from, to) {
+  burst(count, from, to, { stagger = 0.05 } = {}) {
     for (let i = 0; i < count; i++) {
       this.particles.push({
         chip: ['chipWhite', 'chipRedWhite', 'chipGreen', 'chipBlue'][i % 4],
         from: { x: from.x + (Math.random() - 0.5) * 260, y: from.y + (Math.random() - 0.5) * 120 },
         to: { x: to.x + (Math.random() - 0.5) * 26, y: to.y - Math.random() * 60 },
-        t: -i * 0.045,
+        t: -i * stagger,
         dur: 0.55 + Math.random() * 0.2,
         rot: Math.random() * Math.PI * 2,
         spin: (Math.random() - 0.5) * 8,
@@ -287,7 +289,11 @@ export class Renderer {
       p.t += dt;
       if (!p.landed && p.t >= p.dur) {
         p.landed = true;
-        if (Math.random() < 0.55) sfx('chipsCollide', { gain: 0.22, rate: 1.1 });
+        // 每枚落地的筹码都响，但限制最小间隔，避免糊成一团
+        if (this.time - this.lastChipSfx >= 0.045) {
+          this.lastChipSfx = this.time;
+          sfx('chipsCollide', { gain: 0.2 + Math.random() * 0.08, rate: 0.95 + Math.random() * 0.25 });
+        }
       }
     }
     this.particles = this.particles.filter((p) => p.t < p.dur + 0.25);
