@@ -32,25 +32,25 @@ const CONFIG = {
   width:1280,height:720,step:1/60,maxDelta:0.1,
   render:{minScale:1.5,maxDPR:3,maxWidth:3840,maxHeight:2160},
   farm:{maxHP:80,x:295,y:295,w:690,h:310,cropCols:6,cropRows:3,cellGap:14,eatRadius:88,damageTextInterval:0.8},
-  hand:{radius:45,chargeTime:0.85,
+  hand:{radius:45,artScale:.72,chargeTime:0.85,
     spring:160,damping:23,returnSpring:210,returnDamping:27,returnDistance:10,
     cooldown:0.24,burstDuration:0.18,openDuration:0.12,curlSpeed:18,pressCurl:0.10,chargeEase:1.25,maxReturnTime:0.14,
     baseDamage:1,extraDamage:2,knockback:360,extraKnockback:700,
     lift:220,extraLift:230,artTilt:0,pinchTilt:0},
   physics:{gravity:1200,airDrag:1.55,bounce:0.29,minBounce:80,stun:0.32,deathTime:1.5,separation:28},
   animals:{
-    rabbit:{radius:18,speed:80,hp:1,mass:0.8,eat:8,score:100},
-    boar:{radius:28,speed:60,hp:3,mass:1.6,eat:15,score:150},
+    rabbit:{radius:18,speed:88,hp:1,mass:0.8,eat:8,score:100},
+    boar:{radius:28,speed:66,hp:3,mass:1.6,eat:15,score:150},
     elephant:{radius:60,speed:35,hp:10,mass:6,eat:30,score:300},
-    monkey:{radius:20,speed:95,hp:2,mass:0.9,eat:7,score:120},
+    monkey:{radius:20,speed:105,hp:2,mass:0.9,eat:7,score:120},
     rabbitElite:{radius:20,speed:92,hp:2,mass:0.9,eat:9,score:220,base:'rabbit',elite:true},
     boarElite:{radius:30,speed:54,hp:5,mass:2,eat:18,score:360,base:'boar',elite:true},
     boarKing:{radius:50,speed:34,hp:16,mass:5,eat:24,score:900,base:'boar',boss:true}
   },
   growth:[
-    {base:18,full:30,limit:1},{base:22,full:38,limit:1},
-    {base:26,full:46,limit:2},{base:30,full:54,limit:2},
-    {base:34,full:62,limit:3},{base:38,full:70,limit:3}
+    {base:18,full:36,limit:1},{base:22,full:44,limit:1},
+    {base:26,full:52,limit:2},{base:30,full:60,limit:2},
+    {base:34,full:68,limit:3},{base:38,full:76,limit:3}
   ],
   upgrades:{
     growth:{name:'扩幅掌',desc:'蓄满攻击范围 +8',amount:8,max:5},
@@ -63,12 +63,12 @@ const CONFIG = {
     dropChance:0.12,pityKills:8,dropCooldown:2.8,lowHP:0.4,lowDropChance:0.3,
     heal:8,iceTime:4,iceSpeed:0.4,chiliTime:8,chiliDamage:1.3},
   levels:[
-    {name:'小苗初长',hint:'靠近兔子，蓄满再松手',maxActive:4,waves:[
-      {types:['rabbit','rabbit','rabbit'],interval:2.2},
-      {types:['rabbit','rabbit','rabbit','rabbit'],interval:2},
-      {types:['rabbit','rabbit','rabbit','rabbit','rabbit'],interval:1.9},
-      {types:['rabbit','rabbit','rabbitElite','rabbit','rabbit'],interval:1.8},
-      {types:['rabbit','rabbit','rabbit','rabbit','rabbitElite','rabbit'],interval:1.7}]},
+    {name:'小苗初长',hint:'靠近兔子，蓄到 65% 即可击败',maxActive:3,waves:[
+      {types:['rabbit','rabbit','rabbit'],interval:2.8,batch:1},
+      {types:['rabbit','rabbit','rabbit'],interval:2.6,batch:1},
+      {types:['rabbit','rabbit','rabbit','rabbit'],interval:2.4,batch:1},
+      {types:['rabbit','rabbit','rabbit','rabbit','rabbit','rabbit'],interval:2.6,batch:1,stagger:.6},
+      {types:['rabbitElite'],interval:2.8,batch:1}]},
     {name:'兔群来访',hint:'精英更耐打，别让它们扎堆',maxActive:5,waves:[
       {types:['rabbit','rabbit','rabbit','boar'],interval:1.9},
       {types:['rabbit','rabbitElite','rabbit','boar','rabbit'],interval:1.8},
@@ -80,23 +80,23 @@ const CONFIG = {
       {types:['rabbitElite','rabbit','boar','rabbit','boar'],interval:1.8},
       {types:['boarElite','rabbit','rabbitElite','boar','rabbit'],interval:1.7},
       {types:['boarKing','rabbit','boar','rabbit'],interval:2.4}]},
-    {name:'象脚来了',hint:'大象皮厚，蓄满力连拍',maxActive:4,waves:[
-      {types:['rabbit','rabbit','rabbit','rabbit'],interval:2},
-      {types:['boar','rabbit','rabbit','boar'],interval:2},
-      {types:['rabbit','rabbit','boar','rabbit','rabbit'],interval:1.9},
-      {types:['elephant','rabbit','boar','rabbit','rabbit'],interval:2.3}]},
-    {name:'左右夹击',hint:'两侧来敌，冰霜果可减速',maxActive:5,waves:[
-      {types:['boar','rabbit','rabbit','boar'],interval:1.8},
-      {types:['rabbit','rabbit','boar','rabbit','boar'],interval:1.7},
-      {types:['rabbit','elephant','rabbit','boar'],interval:2.1},
-      {types:['boar','rabbit','boar','monkey','rabbit'],interval:1.7},
-      {types:['rabbit','boar','rabbit','boar','monkey','rabbit'],interval:1.6}]},
-    {name:'丰收保卫战',hint:'两只大象分批来袭',maxActive:5,waves:[
-      {types:['rabbit','boar','rabbit','rabbit','boar'],interval:1.7},
-      {types:['rabbit','rabbit','boar','monkey','boar','rabbit'],interval:1.6},
-      {types:['elephant','rabbit','boar','rabbit','rabbit'],interval:2.1},
-      {types:['rabbit','boar','rabbit','rabbit','boar','rabbit'],interval:1.6},
-      {types:['elephant','boar','rabbit','monkey','boar','rabbit','rabbit'],interval:1.8}]}
+    {name:'象脚来了',hint:'大象压田，猴子偷菜，先救哪边？',maxActive:6,waves:[
+      {types:['boar','rabbit','rabbitElite','monkey','rabbit','boar'],interval:2.2},
+      {types:['elephant','monkey','rabbit','boarElite','rabbit','rabbit'],interval:2.3},
+      {types:['boarElite','rabbit','monkey','rabbitElite','boar','rabbit'],interval:2},
+      {types:['elephant','rabbit','monkey','boar','rabbitElite','boarElite'],interval:2.1}]},
+    {name:'左右夹击',hint:'三路来敌，别只盯着大象',maxActive:7,waves:[
+      {types:['boar','rabbit','rabbitElite','monkey','boarElite','rabbit'],interval:2.2},
+      {types:['rabbitElite','boar','monkey','rabbit','boarElite','rabbit','monkey'],interval:2},
+      {types:['elephant','rabbit','monkey','boarElite','rabbit','boar'],interval:2.2},
+      {types:['boarElite','rabbitElite','boar','monkey','rabbit','rabbitElite','boar'],interval:1.9},
+      {types:['rabbit','elephant','monkey','boarElite','rabbitElite','boar','rabbit'],interval:2}]},
+    {name:'丰收保卫战',hint:'双象接力，精英与小偷持续来袭',maxActive:7,waves:[
+      {types:['rabbitElite','boar','monkey','rabbit','boarElite','rabbit'],interval:2},
+      {types:['boarElite','rabbitElite','boar','monkey','rabbit','rabbitElite'],interval:1.9},
+      {types:['elephant','rabbit','monkey','boarElite','rabbitElite','boar','rabbit'],interval:2.2},
+      {types:['rabbitElite','boarElite','monkey','rabbit','boar','monkey','rabbit'],interval:1.8},
+      {types:['elephant','boarElite','rabbitElite','monkey','boar','rabbit','monkey','rabbit'],interval:2}]}
   ],
   save:{key:'hand-guardian-campaign-v2',version:2},
   waveIntro:1.5,waveClear:2.5,tutorialTime:12,comboWindow:1.2,maxMultiplier:5,
@@ -206,6 +206,14 @@ class ParticleSystem{
 }
 
 // ── CampaignStore：逐关快照、通关记录、未领取奖励均可恢复 ───────────
+const ROUTES={
+  echo:{name:'余震',desc:'满蓄力追加一次半伤冲击',sub:'延迟 0.35 秒，在原位置触发',max:1},
+  fist:{name:'重拳',desc:'满蓄力伤害 +2',sub:'代价：蓄满时间增加 25%',max:1},
+  sweep:{name:'横扫',desc:'同时攻击目标 +1',sub:'代价：所有攻击伤害降低 25%',max:1},
+  gust:{name:'疾风掌',desc:'轻点即可快推，伤害 0.5',sub:'冷却 0.6 秒 · 与重拳互斥',max:1}
+};
+const freshRoutes=()=>({echo:0,fist:0,sweep:0,gust:0});
+const validRoutes=r=>r&&Object.keys(ROUTES).every(k=>Number.isInteger(r[k])&&r[k]>=0&&r[k]<=1);
 const freshBuild=()=>({growth:0,heavy:0,quick:0,soil:0,stun:0});
 const copyBuild=b=>({growth:b.growth,heavy:b.heavy,quick:b.quick,soil:b.soil,stun:b.stun});
 const validBuild=b=>b&&Number.isInteger(b.growth)&&b.growth>=0&&b.growth<CONFIG.growth.length&&
@@ -218,8 +226,10 @@ class RunStore{
     try{
       const raw=window.localStorage.getItem(RUN_KEY);if(!raw)return this.empty();
       const d=JSON.parse(raw);
-      if(d.version!==1||!d.active||!Number.isInteger(d.level)||d.level<0||d.level>2||!Number.isFinite(d.hp)||d.hp<=0||!Number.isFinite(d.score)||d.score<0||!Number.isInteger(d.crop)||d.crop<0||d.crop>2||!validBuild(d.build))throw new Error('invalid run');
+      if(d.version!==1||!d.active||!Number.isInteger(d.level)||d.level<0||d.level>=CONFIG.levels.length||!Number.isFinite(d.hp)||d.hp<=0||!Number.isFinite(d.score)||d.score<0||!Number.isInteger(d.crop)||d.crop<0||d.crop>2||!validBuild(d.build))throw new Error('invalid run');
       d.cropUp=validCropUp(d.cropUp)?d.cropUp:freshCropUp();
+      const routes={...freshRoutes(),...d.routes};
+      d.routes=validRoutes(routes)&&!(routes.fist&&routes.gust)?routes:freshRoutes();
       return d;
     }catch(e){this.available=false;return this.empty()}
   }
@@ -314,16 +324,24 @@ class PickupSystem{
 
 // ── Animal：左右入场、进食、受击、伪 3D 高度和落地弹跳 ─────────────
 class Animal{
-  constructor(type,side,y){this.type=type;this.cfg=CONFIG.animals[type];this.base=this.cfg.base||type;this.boss=!!this.cfg.boss;this.elite=!!this.cfg.elite;this.radius=this.cfg.radius;this.dir=side;this.x=side===1?-this.radius-12:CONFIG.width+this.radius+12;this.y=y;this.hp=this.cfg.hp;this.maxHP=this.cfg.hp;this.vx=0;this.vy=0;this.z=0;this.vz=0;this.rotation=0;this.spin=0;this.state='WALKING';this.stun=0;this.flash=0;this.age=0;this.death=0;this.remove=false;this.scored=false;this.struck=false;this.eating=false;this.phase=rand(0,TAU);this.blink=rand(1,4);this.blinkTime=0;this.twitch=rand(1,3);this.twitchTime=0;this.entryDir=side;this.stealing=false;this.stealTime=0;this.carrying=false;this.stealTarget=null;this.stealPrev=0;this.stealCooldown=0;this.rootTime=0;this.chokeTime=0;this.chokeCooldown=0;this.stompTimer=4;this.cropBitten=false;this.biteTimer=0}
-  hit(dx,dy,power,damage){
-    if(this.remove||this.hp<=0)return;if(this.type==='monkey'&&(this.carrying||this.stealing))this.dropCrop();this.hp=Math.max(0,this.hp-damage);this.state=this.hp<=0?'DEAD':'STUNNED';this.struck=true;this.stun=game.stunDuration;this.flash=.15;
-    if(this.hp>0&&game.cropType===1&&power>=.99){this.rootTime=this.boss?game.rootDuration*.5:game.rootDuration;game.fx.text('定身！',clamp(this.x,100,1180),this.y-this.z-96,'#a77c2f',20)}
-    const force=(CONFIG.hand.knockback+power*CONFIG.hand.extraKnockback)/this.cfg.mass;
-    this.vx=dx*force;this.vy=dy*force*.6;this.vz=(CONFIG.hand.lift+power*CONFIG.hand.extraLift)/Math.sqrt(this.cfg.mass);this.z=Math.max(2,this.z);this.spin=(dx>=0?1:-1)*(this.type==='elephant'?1.5:7);game.onHit(this,power);
+  constructor(type,side,y){this.type=type;this.cfg=CONFIG.animals[type];this.base=this.cfg.base||type;this.boss=!!this.cfg.boss;this.elite=!!this.cfg.elite;this.radius=this.cfg.radius;this.dir=side;this.x=side===1?-this.radius-12:CONFIG.width+this.radius+12;this.y=y;this.hp=this.cfg.hp;this.maxHP=this.cfg.hp;this.vx=0;this.vy=0;this.z=0;this.vz=0;this.rotation=0;this.spin=0;this.state='WALKING';this.stun=0;this.flash=0;this.age=0;this.death=0;this.remove=false;this.scored=false;this.struck=false;this.eating=false;this.phase=rand(0,TAU);this.blink=rand(1,4);this.blinkTime=0;this.twitch=rand(1,3);this.twitchTime=0;this.entryDir=side;this.stealing=false;this.stealTime=0;this.carrying=false;this.stealTarget=null;this.stealPrev=0;this.stealCooldown=0;this.rootTime=0;this.chokeTime=0;this.chokeCooldown=0;this.stompTimer=4;this.cropBitten=false;this.biteTimer=0;this.fieldTime=0}
+  hit(dx,dy,power,damage,quickPush=false){
+    if(this.remove||this.hp<=0||this.state==='RETURNING')return;
+    if(this.type==='monkey'&&(this.carrying||this.stealing))this.dropCrop();
+    this.hp=Math.max(0,this.hp-damage);this.state=this.hp<=0?'DEAD':'STUNNED';this.struck=true;
+    this.stun=quickPush?.15:power>=.8?game.stunDuration:.08;this.flash=.15;
+    if(this.hp>0&&game.cropType===1&&power>=1&&!quickPush){this.rootTime=this.boss?game.rootDuration*.5:game.rootDuration;game.fx.text('定身！',clamp(this.x,100,1180),this.y-this.z-96,'#a77c2f',20)}
+    const push=quickPush?420:power<.8?lerp(45,110,clamp((power-.3)/.5,0,1)):lerp(160,CONFIG.hand.knockback+CONFIG.hand.extraKnockback,(power-.8)/.2);
+    const force=push/this.cfg.mass;
+    this.vx=dx*force;this.vy=dy*force*.6;
+    if(power>=1&&!quickPush){this.vz=(CONFIG.hand.lift+CONFIG.hand.extraLift)/Math.sqrt(this.cfg.mass);this.z=Math.max(2,this.z);this.spin=(dx>=0?1:-1)*(this.type==='elephant'?1.5:7)}
+    else{this.vz=0;this.spin=0;this.z=0;this.rotation=0}
+    game.onHit(this,power);
   }
   knockout(){if(this.scored)return;this.scored=true;if(this.type==='monkey')this.dropCrop();this.remove=true;game.pickups.maybeDrop(this);const points=this.cfg.score+CONFIG.scoring.knockout+(this.type==='elephant'?CONFIG.scoring.elephantBonus:0);game.addScore(points,clamp(this.x,80,1200),clamp(this.y-this.z,150,620));if(this.type==='elephant')game.fx.text('大象退场！',clamp(this.x,150,1130),this.y-this.z-50,C.green,27);if(this.boss){game.fx.text('猪王退场！',clamp(this.x,150,1130),this.y-this.z-60,C.gold,32);game.shakeTime=CONFIG.fx.shakeDuration;game.shakeMag=CONFIG.fx.shakeMax}}
   update(dt){
     this.age+=dt;this.flash=Math.max(0,this.flash-dt);this.eating=false;
+    if(this.state==='RETURNING'){this.returnDelay-=dt;if(this.returnDelay<=0)this.state='WALKING';return}
     this.blink-=dt;if(this.blink<=0){this.blinkTime=.12;this.blink=rand(2,5)}
     this.blinkTime=Math.max(0,this.blinkTime-dt);
     this.twitch-=dt;if(this.twitch<=0){this.twitchTime=.2;this.twitch=rand(1.5,4.5)}
@@ -334,7 +352,7 @@ class Animal{
     if(this.state==='WALKING'){
       this.rootTime=Math.max(0,this.rootTime-dt);
       if(this.rootTime>0)return;
-      const speed=this.cfg.speed*(game.buffs.ice>0?CONFIG.pickups.iceSpeed:1)*(game.cropType===2?1.15:1)*(this.chokeTime>0?.6:1);
+      const speed=(this.type==='rabbit'&&game.levelIndex===0?80:this.cfg.speed)*(game.buffs.ice>0?CONFIG.pickups.iceSpeed:1)*(game.cropType===2?1.15:1)*(this.chokeTime>0?.6:1);
       if(this.type==='monkey'&&this.stealing){
         this.stealTime-=dt;
         if(this.stealTime<=0){
@@ -352,6 +370,8 @@ class Animal{
           else if(out)this.remove=true;
         }else{
           if(inside){
+            this.fieldTime+=dt;
+            if(this.base==='rabbit'&&this.fieldTime<.8)return;
             if(game.cropType===0&&this.chokeCooldown<=0&&this.chokeTime<=0){
               this.chokeTime=this.boss?1:game.chokeDuration;this.chokeCooldown=5;
               game.fx.text('噎住了！',clamp(this.x,100,1180),this.y-this.z-100,'#b05136',18);
@@ -369,7 +389,10 @@ class Animal{
     }else{
       this.x+=this.vx*dt;this.y+=this.vy*dt;this.vx*=Math.exp(-CONFIG.physics.airDrag*dt);this.vy*=Math.exp(-CONFIG.physics.airDrag*dt);this.z+=this.vz*dt;this.vz-=CONFIG.physics.gravity*dt;this.rotation+=this.spin*dt;
       if(this.z<=0){this.z=0;if(Math.abs(this.vz)>CONFIG.physics.minBounce){this.vz=-this.vz*CONFIG.physics.bounce;game.fx.dust(this.x,this.y)}else{this.vz=0;this.stun-=dt;this.spin*=.6;if(this.hp>0&&this.stun<=0){this.state='WALKING';this.rotation=0;this.y=clamp(this.y,310,600)}}}
-      if(this.struck&&(this.x<-this.radius-45||this.x>CONFIG.width+this.radius+45||this.y>CONFIG.height+this.radius||this.y<170-this.radius)){if((this.type==='elephant'||this.boss)&&this.hp>0){this.x=clamp(this.x,this.radius,CONFIG.width-this.radius);this.y=clamp(this.y,310,600);this.vx*=.1;this.vy*=.1}else this.knockout()}
+      if(this.struck&&(this.x<-this.radius-45||this.x>CONFIG.width+this.radius+45||this.y>CONFIG.height+this.radius||this.y<170-this.radius)){
+        if(this.hp<=0)this.knockout();
+        else{this.state='RETURNING';this.returnDelay=1.3;this.x=this.x<CONFIG.width/2?-this.radius-24:CONFIG.width+this.radius+24;this.dir=this.x<0?1:-1;this.entryDir=this.dir;this.y=clamp(this.y,338,575);this.vx=this.vy=this.vz=this.z=this.rotation=this.spin=0;this.struck=false;this.eating=false;game.fx.text('还会回来！',clamp(this.x,100,1180),this.y-75,'#b05136',16)}
+      }
       if(this.hp<=0){this.death+=dt;if(this.death>CONFIG.physics.deathTime)this.knockout()}
     }
   }
@@ -511,7 +534,7 @@ class Hand{
     return true;
   }
   beginCharge(){
-    this.state='CHARGING';this.chargeElapsed=0;this.power=0;
+    this.state='CHARGING';this.chargeElapsed=0;this.power=0;this.readySound=false;
     this.curl=CONFIG.hand.pressCurl;this.returnTime=0;
     this.x=this.targetX;this.y=this.targetY;this.vx=this.vy=0;
   }
@@ -519,16 +542,18 @@ class Hand{
     this.held=false;
     // 等待期间已经松手就取消，不在稍后补发一次意外攻击。
     if(this.state!=='CHARGING')return false;
+    const quickPush=!!game.routes.gust&&this.power<.3;
+    if(this.power<.3&&!quickPush){this.cancel();return false}
     const h=CONFIG.hand;
     this.state='BURSTING';this.burstTime=0;this.burstCurl=this.curl;
-    this.cooldown=h.cooldown;
+    this.cooldown=quickPush?.6:h.cooldown;this.cooldownDuration=this.cooldown;
     this.burstRange=this.range;this.vx=this.vy=0;this.hits.clear();
     // 只按距离找范围内的目标；击退方向由动物相对掌心的位置自动计算。
     // 开局只命中最近一只；成长逐步解锁多目标，每个目标各命中一次。
     while(this.hits.size<game.growth.limit){
       let nearest=null,best=Infinity;
       for(const a of game.animals){
-        if(a.remove||a.hp<=0||this.hits.has(a))continue;
+        if(a.remove||a.hp<=0||a.state==='RETURNING'||this.hits.has(a))continue;
         const distance=Math.hypot(a.x-this.x,a.y-a.z-this.y);
         if(distance<=this.burstRange+a.radius&&distance<best){best=distance;nearest=a}
       }
@@ -538,9 +563,10 @@ class Hand{
       // 正好与掌心重合时自动推向最近的左右边界，避免零向量。
       if(distance<0.001){dx=nearest.x<CONFIG.width/2?-1:1;dy=0}
       else{dx/=distance;dy/=distance}
-      const damage=game.attackDamage(this.power);
-      this.hits.add(nearest);nearest.hit(dx,dy,this.power,damage);
+      const damage=game.attackDamage(this.power,quickPush);
+      this.hits.add(nearest);nearest.hit(dx,dy,this.power,damage,quickPush);
     }
+    if(game.routes.echo&&this.power>=1)game.echoes.push({x:this.x,y:this.y,range:this.burstRange,limit:game.growth.limit,damage:game.attackDamage(this.power)*.5,time:.35});
     audio.whoosh(this.power);
     game.fx.burst(this.x,this.y,6+Math.round(this.power*8));
     this.power=0;this.chargeElapsed=0;
@@ -569,6 +595,7 @@ class Hand{
     if(this.state==='CHARGING'&&active){
       this.chargeElapsed=Math.min(game.chargeDuration,this.chargeElapsed+dt);
       this.power=clamp(this.chargeElapsed/game.chargeDuration,0,1);
+      if(this.power>=1&&!this.readySound){this.readySound=true;audio.tone(720,960,.09,'sine',.35)}
       // 手型和力量条读取同一个进度，蓄满时才真正完全握拳。
       this.curl=h.pressCurl+(1-h.pressCurl)*(1-Math.pow(1-this.power,h.chargeEase));
     }else{
@@ -587,13 +614,14 @@ class Hand{
     if(this.state==='CHARGING'){
       // 圆形范围替代方向虚线；不论从哪里拖动，攻击始终覆盖四周。
       ctx.globalAlpha=.08;ellipse(this.x,this.y,this.range,this.range,C.gold);
-      ctx.globalAlpha=.7;ellipse(this.x,this.y,this.range,this.range,null,C.cream,2);
+      ctx.globalAlpha=this.power<.3?.25:.8;ellipse(this.x,this.y,this.range,this.range,null,this.power>=.8?C.gold:C.cream,2);
       ctx.globalAlpha=1;
       if(this.power>0){ctx.beginPath();ctx.arc(this.x,this.y,this.range,-Math.PI/2,-Math.PI/2+TAU*this.power);ctx.strokeStyle=C.gold;ctx.lineWidth=5;ctx.stroke()}
       const bx=clamp(this.x-62,10,1146),by=clamp(this.y+59,120,CONFIG.height-88);
       rounded(bx,by,124,12,6,'#244d3d');
       rounded(bx+3,by+3,118*this.power,6,3,C.gold);
-      label(this.power>=1?`松手弹开 · ${game.growth.limit}目标`:`蓄力 ${Math.round(this.power*100)}% · ${game.growth.limit}目标`,bx+62,by+29,15,C.cream,'center',800);
+      const hint=this.power>=1?'松手出掌':this.power<.3?(game.routes.gust?'松手快推':'蓄力中'):this.power<.8?'松手轻推':'松手出掌';
+      label(`${hint} · ${Math.round(this.power*100)}%`,bx+62,by+29,15,C.cream,'center',800);
     }
     if(this.state==='BURSTING'){
       const t=clamp(this.burstTime/CONFIG.hand.burstDuration,0,1);
@@ -607,7 +635,7 @@ class Hand{
     }
     ctx.translate(this.x,this.y);
     const pop=this.state==='BURSTING'?Math.sin(Math.PI*clamp(this.burstTime/CONFIG.hand.burstDuration,0,1))*.2:0;
-    const scale=1-this.curl*.09+pop;
+    const scale=(1-this.curl*.09+pop)*CONFIG.hand.artScale;
     ctx.scale(scale,scale);
     ctx.rotate(CONFIG.hand.artTilt+CONFIG.hand.pinchTilt*this.curl);
     ctx.save();ctx.translate(3,7);this.shape('rgba(32,62,55,.22)',null,this.curl);ctx.restore();
@@ -620,7 +648,7 @@ class Hand{
       ctx.restore();
     }
     if(this.cooldown>0&&this.state!=='CHARGING'){
-      ctx.beginPath();ctx.arc(0,1,53,-Math.PI/2,-Math.PI/2+TAU*(1-this.cooldown/CONFIG.hand.cooldown));ctx.strokeStyle='#d5ded0';ctx.lineWidth=2;ctx.stroke();
+      ctx.beginPath();ctx.arc(0,1,53,-Math.PI/2,-Math.PI/2+TAU*(1-this.cooldown/this.cooldownDuration));ctx.strokeStyle='#d5ded0';ctx.lineWidth=2;ctx.stroke();
     }
     ctx.restore();
   }
@@ -747,12 +775,16 @@ class WaveManager{
     if(this.intro>0){this.intro=Math.max(0,this.intro-dt);return}
     const stage=CONFIG.levels[game.levelIndex],wave=stage.waves[this.index];this.timer-=dt;
     if(this.spawned<wave.types.length&&this.timer<=0&&game.animals.length<stage.maxActive){
-      let side=game.levelIndex===0&&this.index===0?1:((this.spawned+this.index)%2===0?1:-1);
-      const type=wave.types[this.spawned],y=game.levelIndex===0&&this.index===0?420:type==='boarKing'?430:rand(338,575);
-      game.animals.push(new Animal(type,side,y));this.spawned++;this.timer=wave.interval;
-      if(type==='boarKing'){game.fx.text('猪王来了！',640,210,C.gold,30);game.shakeTime=CONFIG.fx.shakeDuration;game.shakeMag=CONFIG.fx.shakeMax}
+      const count=Math.min(wave.batch||(game.levelIndex===0?(this.index<2?1:2):game.levelIndex>=4?3:2),wave.types.length-this.spawned,stage.maxActive-game.animals.length);
+      for(let i=0;i<count;i++){
+        const side=game.levelIndex===0&&this.index===0?1:((this.spawned+this.index)%2===0?1:-1);
+        const type=wave.types[this.spawned],y=game.levelIndex===0&&this.index===0?420:type==='boarKing'?430:[350,445,550][(this.spawned+this.index)%3]+rand(-10,10);
+        const a=new Animal(type,side,y);a.x-=side*i*30;game.animals.push(a);this.spawned++;
+        if(type==='boarKing'){game.fx.text('猪王来了！',640,210,C.gold,30);game.shakeTime=CONFIG.fx.shakeDuration;game.shakeMag=CONFIG.fx.shakeMax}
+      }
+      this.timer=wave.stagger&&this.spawned%2===1?wave.stagger:wave.interval;
     }
-    if(this.spawned===wave.types.length&&game.animals.length===0)game.clearWave();
+    if(this.spawned===wave.types.length&&game.animals.length===0&&game.echoes.length===0)game.clearWave();
   }
 }
 
@@ -761,18 +793,18 @@ class Game{
   constructor(){
     this.store=new CampaignStore();this.build=freshBuild();this.levelIndex=0;this.state='MENU';
     this.scene=new Scene();this.fx=new ParticleSystem();this.hand=new Hand();this.waves=new WaveManager();this.pickups=new PickupSystem();
-    this.cropType=0;this.cropUp=freshCropUp();
+    this.cropType=0;this.cropUp=freshCropUp();this.routes=freshRoutes();this.echoes=[];
     this.animals=[];this.score=0;this.hp=this.maxHP;this.combo=0;this.comboTime=0;this.elapsed=0;this.visualTime=0;
     this.shakeTime=0;this.shakeMag=0;this.damageAmount=0;this.damageClock=0;this.tutorial=0;this.buffs={ice:0,chili:0};
     this.seedCollected=false;this.seedSpawned=false;this.result=null;this.growthNotice=0;
-    this.cropOffers=[0,1,2];this.rewards=[];this.levelIntro=0;this.runStore=new RunStore();this.runFresh=false;
+    this.cropOffers=[0,1,2];this.rewards=[];this.levelIntro=0;this.runOverTime=0;this.runStore=new RunStore();this.runFresh=false;
   }
-  get growth(){return CONFIG.growth[this.build.growth]}
+  get growth(){const g=CONFIG.growth[this.build.growth];return {...g,limit:g.limit+this.routes.sweep}}
   get maxHP(){return CONFIG.farm.maxHP+this.build.soil*CONFIG.upgrades.soil.amount+(this.cropType===0?15+(this.cropUp.cabbageHeart||0)*10:0)-(this.cropType===2?10:0)}
   get chargeDuration(){
     let t=CONFIG.hand.chargeTime-this.build.quick*CONFIG.upgrades.quick.amount;
     if(this.cropType===1)t*=.8*Math.pow(.92,this.cropUp.carrotQuick||0);
-    return Math.max(.2,t);
+    return Math.max(.45,t)*(this.routes.fist?1.25:1);
   }
   get chokeDuration(){return 2+(this.cropUp.cabbageChoke||0)*.5}
   get rootDuration(){return 1.2+(this.cropUp.carrotRoot||0)*.4}
@@ -784,7 +816,22 @@ class Game{
   get highest(){return this.store.data.checkpoints.length-1}
   get level(){return CONFIG.levels[this.levelIndex]}
   get remaining(){return this.level.waves[this.waves.index].types.length-this.waves.spawned+this.animals.length}
-  attackDamage(power){return (CONFIG.hand.baseDamage+power*(CONFIG.hand.extraDamage+this.build.heavy*CONFIG.upgrades.heavy.amount))*(this.buffs.chili>0?CONFIG.pickups.chiliDamage:1)}
+  attackDamage(power,quickPush=false){
+    if(quickPush)return .5*(this.routes.sweep?.75:1);
+    if(power<.3)return 0;
+    const base=power>=1?3:power<.65?lerp(.3,1,(power-.3)/.35):power<.8?lerp(1,1.3,(power-.65)/.15):lerp(1.3,3,(power-.8)/.2);
+    const bonus=power>=.8?this.build.heavy*CONFIG.upgrades.heavy.amount*(power>=1?1:(power-.8)/.2):0;
+    return (base+bonus+(this.routes.fist&&power>=1?2:0))*(this.routes.sweep?.75:1)*(this.buffs.chili>0?CONFIG.pickups.chiliDamage:1);
+  }
+  updateEchoes(dt){
+    for(const e of this.echoes){
+      e.time-=dt;if(e.time>0)continue;
+      const targets=this.animals.filter(a=>!a.remove&&a.hp>0&&a.state!=='RETURNING'&&Math.hypot(a.x-e.x,a.y-a.z-e.y)<=e.range+a.radius).sort((a,b)=>Math.hypot(a.x-e.x,a.y-a.z-e.y)-Math.hypot(b.x-e.x,b.y-b.z-e.y)).slice(0,e.limit);
+      for(const a of targets){const dx=a.x-e.x,dy=a.y-a.z-e.y,d=Math.hypot(dx,dy);a.hit(d?dx/d:1,d?dy/d:0,.4,e.damage)}
+      this.fx.burst(e.x,e.y,8);
+    }
+    this.echoes=this.echoes.filter(e=>e.time>0);
+  }
   openMap(){
     input.cancel();
     if(this.store.data.pending){this.openUpgrades();return}
@@ -792,18 +839,18 @@ class Game{
   }
   start(){this.startLevel(this.highest)}
   startNewRun(){
-    this.runStore.clear();this.build=freshBuild();this.levelIndex=0;this.score=0;this.cropType=0;this.cropUp=freshCropUp();this.hp=CONFIG.farm.maxHP;this.cropOffers=[0,1,2];this.runFresh=true;
+    this.runStore.clear();this.build=freshBuild();this.levelIndex=0;this.score=0;this.cropType=0;this.cropUp=freshCropUp();this.routes=freshRoutes();this.echoes=[];this.hp=CONFIG.farm.maxHP;this.cropOffers=[0,1,2];this.runFresh=true;
     this.animals.length=0;this.scene.reset();this.scene.replant=.35;this.fx.reset();this.pickups.reset();
     input.cancel();this.state='CROP';audio.unlock();
   }
   resumeRun(){
     const d=this.runStore.load();if(!d.active){this.startNewRun();return}
-    this.build=copyBuild(d.build);this.cropUp=copyCropUp(d.cropUp||{});this.levelIndex=d.level;this.score=d.score;this.cropType=d.crop;this.hp=d.hp;this.runFresh=false;
+    this.build=copyBuild(d.build);this.routes={...d.routes};this.cropUp=copyCropUp(d.cropUp||{});this.levelIndex=d.level;this.score=d.score;this.cropType=d.crop;this.hp=d.hp;this.runFresh=false;
     this.startRunLevel(d.level,true);
   }
   startRunLevel(index,resume){
-    if(!Number.isInteger(index)||index<0||index>=3)return false;
-    input.cancel();this.levelIndex=index;
+    if(!Number.isInteger(index)||index<0||index>=CONFIG.levels.length)return false;
+    input.cancel();this.levelIndex=index;this.echoes=[];this.runOverTime=0;
     this.animals.length=0;this.fx.reset();this.scene.reset();this.scene.replant=.35;this.hand.reset();this.pickups.reset();this.waves.reset();
     this.hand.targetX=input.x;this.hand.targetY=input.y;
     this.combo=0;this.comboTime=0;this.elapsed=0;this.shakeTime=0;this.shakeMag=0;this.damageAmount=0;this.damageClock=0;
@@ -812,7 +859,7 @@ class Game{
     this.tutorial=index===0?CONFIG.tutorialTime:0;this.levelIntro=1.9;
     this.state='PLAYING';this.saveRun();audio.unlock();return true;
   }
-  saveRun(){this.runStore.save({version:1,active:true,level:this.levelIndex,hp:this.hp,score:this.score,crop:this.cropType,cropUp:copyCropUp(this.cropUp),build:copyBuild(this.build)})}
+  saveRun(){this.runStore.save({version:1,active:true,level:this.levelIndex,hp:this.hp,score:this.score,crop:this.cropType,cropUp:copyCropUp(this.cropUp),routes:{...this.routes},build:copyBuild(this.build)})}
   chooseCrop(type){
     if(this.state!=='CROP'||!this.cropOffers.includes(type))return false;
     this.cropType=type;this.cropUp=freshCropUp();this.hp=this.maxHP;this.runFresh=false;
@@ -825,6 +872,7 @@ class Game{
   rewardInfo(key){
     if(key==='heal')return{name:'水壶补给',desc:'恢复 10 生命',sub:'立刻生效',tag:'补给'};
     if(key==='score')return{name:'丰收加成',desc:'额外 +250 分',sub:'立刻生效',tag:'补给'};
+    if(ROUTES[key]){const u=ROUTES[key];return{name:u.name,desc:u.desc,sub:u.sub,tag:'路线 · 本局一次'}}
     if(key==='growth'){const u=CONFIG.upgrades.growth,lv=this.build.growth;return{name:u.name,desc:u.desc,sub:`范围 Lv.${lv} → ${lv+1}`,tag:'范围'}}
     if(CONFIG.upgrades[key]){const u=CONFIG.upgrades[key],lv=this.build[key];return{name:u.name,desc:u.desc,sub:`手掌 Lv.${lv} → ${lv+1}`,tag:'手掌'}}
     const u=cropUpgradeFor(this.cropType,key);
@@ -835,24 +883,28 @@ class Game{
     const generic=Object.keys(CONFIG.upgrades).filter(k=>this.build[k]<CONFIG.upgrades[k].max);
     const cropPool=(CROP_UPGRADES[this.cropType]||[]).filter(u=>(this.cropUp[u.key]||0)<u.max).map(u=>u.key);
     const growthAvailable=this.build.growth<CONFIG.growth.length-1;
-    const pool=[...generic,...cropPool];
+    const routePool=this.levelIndex>=1?Object.keys(ROUTES).filter(k=>!this.routes[k]&&!(k==='gust'&&this.routes.fist)&&!(k==='fist'&&this.routes.gust)):[];
+    const pool=[...generic,...cropPool,...routePool];
     if(this.hp<this.maxHP)pool.push('heal');
     for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
     const offers=pool.slice(0,3);
-    if(cropPool.length&&!offers.some(k=>cropPool.includes(k))){const i=offers.findIndex(k=>!cropPool.includes(k));if(i>=0)offers[i]=cropPool[Math.floor(Math.random()*cropPool.length)]}
-    if(growthAvailable&&!offers.includes('growth')){const i=offers.findIndex(k=>k!=='growth'&&!cropPool.includes(k));if(i>=0)offers[i]='growth'}
+    if(this.levelIndex===0&&growthAvailable&&!offers.includes('growth'))offers[0]='growth';
+    if(routePool.length&&!offers.some(k=>routePool.includes(k)))offers[0]=routePool[Math.floor(Math.random()*routePool.length)];
+    if(this.levelIndex===2&&routePool.length){const rest=offers.filter(k=>!routePool.includes(k));const shuffled=pool.filter(k=>routePool.includes(k)).slice(0,3);offers.splice(0,offers.length,...shuffled,...rest.slice(0,3-shuffled.length))}
     for(const k of ['heal','score'])if(offers.length<3&&!offers.includes(k))offers.push(k);
     return offers;
   }
   chooseReward(key){
     if(this.state!=='REWARD'||!this.rewards.includes(key))return false;
+    if((key==='gust'&&this.routes.fist)||(key==='fist'&&this.routes.gust))return false;
     if(key==='heal')this.hp=Math.min(this.maxHP,this.hp+10);
     else if(key==='score')this.score+=250;
+    else if(ROUTES[key])this.routes[key]=1;
     else if(CONFIG.upgrades[key]&&this.build[key]<CONFIG.upgrades[key].max)this.build[key]++;
     else{const u=cropUpgradeFor(this.cropType,key);if(u&&(this.cropUp[key]||0)<u.max)this.cropUp[key]=(this.cropUp[key]||0)+1}
     if(key==='cabbageHeart')this.hp=Math.min(this.maxHP,this.hp+10);
     this.rewards=[];this.levelIndex++;
-    if(this.levelIndex>=3){this.state='EXPEDITION_CLEAR';this.runStore.clear()}
+    if(this.levelIndex>=CONFIG.levels.length){this.state='EXPEDITION_CLEAR';this.runStore.clear()}
     else this.startRunLevel(this.levelIndex,false);
     audio.clear();return true;
   }
@@ -865,7 +917,7 @@ class Game{
     if(harvest){this.score+=harvest;this.fx.text(`丰收 +${harvest}`,640,360,C.green,24)}
     if(this.cropType===0)this.hp=Math.min(this.maxHP,this.hp+Math.floor(healthy/10));
     this.pickups.reset();this.buffs.ice=0;this.buffs.chili=0;input.cancel();
-    if(this.levelIndex>=2){this.state='EXPEDITION_CLEAR';this.runStore.clear();audio.clear();return}
+    if(this.levelIndex>=CONFIG.levels.length-1){this.state='EXPEDITION_CLEAR';this.runStore.clear();audio.clear();return}
     this.rewards=this.makeRewards();this.state='REWARD';audio.clear();
   }
   startLevel(index){
@@ -968,7 +1020,7 @@ class Game{
   }
   update(dt){
     if(this.state==='PAUSED')return;this.visualTime+=dt;
-    if(!['PLAYING','WAVE_CLEAR'].includes(this.state)){this.hand.update(dt,false);this.fx.update(dt);return}
+    if(!['PLAYING','WAVE_CLEAR'].includes(this.state)){if(this.state==='RUN_OVER')this.runOverTime+=dt;this.hand.update(dt,false);this.fx.update(dt);return}
     this.shakeTime=Math.max(0,this.shakeTime-dt);this.growthNotice=Math.max(0,this.growthNotice-dt);this.fx.update(dt);
     this.buffs.ice=Math.max(0,this.buffs.ice-dt);this.buffs.chili=Math.max(0,this.buffs.chili-dt);
     if(this.state==='WAVE_CLEAR'){
@@ -977,7 +1029,7 @@ class Game{
       return;
     }
     this.elapsed+=dt;this.tutorial=Math.max(0,this.tutorial-dt);this.levelIntro=Math.max(0,this.levelIntro-dt);this.comboTime=Math.max(0,this.comboTime-dt);if(!this.comboTime)this.combo=0;
-    this.hand.update(dt,true);
+    this.hand.update(dt,true);this.updateEchoes(dt);
     for(const a of this.animals)a.update(dt);
     for(let i=0;i<this.animals.length;i++)for(let j=i+1;j<this.animals.length;j++){
       const a=this.animals[i],b=this.animals[j];if(a.state!=='WALKING'||b.state!=='WALKING'||a.remove||b.remove)continue;
@@ -987,7 +1039,7 @@ class Game{
     }
     for(let i=this.animals.length-1;i>=0;i--)if(this.animals[i].remove)this.animals.splice(i,1);
     // 生命归零优先判负，避免同一帧拾取水壶或清波掩盖失败。
-    if(this.hp<=0){this.state='RUN_OVER';this.runStore.clear();input.cancel();this.combo=0;this.comboTime=0;audio.fail();return}
+    if(this.hp<=0){this.state='RUN_OVER';this.runOverTime=0;this.runStore.clear();input.cancel();this.combo=0;this.comboTime=0;audio.fail();return}
     this.pickups.update(dt);
     this.damageClock+=dt;if(this.damageClock>=CONFIG.farm.damageTextInterval){if(this.damageAmount>0)this.fx.text(`−${this.damageAmount.toFixed(1)} 田地生命`,181,121,'#b9533c',18);this.damageAmount=0;this.damageClock=0}
     this.waves.update(dt);
@@ -1108,29 +1160,23 @@ const UI={
     rounded(500,675,280,30,4,'rgba(19,39,28,.78)','rgba(244,232,204,.24)',1);label('按住蓄力 · 松手弹开',640,690,12,C.cream,'center',700);
   },
   menu(){
-    this.veil();paperPanel(300,96,680,528,12);
-    seal(350,132,54,'守');
-    displayLabel('别动我的农田',640,208,48,C.green,'center',700);
-    label('3 关 · 3 种基底 · 本局固定',640,258,13,'#745238','center');
-    line(405,281,875,281,'#b99a6a',1);
     const run=game.runStore.data,active=run.active;
-    for(let i=0;i<3;i++){
-      const x=365+i*190,y=318,w=168;paperPanel(x,y,w,62,5);
-      if(active&&i===run.level){rounded(x-2,y-2,172,66,6,null,'#b73525',2);seal(x+w-30,y+8,22,'关')}
-      displayLabel(String(i+1).padStart(2,'0'),x+13,y+20,11,'#8a603c','left',800);
-      label(CONFIG.levels[i].name,x+44,y+21,13,'#392316','left',750);
-      label(i===0?'兔子':i===1?'野猪':'猪王',x+13,y+44,11,'#745238');
-    }
-    this.button('continue',active?`继续远征 · 第 ${run.level+1} 关`:'开始远征',active?362:487,446,306,62,true);
-    if(active)this.button('restart','重新开始',691,446,226,62);
-    label('按住蓄力 · 松手弹开',640,556,13,'#745238','center');
+    this.veil();paperPanel(300,140,680,active?440:390,12);
+    seal(350,176,46,'守');
+    displayLabel('别动我的农田',640,240,48,C.green,'center',700);
+    if(active){
+      label(`第 ${run.level+1} / ${CONFIG.levels.length} 关 · ${CONFIG.levels[run.level].name}`,640,306,18,'#392316','center',700);
+      this.button('continue','继续守田',440,366,400,62,true);
+      this.button('restart','重新开始',525,452,230,48);
+    }else this.button('continue','开始守田',440,340,400,62,true);
+    label('按住蓄力 · 松手弹开',640,active?540:458,14,'#745238','center');
     this.stampButton('sound',audio.enabled?'♪':'×',1204,30,44);this.saveNote();
   },
   crop(){
     this.veil();paperPanel(120,64,1040,596,12);
     label('开局一次',640,104,12,'#8a603c','center',800);
     displayLabel('选一个基底',640,148,34,C.green,'center',700);
-    label('本局固定 · 重开远征可更换',640,186,13,'#745238','center');
+    label('本局固定 · 重开一局可更换',640,186,13,'#745238','center');
     for(let i=0;i<game.cropOffers.length;i++){
       const t=game.cropOffers[i],info=CROP_INFO[t],x=159+i*327,y=226,w=308,h=318;
       const hover=input.x>=x&&input.x<=x+w&&input.y>=y&&input.y<=y+h;
@@ -1167,17 +1213,20 @@ const UI={
     label('1 / 2 / 3 选择',640,596,13,C.cream,'center');this.saveNote(630);
   },
   runOver(){
-    this.buttons.length=0;this.veil();paperPanel(340,146,600,456,12);
+    this.buttons.length=0;const t=clamp(game.runOverTime/.55,0,1);
+    ctx.save();ctx.globalAlpha=t;this.veil();paperPanel(340,146,600,456,12);
     seal(370,176,44,'守');
-    displayLabel('远征结束',640,220,36,C.green,'center',700);
-    label(`到达第 ${game.levelIndex+1} 关 · ${game.score} 分`,640,284,18,'#392316','center',700);
-    label(`田地耗尽 · 基底 ${CROP_INFO[game.cropType].name} · ${CROP_INFO[game.cropType].tag}`,640,326,13,'#745238','center');
-    this.button('newRun','再来一次',431,382,419,62,true);this.button('menu','返回首页',523,466,234,51);
+    displayLabel('这次没守住',640,220,36,C.green,'center',700);
+    label(`第 ${game.levelIndex+1} / ${CONFIG.levels.length} 关 · ${game.level.name}`,640,282,15,'#745238','center',700);
+    label(`本局得分 ${game.score}`,640,318,24,'#392316','center',700);
+    label(`基底 ${CROP_INFO[game.cropType].name} · ${CROP_INFO[game.cropType].tag}`,640,354,13,'#745238','center');
+    label('调整一下，再选一个基底',640,390,12,'#8a603c','center');ctx.restore();
+    if(t>=.72){this.button('newRun','重新选择基底',431,420,419,60,true);this.button('menu','返回首页',523,496,234,48)}
   },
   expeditionClear(){
     this.buttons.length=0;this.veil();paperPanel(320,128,640,480,12);
     seal(352,160,48,'守');
-    displayLabel('三关守住',640,210,38,C.green,'center',700);
+    displayLabel('六关守住',640,210,38,C.green,'center',700);
     label(`最终得分 ${game.score}`,640,270,24,'#392316','center',850);
     label(`最终田地 ${Math.ceil(game.hp)} / ${game.maxHP}`,640,310,13,'#745238','center');
     label(`本局基底 ${game.cropSummary()}`,640,346,13,C.green,'center',700);
@@ -1242,9 +1291,8 @@ const UI={
       if(game.levelIntro>0){ctx.save();ctx.globalAlpha=Math.min(1,game.levelIntro*3);paperPanel(350,150,580,112,8);
         label(`第 ${game.levelIndex+1} 关`,640,176,12,'#8a603c','center',800);
         displayLabel(game.level.name,640,204,28,C.green,'center',700);
-        label(game.level.hint,640,234,13,'#3a2416','center',700);
-        label(`基底 ${game.cropSummary()}`,640,254,11,'#745238','center');ctx.restore()}
-      else if(game.tutorial>0&&game.waves.index===0){paperPanel(365,167,550,70,7);label('靠近兔子 · 按住蓄力 · 松手弹开',640,190,14,C.green,'center',750);label('每关结束选择强化 · 扩大范围',640,216,12,'#745238','center')}
+        label(game.level.hint,640,234,13,'#3a2416','center',700);ctx.restore()}
+      else if(game.tutorial>0&&game.waves.index===0){paperPanel(365,167,550,70,7);label('靠近兔子 · 按住蓄力 · 松手弹开',640,190,14,C.green,'center',750);label('不足 30% 松手取消 · 蓄满伤害最高',640,216,12,'#745238','center')}
       if(game.growthNotice>0){paperPanel(372,594,536,50,7);label(`范围提升 · 最多 ${game.growth.limit} 个目标`,640,619,14,C.green,'center',800)}
     }else if(game.state==='PAUSED'){
       this.buttons.length=0;this.veil();paperPanel(380,170,520,420,12);
